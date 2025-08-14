@@ -21,6 +21,7 @@ describe('options.ts', () => {
   let highlightStyleSelect: HTMLSelectElement;
   let rateValue: HTMLSpanElement;
   let pitchValue: HTMLSpanElement;
+  let autoPlayNextToggle: HTMLInputElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -46,6 +47,9 @@ describe('options.ts', () => {
     ) as HTMLSelectElement;
     rateValue = document.getElementById('rate-value') as HTMLSpanElement;
     pitchValue = document.getElementById('pitch-value') as HTMLSpanElement;
+    autoPlayNextToggle = document.getElementById(
+      'auto-play-next-toggle'
+    ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -55,6 +59,7 @@ describe('options.ts', () => {
           speechRate: 1.1,
           speechPitch: 1.2,
           highlightStyle: 'default',
+          autoPlayNext: false,
         });
       }
     );
@@ -153,7 +158,13 @@ describe('options.ts', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(chrome.storage.local.get).toHaveBeenCalledWith(
-        ['selectedVoice', 'speechRate', 'speechPitch', 'highlightStyle'],
+        [
+          'selectedVoice',
+          'speechRate',
+          'speechPitch',
+          'highlightStyle',
+          'autoPlayNext',
+        ],
         expect.any(Function)
       );
 
@@ -505,6 +516,93 @@ describe('options.ts', () => {
 
       const kbdElements = document.querySelectorAll('kbd');
       expect(kbdElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('auto play next functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should restore auto play next setting from storage', async () => {
+      // Mock storage with specific auto play next setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            autoPlayNext: true,
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(autoPlayNextToggle.checked).toBe(true);
+    });
+
+    it('should default to false when auto play next is not stored', async () => {
+      // Mock storage with missing auto play next setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            // autoPlayNext is missing
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(autoPlayNextToggle.checked).toBe(false);
+    });
+
+    it('should save auto play next setting to storage when changed', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change auto play next setting
+      autoPlayNextToggle.checked = true;
+      const changeEvent = new Event('change');
+      autoPlayNextToggle.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        autoPlayNext: true,
+      });
+    });
+
+    it('should save false when toggled off', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change auto play next setting to false
+      autoPlayNextToggle.checked = false;
+      const changeEvent = new Event('change');
+      autoPlayNextToggle.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        autoPlayNext: false,
+      });
     });
   });
 });

@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ) as HTMLSelectElement;
   const rateValue = document.getElementById('rate-value') as HTMLSpanElement;
   const pitchValue = document.getElementById('pitch-value') as HTMLSpanElement;
+  const autoPlayNextToggle = document.getElementById(
+    'auto-play-next-toggle'
+  ) as HTMLInputElement;
 
   if (
     !voiceSelect ||
@@ -18,13 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
     !pitchSlider ||
     !highlightStyleSelect ||
     !rateValue ||
-    !pitchValue
+    !pitchValue ||
+    !autoPlayNextToggle
   )
     return;
 
   // Restore settings from storage
   chrome.storage.local.get(
-    ['selectedVoice', 'speechRate', 'speechPitch', 'highlightStyle'],
+    [
+      'selectedVoice',
+      'speechRate',
+      'speechPitch',
+      'highlightStyle',
+      'autoPlayNext',
+    ],
     (result) => {
       const selectedVoice =
         typeof result.selectedVoice === 'string'
@@ -38,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.highlightStyle === 'string'
           ? result.highlightStyle
           : 'default';
+      const autoPlayNext =
+        typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
 
       populateVoices(selectedVoice);
 
@@ -51,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set highlight style select
       highlightStyleSelect.value = highlightStyle;
+
+      // Set auto play next toggle
+      autoPlayNextToggle.checked = autoPlayNext;
     }
   );
 
@@ -90,6 +105,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Highlight style saved!', 'success');
+  });
+
+  // Save auto play next setting to storage
+  autoPlayNextToggle.addEventListener('change', () => {
+    const autoPlayNext = autoPlayNextToggle.checked;
+    chrome.storage.local.set({ autoPlayNext });
+
+    // Show a brief status message
+    showStatus('Auto play next item setting saved!', 'success');
   });
 });
 

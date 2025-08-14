@@ -12,27 +12,15 @@
         <h1>Talkient Settings</h1>
         <p class="subtitle">Customize your text-to-speech experience</p>
       </header>
-
-      <div class="setting-group disabled-group">
-        <h2>General Settings</h2>
-        <div class="setting-row">
-          <span class="setting-label">Enable Extension</span>
-          <label class="toggle-switch disabled">
-            <input type="checkbox" disabled id="enabled-toggle" />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <span class="setting-label">Auto-read selected text</span>
-          <label class="toggle-switch disabled">
-            <input type="checkbox" disabled id="auto-read-toggle" />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
       <div class="setting-group">
         <h2>Voice Settings</h2>
+        <div class="setting-row">
+          <span class="setting-label">Auto play next item</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-play-next-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
         <div class="setting-row">
           <span class="setting-label">Voice</span>
           <select id="voice-select" class="select-input">
