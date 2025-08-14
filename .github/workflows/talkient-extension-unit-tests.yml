@@ -2,9 +2,9 @@ name: Unit Tests for Talkient Extension
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   talkient-extension-unit-tests:
