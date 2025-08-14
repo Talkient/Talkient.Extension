@@ -1,0 +1,57 @@
+/// <reference lib="dom" />
+/// <reference types="chrome" />
+
+import {
+  processTextElements,
+  clearHighlight,
+  loadHighlightStyleFromStorage,
+  setHighlightingStyle,
+} from './content-lib';
+
+// Listen for messages from the background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('[Talkient] Message received: ', message);
+  if (message.type === 'SPEECH_ENDED') {
+    // Reset all play buttons to their initial state
+    document.querySelectorAll('.talkient-play-button').forEach((button) => {
+      if (button instanceof HTMLButtonElement) {
+        button.innerHTML = '▶️';
+      }
+    });
+
+    // Clear text highlighting
+    clearHighlight();
+  }
+});
+
+// Load highlight style from storage
+loadHighlightStyleFromStorage();
+
+// Listen for storage changes to update highlight style in real-time
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.highlightStyle) {
+    const newStyle = changes.highlightStyle.newValue;
+    if (newStyle && typeof newStyle === 'string') {
+      setHighlightingStyle(
+        newStyle as 'default' | 'minimal' | 'bold' | 'elegant'
+      );
+    }
+  }
+});
+
+// Initial processing
+processTextElements();
+
+// Watch for DOM changes to process new text elements
+// const observer = new MutationObserver((mutations: MutationRecord[]) => {
+//     for (const mutation of mutations) {
+//         if (mutation.type === 'childList') {
+//             processTextElements();
+//         }
+//     }
+// });
+
+// observer.observe(document.body, {
+//     childList: true,
+//     subtree: true
+// });

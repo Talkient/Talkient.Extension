@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talkient Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Talkient Settings</h1>
+        <p class="subtitle">Customize your text-to-speech experience</p>
+      </header>
+
+      <div class="setting-group disabled-group">
+        <h2>General Settings</h2>
+        <div class="setting-row">
+          <span class="setting-label">Enable Extension</span>
+          <label class="toggle-switch disabled">
+            <input type="checkbox" disabled id="enabled-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Auto-read selected text</span>
+          <label class="toggle-switch disabled">
+            <input type="checkbox" disabled id="auto-read-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h2>Voice Settings</h2>
+        <div class="setting-row">
+          <span class="setting-label">Voice</span>
+          <select id="voice-select" class="select-input">
+            <option value="default">Default Voice</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Speaking Rate</span>
+          <div class="range-container">
+            <input
+              type="range"
+              id="rate-slider"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
+            />
+            <span id="rate-value">1.0x</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Pitch</span>
+          <div class="range-container">
+            <input
+              type="range"
+              id="pitch-slider"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
+            />
+            <span id="pitch-value">1.0x</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Highlight Style</span>
+          <select id="highlight-style-select" class="select-input">
+            <option value="default">Default</option>
+            <option value="minimal">Minimal</option>
+            <option value="bold">Bold</option>
+            <option value="elegant">Elegant</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="setting-group disabled-group">
+        <h2>Keyboard Shortcuts</h2>
+        <div class="setting-row">
+          <span class="setting-label">Read Selected Text</span>
+          <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Stop Reading</span>
+          <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>
+        </div>
+      </div>
+
+      <div id="status"></div>
+    </div>
+
+    <script src="./options.js"></script>
+  </body>
+  <!-- TODO: Report an issue to github (talkient-public) -->
+</html>

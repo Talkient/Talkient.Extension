@@ -1,0 +1,38 @@
+{
+  "name": "Talkient.Extension",
+  "version": "0.0.2",
+  "description": "Talkient Extension",
+  "main": "index.js",
+  "scripts": {
+    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js",
+    "build": "tsc --build && pnpm build:content",
+    "update-manifest": "cp manifest.json dist/",
+    "update-assets": "cp assets/ dist/ -r",
+    "update-htmls": "cp src/options/*.html dist/options -r && cp src/popup/*.html dist/popup -r",
+    "update-css": "cp src/options/*.css dist/options -r && cp src/popup/*.css dist/popup -r && cp src/content/*.css dist/content -r",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "@types/chrome": "^0.0.326",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.15.30",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "esbuild": "^0.24.1",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.8.3"
+  }
+}

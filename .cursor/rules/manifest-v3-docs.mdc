@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+There are some important documentations about Manifest V3 for chrome extensions:
+
+
+- [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
+- [Manifest file format](https://developer.chrome.com/docs/extensions/reference/manifest)
+- [Manifest permissions](https://developer.chrome.com/docs/extensions/reference/permissions-list)
+- [Manifest API Reference](https://developer.chrome.com/docs/extensions/reference/api)

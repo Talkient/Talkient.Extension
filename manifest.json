@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Talkient",
+  "description": "Talkient: Your best Text-To-Speech extension!",
+  "icons": {
+    "48": "assets/png/text-to-speech.png",
+    "128": "assets/png/text-to-speech.png"
+  },
+  "version": "0.0.2",
+  "permissions": ["tts", "storage"],
+  "action": {
+    "default_popup": "./popup/popup.html"
+  },
+  "background": {
+    "service_worker": "./background/service-worker.js",
+    "type": "module"
+  },
+  "options_page": "./options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://learn.microsoft.com/*",
+        "https://docs.aws.amazon.com/*",
+        "https://medium.com/*"
+      ],
+      "css": ["./content/content.css"],
+      "js": ["./content/content.js"]
+    }
+  ]
+}

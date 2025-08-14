@@ -1,0 +1,1 @@
+{"root":["./src/background/service-worker.ts","./src/content/content.ts","./src/options/options.ts","./src/popup/popup.ts"],"errors":true,"version":"5.8.3"}

@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Here are the rules for tests in this project:
+
+1. Raw HTML and css are testes by jest.
+2. Playwright for E2E (end-to-end) tests.

@@ -1,0 +1,220 @@
+/* Options Page Styles for Talkient Extension */
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #666;
+  margin: 0;
+  font-size: 16px;
+}
+
+h2 {
+  color: #2c3e50;
+  font-size: 18px;
+  margin: 0 0 16px 0;
+  font-weight: 500;
+}
+
+.setting-group {
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid #eee;
+}
+
+.setting-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 8px 0;
+}
+
+.setting-label {
+  font-weight: 500;
+  color: #444;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #2196f3;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.select-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  min-width: 200px;
+  font-size: 14px;
+  color: #333;
+}
+
+.range-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+input[type='range'] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #2196f3;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+}
+
+input[type='range']::-webkit-slider-thumb:hover {
+  background: #1976d2;
+}
+
+kbd {
+  background-color: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  color: #333;
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+  white-space: nowrap;
+  margin: 0 2px;
+}
+
+#status {
+  margin-top: 24px;
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  text-align: center;
+  display: none;
+  font-weight: 500;
+}
+
+#status.visible {
+  display: block;
+}
+
+#status.error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+#status.warning {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Disabled settings styles */
+.disabled-group {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.disabled-group .setting-label {
+  color: #999;
+}
+
+.toggle-switch.disabled .toggle-slider {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.toggle-switch.disabled .toggle-slider:before {
+  background-color: #f5f5f5;
+}
+
+.disabled-group h2 {
+  color: #999;
+}
