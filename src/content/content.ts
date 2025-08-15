@@ -11,6 +11,8 @@ import {
   findNextTextElement,
 } from './content-lib';
 
+import { getSvgIcon, isSvgPlayIcon } from './icons';
+
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Talkient] Message received: ', message);
@@ -32,7 +34,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Reset all play buttons to their initial state
     document.querySelectorAll('.talkient-play-button').forEach((button) => {
       if (button instanceof HTMLButtonElement) {
-        button.innerHTML = '▶️';
+        button.innerHTML = getSvgIcon('play');
       }
     });
 
@@ -44,7 +46,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const nextPlayButton = nextElementToPlay.querySelector(
         '.talkient-play-button'
       ) as HTMLButtonElement;
-      if (nextPlayButton && nextPlayButton.innerHTML === '▶️') {
+
+      // Check if it has the play icon (not the pause icon)
+      const svgInButton = nextPlayButton?.querySelector('svg');
+      
+      if (nextPlayButton && isSvgPlayIcon(svgInButton as SVGElement)) {
         // Add a small delay to ensure the UI state is updated before auto-playing
         setTimeout(() => {
           console.log('[Talkient] Auto-playing next text element');

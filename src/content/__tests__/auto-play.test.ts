@@ -10,6 +10,8 @@ import {
   getCurrentHighlightedElement,
 } from '../content-lib';
 
+import { getSvgIcon } from '../icons';
+
 // Mock chrome runtime
 const mockChrome = {
   runtime: {
@@ -132,7 +134,7 @@ describe('Auto-play functionality', () => {
       element1.appendChild(textSpan1);
       const button1 = document.createElement('button');
       button1.classList.add('talkient-play-button');
-      button1.innerHTML = '⏸️'; // Currently playing
+      button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
       element1.appendChild(button1);
       container.appendChild(element1);
 
@@ -143,7 +145,7 @@ describe('Auto-play functionality', () => {
       element2.appendChild(textSpan2);
       const button2 = document.createElement('button');
       button2.classList.add('talkient-play-button');
-      button2.innerHTML = '▶️'; // Not playing
+      button2.innerHTML = getSvgIcon('play'); // Play icon (not playing)
       element2.appendChild(button2);
       container.appendChild(element2);
 
@@ -165,7 +167,7 @@ describe('Auto-play functionality', () => {
       element1.classList.add('talkient-processed');
       const button1 = document.createElement('button');
       button1.classList.add('talkient-play-button');
-      button1.innerHTML = '▶️';
+      button1.innerHTML = getSvgIcon('play'); // Play icon
       element1.appendChild(button1);
       container.appendChild(element1);
 
@@ -185,7 +187,7 @@ describe('Auto-play functionality', () => {
       element1.appendChild(textSpan1);
       const button1 = document.createElement('button');
       button1.classList.add('talkient-play-button');
-      button1.innerHTML = '▶️';
+      button1.innerHTML = getSvgIcon('play'); // Play icon
       element1.appendChild(button1);
       container.appendChild(element1);
 
@@ -209,7 +211,7 @@ describe('Auto-play functionality', () => {
       element1.appendChild(textSpan1);
       const button1 = document.createElement('button');
       button1.classList.add('talkient-play-button');
-      button1.innerHTML = '⏸️'; // Currently playing
+      button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
       element1.appendChild(button1);
       container.appendChild(element1);
 
@@ -220,7 +222,7 @@ describe('Auto-play functionality', () => {
       element2.appendChild(textSpan2);
       const button2 = document.createElement('button');
       button2.classList.add('talkient-play-button');
-      button2.innerHTML = '⏸️'; // Already playing
+      button2.innerHTML = getSvgIcon('pause'); // Already playing (pause icon)
       element2.appendChild(button2);
       container.appendChild(element2);
 

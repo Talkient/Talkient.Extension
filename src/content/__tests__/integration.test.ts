@@ -7,6 +7,7 @@ import {
   clearHighlight,
   getCurrentHighlightedElement,
 } from '../content-lib';
+import { isSvgPlayIcon, isSvgPauseIcon } from '../icons';
 
 // Mock chrome runtime
 const mockChrome = {
@@ -70,7 +71,11 @@ describe('Text Highlighting Integration', () => {
       '.talkient-play-button'
     ) as HTMLButtonElement;
     expect(playButton).toBeTruthy();
-    expect(playButton.innerHTML).toBe('▶️');
+
+    // Check for SVG play icon
+    const svg = playButton.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
     // Mock successful sendMessage response
     mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
@@ -88,7 +93,9 @@ describe('Text Highlighting Integration', () => {
     );
 
     // Check that the play button changed to pause
-    expect(playButton.innerHTML).toBe('⏸️');
+    const svgAfterClick = playButton.querySelector('svg');
+    expect(svgAfterClick).not.toBeNull();
+    expect(isSvgPauseIcon(svgAfterClick as SVGElement)).toBe(true);
 
     // Check that the correct message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
@@ -132,12 +139,20 @@ describe('Text Highlighting Integration', () => {
     // Click play to start and highlight
     playButton.click();
     expect(getCurrentHighlightedElement()).toBeTruthy();
-    expect(playButton.innerHTML).toBe('⏸️');
+
+    // Check for pause icon
+    const svgAfterPlay = playButton.querySelector('svg');
+    expect(svgAfterPlay).not.toBeNull();
+    expect(isSvgPauseIcon(svgAfterPlay as SVGElement)).toBe(true);
 
     // Click pause to stop and clear highlight
     playButton.click();
     expect(getCurrentHighlightedElement()).toBeNull();
-    expect(playButton.innerHTML).toBe('▶️');
+
+    // Check for play icon
+    const svgAfterPause = playButton.querySelector('svg');
+    expect(svgAfterPause).not.toBeNull();
+    expect(isSvgPlayIcon(svgAfterPause as SVGElement)).toBe(true);
 
     // Check that pause message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(

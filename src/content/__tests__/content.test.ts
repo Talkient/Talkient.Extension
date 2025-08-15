@@ -7,6 +7,8 @@ import {
   getCurrentHighlightedElement,
 } from '../content-lib';
 
+import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
+
 // Mock chrome runtime
 const mockChrome = {
   runtime: {
@@ -41,17 +43,21 @@ describe('createPlayButton', () => {
     expect(button).toBeInstanceOf(HTMLButtonElement);
   });
 
-  test('should have the correct play emoji as innerHTML', () => {
-    expect(button.innerHTML).toBe('▶️');
+  test('should have the correct play SVG as innerHTML', () => {
+    const playIconSvg = button.querySelector('svg');
+    expect(playIconSvg).not.toBeNull();
+    expect(playIconSvg?.getAttribute('width')).toBe('10');
+    expect(playIconSvg?.getAttribute('height')).toBe('10');
+    expect(playIconSvg?.getAttribute('viewBox')).toBe('0 0 24 24');
+    expect(playIconSvg?.getAttribute('fill')).toBe('currentColor');
+    expect(isSvgPlayIcon(playIconSvg as SVGElement)).toBe(true);
   });
 
   test('should have the correct CSS styles', () => {
     const cssText = button.style.cssText;
-    expect(cssText).toContain('background: none');
-    expect(cssText).toContain('cursor: pointer');
-    expect(cssText).toContain('padding: 2px 5px');
-    expect(cssText).toContain('margin-left: 5px');
-    expect(cssText).toContain('font-size: 14px');
+    expect(cssText).toContain('display: flex');
+    expect(cssText).toContain('align-items: center');
+    expect(cssText).toContain('justify-content: center');
   });
 
   test('should be clickable', () => {
@@ -232,7 +238,7 @@ describe('Content Script Message Handling', () => {
     container = document.createElement('div');
     playButton = document.createElement('button');
     playButton.classList.add('talkient-play-button');
-    playButton.innerHTML = '⏸️';
+    playButton.innerHTML = getSvgIcon('pause');
     container.appendChild(playButton);
     document.body.appendChild(container);
 
@@ -270,8 +276,10 @@ describe('Content Script Message Handling', () => {
 
     messageListener(message, sender, sendResponse);
 
-    // Check that play button is reset
-    expect(playButton.innerHTML).toBe('▶️');
+    // Check that play button is reset to play icon
+    const svg = playButton.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
     // Check that highlighting is cleared
     expect(getCurrentHighlightedElement()).toBeNull();
@@ -282,12 +290,12 @@ describe('Content Script Message Handling', () => {
     // Create multiple play buttons
     const playButton2 = document.createElement('button');
     playButton2.classList.add('talkient-play-button');
-    playButton2.innerHTML = '⏸️';
+    playButton2.innerHTML = getSvgIcon('pause');
     container.appendChild(playButton2);
 
     const playButton3 = document.createElement('button');
     playButton3.classList.add('talkient-play-button');
-    playButton3.innerHTML = '⏸️';
+    playButton3.innerHTML = getSvgIcon('pause');
     container.appendChild(playButton3);
 
     // Import content script
@@ -304,9 +312,11 @@ describe('Content Script Message Handling', () => {
     const message = { type: 'SPEECH_ENDED' };
     messageListener(message, {}, jest.fn());
 
-    // Check that all play buttons are reset
+    // Check that all play buttons are reset to play icon
     document.querySelectorAll('.talkient-play-button').forEach((button) => {
-      expect((button as HTMLButtonElement).innerHTML).toBe('▶️');
+      const svg = (button as HTMLButtonElement).querySelector('svg');
+      expect(svg).not.toBeNull();
+      expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
     });
   });
 
@@ -330,7 +340,8 @@ describe('Content Script Message Handling', () => {
     messageListener(message, {}, jest.fn());
 
     // Check that nothing changed
-    expect(playButton.innerHTML).toBe('⏸️');
+    const svg = playButton.querySelector('svg');
+    expect(isSvgPauseIcon(svg as SVGElement)).toBe(true);
     expect(getCurrentHighlightedElement()).toBe(testElement);
   });
 });

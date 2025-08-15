@@ -2,6 +2,7 @@
 /// <reference types="chrome" />
 
 import { highlightText } from '../content-lib';
+import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
 
 // Mock chrome runtime
 const mockChrome = {
@@ -54,7 +55,7 @@ describe('Content Script Auto-Play Integration', () => {
     element1.appendChild(textSpan1);
     const button1 = document.createElement('button');
     button1.classList.add('talkient-play-button');
-    button1.innerHTML = '⏸️'; // Currently playing
+    button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
     element1.appendChild(button1);
     container.appendChild(element1);
 
@@ -65,7 +66,7 @@ describe('Content Script Auto-Play Integration', () => {
     element2.appendChild(textSpan2);
     const button2 = document.createElement('button');
     button2.classList.add('talkient-play-button');
-    button2.innerHTML = '▶️'; // Not playing
+    button2.innerHTML = getSvgIcon('play'); // Play icon (not playing)
     element2.appendChild(button2);
     container.appendChild(element2);
 
@@ -98,8 +99,10 @@ describe('Content Script Auto-Play Integration', () => {
     // Check that the next play button was clicked
     expect(clickSpy).toHaveBeenCalled();
 
-    // Check that all play buttons are reset
-    expect(button1.innerHTML).toBe('▶️');
+    // Check that all play buttons have the play icon
+    const svg = button1.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
   });
 
   test('should not auto-play next text when SPEECH_ENDED message includes autoPlayNext=false', async () => {
@@ -111,7 +114,7 @@ describe('Content Script Auto-Play Integration', () => {
     element1.appendChild(textSpan1);
     const button1 = document.createElement('button');
     button1.classList.add('talkient-play-button');
-    button1.innerHTML = '⏸️'; // Currently playing
+    button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
     element1.appendChild(button1);
     container.appendChild(element1);
 
@@ -122,7 +125,7 @@ describe('Content Script Auto-Play Integration', () => {
     element2.appendChild(textSpan2);
     const button2 = document.createElement('button');
     button2.classList.add('talkient-play-button');
-    button2.innerHTML = '▶️'; // Not playing
+    button2.innerHTML = getSvgIcon('play'); // Play icon (not playing)
     element2.appendChild(button2);
     container.appendChild(element2);
 
@@ -152,8 +155,13 @@ describe('Content Script Auto-Play Integration', () => {
     // Check that the next play button was NOT clicked
     expect(clickSpy).not.toHaveBeenCalled();
 
-    // Check that all play buttons are reset
-    expect(button1.innerHTML).toBe('▶️');
-    expect(button2.innerHTML).toBe('▶️');
+    // Check that all play buttons have the play icon
+    const svg1 = button1.querySelector('svg');
+    expect(svg1).not.toBeNull();
+    expect(isSvgPlayIcon(svg1 as SVGElement)).toBe(true);
+
+    const svg2 = button2.querySelector('svg');
+    expect(svg2).not.toBeNull();
+    expect(isSvgPlayIcon(svg2 as SVGElement)).toBe(true);
   });
 });

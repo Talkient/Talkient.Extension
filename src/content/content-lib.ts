@@ -11,6 +11,8 @@ import {
   loadHighlightStyleFromStorage,
 } from './highlight';
 
+import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from './icons';
+
 // Re-export highlighting functions for backward compatibility
 export {
   highlightText,
@@ -25,17 +27,13 @@ export {
 // Function to create a play button element
 export function createPlayButton(): HTMLButtonElement {
   const button = document.createElement('button');
-  button.innerHTML = '▶️';
+  // Using SVG play icon for better visual appearance
+  button.innerHTML = getSvgIcon('play');
   button.title =
     'Click to play/pause speech\nShift+Click: Bold highlighting\nCtrl+Click: Minimal highlighting\nAlt+Click: Elegant highlighting';
-  button.style.cssText = `
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 2px 5px;
-        margin-left: 5px;
-        font-size: 14px;
-    `;
+  // Styles are now primarily in content.css
+  button.style.cssText =
+    'display: flex; align-items: center; justify-content: center;';
   return button;
 }
 
@@ -118,7 +116,8 @@ export function autoPlayNextText(): void {
   }
 
   // Only auto-play if the button is not currently playing
-  if (nextPlayButton.innerHTML === '▶️') {
+  const svgInButton = nextPlayButton.querySelector('svg');
+  if (isSvgPlayIcon(svgInButton as SVGElement)) {
     console.log('[Talkient] Auto-playing next text element');
     // Simulate a click on the next play button
     nextPlayButton.click();
@@ -166,7 +165,9 @@ export function processTextElements(): void {
 
       // Add click handler
       playButton.addEventListener('click', (event) => {
-        const isPlaying = playButton.innerHTML === '⏸️';
+        const isPlaying = isSvgPauseIcon(
+          playButton.querySelector('svg') as SVGElement
+        );
         chrome.runtime.sendMessage({
           type: 'GA4_EVENT',
           event: {
@@ -192,7 +193,8 @@ export function processTextElements(): void {
                   chrome.runtime.lastError
                 );
               } else {
-                playButton.innerHTML = '▶️';
+                // Set play icon
+                playButton.innerHTML = getSvgIcon('play');
                 clearHighlight();
               }
             }
@@ -225,7 +227,8 @@ export function processTextElements(): void {
                 );
                 clearHighlight();
               } else {
-                playButton.innerHTML = '⏸️';
+                // Set pause icon
+                playButton.innerHTML = getSvgIcon('pause');
               }
             }
           );

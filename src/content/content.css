@@ -145,25 +145,50 @@
 }
 
 .talkient-play-button {
-  background: none !important;
+  background: linear-gradient(135deg, #4a90e2 0%, #2d6cdf 100%) !important;
   border: none !important;
   cursor: pointer !important;
-  padding: 2px 5px !important;
-  margin-left: 5px !important;
-  font-size: 14px !important;
-  opacity: 0.7 !important;
-  transition: opacity 0.2s ease !important;
-  border-radius: 3px !important;
+  padding: 5px !important;
+  margin-left: 6px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  opacity: 0.85 !important;
+  transition: all 0.2s ease !important;
+  border-radius: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 4px rgba(45, 108, 223, 0.3) !important;
 }
 
 .talkient-play-button:hover {
   opacity: 1 !important;
-  background-color: rgba(0, 0, 0, 0.05) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 3px 6px rgba(45, 108, 223, 0.4) !important;
+}
+
+.talkient-play-button:active {
+  transform: scale(0.95) !important;
 }
 
 .talkient-play-button:focus {
   outline: 2px solid #007acc !important;
-  outline-offset: 1px !important;
+  outline-offset: 2px !important;
+}
+
+/* Dark mode support for play buttons */
+@media (prefers-color-scheme: dark) {
+  .talkient-play-button {
+    background: linear-gradient(135deg, #5e9cea 0%, #3b7de8 100%) !important;
+    box-shadow: 0 2px 4px rgba(59, 125, 232, 0.3) !important;
+  }
+
+  .talkient-play-button:hover {
+    box-shadow: 0 3px 6px rgba(59, 125, 232, 0.4) !important;
+  }
 }
 
 /* Add more specific styles for your content script UI elements here */
