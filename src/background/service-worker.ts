@@ -53,9 +53,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   currentText = '';
                   break;
                 case 'end':
-                  // Notify content script that speech has ended
-                  chrome.tabs.sendMessage(sender.tab?.id!, {
-                    type: 'SPEECH_ENDED',
+                  // Check if auto play next is enabled
+                  chrome.storage.local.get(['autoPlayNext'], (result) => {
+                    const autoPlayNext = result.autoPlayNext || false;
+                    // Notify content script that speech has ended
+                    chrome.tabs.sendMessage(sender.tab?.id!, {
+                      type: 'SPEECH_ENDED',
+                      autoPlayNext: autoPlayNext,
+                    });
                   });
                   isPaused = false;
                   currentText = '';

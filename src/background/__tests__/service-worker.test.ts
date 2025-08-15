@@ -154,6 +154,7 @@ describe('service-worker.ts', () => {
 
           expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
             type: 'SPEECH_ENDED',
+            autoPlayNext: false,
           });
         });
 
@@ -564,6 +565,7 @@ describe('service-worker.ts', () => {
         // Should still call sendMessage, but with undefined tab ID (this is how the actual Chrome API behaves)
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(undefined, {
           type: 'SPEECH_ENDED',
+          autoPlayNext: false,
         });
       });
 
@@ -863,6 +865,7 @@ describe('service-worker.ts', () => {
 
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
           type: 'SPEECH_ENDED',
+          autoPlayNext: false,
         });
       });
 
@@ -890,6 +893,7 @@ describe('service-worker.ts', () => {
 
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
           type: 'SPEECH_ENDED',
+          autoPlayNext: false,
         });
       });
     });

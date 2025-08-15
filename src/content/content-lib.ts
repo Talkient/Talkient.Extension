@@ -70,6 +70,61 @@ export function shouldProcessNode(node: Node): boolean {
   return true;
 }
 
+// Function to find the next text element to play
+export function findNextTextElement(
+  currentElement: HTMLElement
+): HTMLElement | null {
+  // Get all processed elements in document order
+  const allProcessedElements = Array.from(
+    document.querySelectorAll('.talkient-processed')
+  ) as HTMLElement[];
+
+  // Find current element index
+  const currentIndex = allProcessedElements.indexOf(currentElement);
+
+  if (currentIndex === -1 || currentIndex >= allProcessedElements.length - 1) {
+    return null; // Current element not found or it's the last one
+  }
+
+  // Return the next element
+  return allProcessedElements[currentIndex + 1];
+}
+
+// Function to auto-play the next text element
+export function autoPlayNextText(): void {
+  const currentHighlighted = getCurrentHighlightedElement();
+  if (!currentHighlighted) return;
+
+  // Find the wrapper element that contains the currently highlighted text
+  const currentWrapper = currentHighlighted.closest(
+    '.talkient-processed'
+  ) as HTMLElement;
+  if (!currentWrapper) return;
+
+  // Find the next text element
+  const nextElement = findNextTextElement(currentWrapper);
+  if (!nextElement) {
+    console.log('[Talkient] No next element found for auto-play');
+    return;
+  }
+
+  // Find the play button in the next element
+  const nextPlayButton = nextElement.querySelector(
+    '.talkient-play-button'
+  ) as HTMLButtonElement;
+  if (!nextPlayButton) {
+    console.log('[Talkient] No play button found in next element');
+    return;
+  }
+
+  // Only auto-play if the button is not currently playing
+  if (nextPlayButton.innerHTML === '▶️') {
+    console.log('[Talkient] Auto-playing next text element');
+    // Simulate a click on the next play button
+    nextPlayButton.click();
+  }
+}
+
 // Function to process text nodes and add play buttons
 export function processTextElements(): void {
   console.log('[Talkient] Processing the text elements...');

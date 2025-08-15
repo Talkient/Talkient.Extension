@@ -6,12 +6,29 @@ import {
   clearHighlight,
   loadHighlightStyleFromStorage,
   setHighlightingStyle,
+  autoPlayNextText,
+  getCurrentHighlightedElement,
+  findNextTextElement,
 } from './content-lib';
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Talkient] Message received: ', message);
   if (message.type === 'SPEECH_ENDED') {
+    // Check if auto-play next is enabled and find the next element BEFORE clearing highlights
+    let nextElementToPlay: HTMLElement | null = null;
+    if (message.autoPlayNext) {
+      const currentHighlighted = getCurrentHighlightedElement();
+      if (currentHighlighted) {
+        const currentWrapper = currentHighlighted.closest(
+          '.talkient-processed'
+        ) as HTMLElement;
+        if (currentWrapper) {
+          nextElementToPlay = findNextTextElement(currentWrapper);
+        }
+      }
+    }
+
     // Reset all play buttons to their initial state
     document.querySelectorAll('.talkient-play-button').forEach((button) => {
       if (button instanceof HTMLButtonElement) {
@@ -21,6 +38,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Clear text highlighting
     clearHighlight();
+
+    // Auto-play the next element if one was found
+    if (nextElementToPlay) {
+      const nextPlayButton = nextElementToPlay.querySelector(
+        '.talkient-play-button'
+      ) as HTMLButtonElement;
+      if (nextPlayButton && nextPlayButton.innerHTML === '▶️') {
+        // Add a small delay to ensure the UI state is updated before auto-playing
+        setTimeout(() => {
+          console.log('[Talkient] Auto-playing next text element');
+          nextPlayButton.click();
+        }, 500);
+      }
+    }
   }
 });
 
