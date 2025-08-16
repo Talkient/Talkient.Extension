@@ -4,7 +4,7 @@
   "description": "Talkient Extension",
   "main": "index.js",
   "scripts": {
-    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js",
+    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js && rm -f dist/tsconfig.tsbuildinfo",
     "build": "tsc --build && pnpm build:content",
     "update-manifest": "cp manifest.json dist/",
     "update-assets": "cp assets/ dist/ -r",
