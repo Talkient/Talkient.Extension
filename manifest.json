@@ -21,7 +21,9 @@
       "matches": [
         "https://learn.microsoft.com/*",
         "https://docs.aws.amazon.com/*",
-        "https://medium.com/*"
+        "https://medium.com/*",
+        "https://aws.amazon.com/*/blogs/*",
+        "https://newsletter.eng-leadership.com/*"
       ],
       "css": ["./content/content.css"],
       "js": ["./content/content.js"]
