@@ -6,9 +6,9 @@ import {
   clearHighlight,
   loadHighlightStyleFromStorage,
   setHighlightingStyle,
-  autoPlayNextText,
   getCurrentHighlightedElement,
   findNextTextElement,
+  safeClickButton,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -49,12 +49,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       // Check if it has the play icon (not the pause icon)
       const svgInButton = nextPlayButton?.querySelector('svg');
-      
+
       if (nextPlayButton && isSvgPlayIcon(svgInButton as SVGElement)) {
         // Add a small delay to ensure the UI state is updated before auto-playing
         setTimeout(() => {
           console.log('[Talkient] Auto-playing next text element');
-          nextPlayButton.click();
+          safeClickButton(nextPlayButton);
         }, 500);
       }
     }
