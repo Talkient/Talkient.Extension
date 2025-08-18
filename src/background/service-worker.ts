@@ -7,6 +7,13 @@ let availableVoices: chrome.tts.TtsVoice[] = [];
 
 // Get available voices
 chrome.tts.getVoices((voices) => {
+  if (chrome.runtime.lastError) {
+    console.error(
+      '[Talkient.SW] Error getting voices:',
+      chrome.runtime.lastError
+    );
+    return;
+  }
   availableVoices = voices;
   console.log('[Talkient.SW] Available voices:', voices);
 });
@@ -21,6 +28,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Resume paused speech
       console.log('[Talkient.SW] Resuming paused speech...');
       chrome.tts.resume();
+      if (chrome.runtime.lastError) {
+        console.error(
+          '[Talkient.SW] Error resuming speech:',
+          chrome.runtime.lastError
+        );
+      }
       isPaused = false;
     } else {
       currentText = request.text;
@@ -29,6 +42,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.storage.local.get(
         ['selectedVoice', 'speechRate', 'speechPitch'],
         (result) => {
+          if (chrome.runtime.lastError) {
+            console.error(
+              '[Talkient.SW] Error getting storage data:',
+              chrome.runtime.lastError
+            );
+            return;
+          }
+
           const selectedVoice = result.selectedVoice;
           const speechRate =
             typeof result.speechRate === 'number' ? result.speechRate : 1.0;
@@ -55,12 +76,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 case 'end':
                   // Check if auto play next is enabled
                   chrome.storage.local.get(['autoPlayNext'], (result) => {
+                    if (chrome.runtime.lastError) {
+                      console.error(
+                        '[Talkient.SW] Error getting autoPlayNext setting:',
+                        chrome.runtime.lastError
+                      );
+                      return;
+                    }
                     const autoPlayNext = result.autoPlayNext || false;
                     // Notify content script that speech has ended
                     chrome.tabs.sendMessage(sender.tab?.id!, {
                       type: 'SPEECH_ENDED',
                       autoPlayNext: autoPlayNext,
                     });
+                    if (chrome.runtime.lastError) {
+                      console.error(
+                        '[Talkient.SW] Error sending message to content script:',
+                        chrome.runtime.lastError
+                      );
+                    }
                   });
                   isPaused = false;
                   currentText = '';
@@ -76,6 +110,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   break;
                 case 'interrupted':
                   chrome.tts.stop();
+                  if (chrome.runtime.lastError) {
+                    console.error(
+                      '[Talkient.SW] Error stopping TTS:',
+                      chrome.runtime.lastError
+                    );
+                  }
                   break;
                 default:
                   console.warn(
@@ -87,6 +127,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             },
           };
           chrome.tts.speak(request.text, ttsOptions);
+          if (chrome.runtime.lastError) {
+            console.error(
+              '[Talkient.SW] Error speaking text:',
+              chrome.runtime.lastError
+            );
+          }
         }
       );
     }
@@ -95,11 +141,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('[Talkient.SW] Pausing the speak...');
     isPaused = true;
     chrome.tts.pause();
+    if (chrome.runtime.lastError) {
+      console.error(
+        '[Talkient.SW] Error pausing speech:',
+        chrome.runtime.lastError
+      );
+    }
     sendResponse({ success: true });
-  } else if (request.type === 'GA4_EVENT' && request.event) {
-    // TODO: Remove or implement GA4 event tracking
-    console.warn('[Talkient.SW] GA4 Event not implemented');
-    sendResponse({ success: true });
-  }
+  } else console.warn(`[Talkient.SW] Event ${request.type} not implemented`);
+
   return true;
 });

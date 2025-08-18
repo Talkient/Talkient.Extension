@@ -11,13 +11,18 @@
 
 ## TO DO
 
-- [] [Bug] When the play next item is enabled and the next item is a link, it goes to the link
 - [] Sometimes the extension stuck and the entire browser needs to be reopen
-- [] Add a console error when a new error is pushed within `chrome.runtime.lastError`
-- [] Play <p> elements
+- [] Play raw text within <p> elements when there are others sub-elements within the p tag.
 - [] Estimate time in minutes
+- [] play/pause buttons at the left and showing up on hover
+- [] Control panel including play/pause, rate, voice
 - [] Options page
+  - [] Reset default settings
+  - [] Min words to add play button
+  - [] Skip tags
+  - [] Max elements per page
 - [] Popup page
+- [] Add support for `"file:///*"` like PDF
 - [] Unit tests
 - [] E2E tests (could start by loading the extension, e.g to get error is adding a title within manifest.json)
 - [] Github Actions for E2E tests
