@@ -6,7 +6,7 @@
     "48": "assets/png/text-to-speech.png",
     "128": "assets/png/text-to-speech.png"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "permissions": ["tts", "storage"],
   "action": {
     "default_popup": "./popup/popup.html"
