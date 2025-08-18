@@ -16,17 +16,19 @@
 - [] Estimate time in minutes
 - [] play/pause buttons at the left and showing up on hover
 - [] Control panel including play/pause, rate, voice
+- [] Ignore text elements within <code>
 - [] Options page
   - [] Reset default settings
   - [] Min words to add play button
   - [] Skip tags
   - [] Max elements per page
+  - [] Elements to ignore
 - [] Popup page
 - [] Add support for `"file:///*"` like PDF
-- [] Unit tests
 - [] E2E tests (could start by loading the extension, e.g to get error is adding a title within manifest.json)
-- [] Github Actions for E2E tests
-- [] Improve Analytics security
+- Github Actions
+  - [] E2E tests
+  - [] build
 
 ## E2E tests
 

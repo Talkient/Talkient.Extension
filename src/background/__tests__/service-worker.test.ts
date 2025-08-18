@@ -229,49 +229,6 @@ describe('service-worker.ts', () => {
       });
     });
 
-    describe('GA4_EVENT message', () => {
-      it('should send analytics event when event is provided', async () => {
-        (chrome.storage.local.get as jest.Mock).mockImplementation((keys, cb) =>
-          cb({ ga_client_id: 'test-client-id' })
-        );
-        (chrome.storage.session.get as jest.Mock).mockImplementation(
-          (keys, cb) =>
-            cb({
-              sessionData: {
-                session_id: 'test-session',
-                timestamp: Date.now().toString(),
-              },
-            })
-        );
-
-        const request = {
-          type: 'GA4_EVENT',
-          event: { name: 'button_click', params: { button_name: 'play' } },
-        };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
-        expect(result).toBe(true);
-
-        // Wait for async analytics call - use longer timeout for module reloading
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // The fetch might not be called due to module reset, so let's not assert it
-        // This test verifies the message handler behavior, not the analytics function
-      });
-
-      it('should not send analytics if no event provided', () => {
-        const request = { type: 'GA4_EVENT' }; // Missing event property
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        // Should still return true and not crash
-        expect(result).toBe(true);
-        expect(global.fetch).not.toHaveBeenCalled();
-      });
-    });
-
     describe('unknown message types', () => {
       it('should not respond to unknown message types', () => {
         const request = { type: 'UNKNOWN_MESSAGE' };
@@ -419,97 +376,6 @@ describe('service-worker.ts', () => {
       });
     });
 
-    describe('GA4_EVENT message - additional edge cases', () => {
-      beforeEach(() => {
-        (chrome.storage.local.get as jest.Mock).mockImplementation((keys, cb) =>
-          cb({ ga_client_id: 'test-client-id' })
-        );
-        (chrome.storage.session.get as jest.Mock).mockImplementation(
-          (keys, cb) =>
-            cb({
-              sessionData: {
-                session_id: 'test-session',
-                timestamp: Date.now().toString(),
-              },
-            })
-        );
-      });
-
-      it('should handle event with no params', async () => {
-        const request = {
-          type: 'GA4_EVENT',
-          event: { name: 'simple_event' },
-        };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
-        expect(result).toBe(true);
-
-        // Wait for async analytics call - use longer timeout for module reloading
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // The fetch might not be called due to module reset, so let's not assert it
-        // This test verifies the message handler behavior, not the analytics function
-      });
-
-      it('should handle event with complex params', async () => {
-        const complexParams = {
-          string_param: 'test_value',
-          number_param: 42,
-          boolean_param: true,
-          array_param: [1, 2, 3],
-          object_param: { nested: 'value' },
-        };
-
-        const request = {
-          type: 'GA4_EVENT',
-          event: { name: 'complex_event', params: complexParams },
-        };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
-        expect(result).toBe(true);
-
-        // Wait for async analytics call - use longer timeout for module reloading
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // The fetch might not be called due to module reset, so let's not assert it
-        // This test verifies the message handler behavior, not the analytics function
-      });
-
-      it('should handle empty event name', async () => {
-        const request = {
-          type: 'GA4_EVENT',
-          event: { name: '' },
-        };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
-        expect(result).toBe(true);
-
-        // Wait for async analytics call - use longer timeout for module reloading
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // The fetch might not be called due to module reset, so let's not assert it
-        // This test verifies the message handler behavior, not the analytics function
-      });
-
-      it('should handle malformed event object', () => {
-        const request = {
-          type: 'GA4_EVENT',
-          event: 'not_an_object',
-        };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(result).toBe(true);
-        expect(global.fetch).not.toHaveBeenCalled();
-      });
-    });
-
     describe('TTS event handling - comprehensive coverage', () => {
       let onEvent: any;
 
@@ -615,8 +481,6 @@ describe('service-worker.ts', () => {
         const requests = [
           { type: 'SPEAK_TEXT', text: 'test' },
           { type: 'PAUSE_SPEECH' },
-          { type: 'GA4_EVENT', event: { name: 'test' } },
-          { type: 'GA4_EVENT' },
           { type: 'UNKNOWN_TYPE' },
           {},
         ];
@@ -691,7 +555,6 @@ describe('service-worker.ts', () => {
         const requests = [
           { type: 'SPEAK_TEXT', text: 'test' },
           { type: 'PAUSE_SPEECH' },
-          { type: 'GA4_EVENT', event: { name: 'test' } },
           { type: 'UNKNOWN_MESSAGE' },
         ];
 

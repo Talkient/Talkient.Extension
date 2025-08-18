@@ -191,17 +191,6 @@ export function processTextElements(): void {
         const isPlaying = isSvgPauseIcon(
           playButton.querySelector('svg') as SVGElement
         );
-        chrome.runtime.sendMessage({
-          type: 'GA4_EVENT',
-          event: {
-            name: 'play_pause_clicked',
-            params: {
-              id: 'play-pause-button',
-              page_title: document.title,
-              page_location: document.location.href,
-            },
-          },
-        });
 
         if (isPlaying) {
           // Pause the speech and clear highlighting
