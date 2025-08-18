@@ -75,6 +75,7 @@ export function shouldProcessNode(node: Node): boolean {
     parent.tagName === 'SCRIPT' ||
     parent.tagName === 'STYLE' ||
     parent.tagName === 'BUTTON' ||
+    parent.tagName === 'CODE' ||
     parent.tagName === 'INPUT'
   )
     return false;

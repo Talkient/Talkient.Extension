@@ -152,6 +152,28 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
+  test('should return false for text nodes in code tags', () => {
+    const code = document.createElement('code');
+    const textNode = document.createTextNode('console.log("hello world")');
+    code.appendChild(textNode);
+    container.appendChild(code);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return false for text nodes in nested code tags', () => {
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    const textNode = document.createTextNode(
+      'function example() {\n  return "test";\n}'
+    );
+    code.appendChild(textNode);
+    pre.appendChild(code);
+    container.appendChild(pre);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
   test('should return false if parent already has a play button', () => {
     const div = document.createElement('div');
     const textNode = document.createTextNode('This is a test');

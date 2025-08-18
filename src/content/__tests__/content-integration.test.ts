@@ -27,6 +27,89 @@ const mockChrome = {
 // Assign mock to global chrome
 (global as any).chrome = mockChrome;
 
+describe('Content Script Element Processing Integration', () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    // Set up DOM
+    document.body.innerHTML = '';
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Reset mocks
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test('should not add play buttons to code elements during processing', () => {
+    // Create a mixed content scenario with regular text and code
+    const paragraph = document.createElement('p');
+    paragraph.textContent =
+      'Here is some regular text that should get a play button.';
+    container.appendChild(paragraph);
+
+    const codeBlock = document.createElement('code');
+    codeBlock.textContent = 'console.log("this code should not get a button");';
+    container.appendChild(codeBlock);
+
+    const preWithCode = document.createElement('pre');
+    const nestedCode = document.createElement('code');
+    nestedCode.textContent = 'function test() {\n  return "nested code";\n}';
+    preWithCode.appendChild(nestedCode);
+    container.appendChild(preWithCode);
+
+    const anotherParagraph = document.createElement('p');
+    anotherParagraph.textContent =
+      'More regular text that should also get a play button.';
+    container.appendChild(anotherParagraph);
+
+    // Import the processTextElements function and test it
+    const { processTextElements } = require('../content-lib');
+
+    // Mock requestAnimationFrame for synchronous processing
+    const originalRAF = global.requestAnimationFrame;
+    global.requestAnimationFrame = jest.fn((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    // Process all text elements
+    processTextElements();
+
+    // Restore original requestAnimationFrame
+    global.requestAnimationFrame = originalRAF;
+
+    // Check that regular paragraphs have play buttons
+    const processedParagraphs = container.querySelectorAll(
+      'p .talkient-play-button'
+    );
+    expect(processedParagraphs.length).toBe(2); // Two paragraphs should have buttons
+
+    // Check that code elements do NOT have play buttons
+    const codePlayButtons = container.querySelectorAll(
+      'code .talkient-play-button'
+    );
+    expect(codePlayButtons.length).toBe(0); // No code elements should have buttons
+
+    // Check that pre elements do NOT have play buttons
+    const prePlayButtons = container.querySelectorAll(
+      'pre .talkient-play-button'
+    );
+    expect(prePlayButtons.length).toBe(0); // No pre elements should have buttons
+
+    // Verify code content is still intact
+    expect(codeBlock.textContent).toBe(
+      'console.log("this code should not get a button");'
+    );
+    expect(nestedCode.textContent).toBe(
+      'function test() {\n  return "nested code";\n}'
+    );
+  });
+});
+
 describe('Content Script Auto-Play Integration', () => {
   let container: HTMLDivElement;
 
