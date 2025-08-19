@@ -25,5 +25,7 @@
     onMessage: {
       addListener: jest.fn(),
     },
+    openOptionsPage: jest.fn(),
+    lastError: undefined,
   },
 };

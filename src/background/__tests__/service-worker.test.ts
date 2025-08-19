@@ -229,6 +229,36 @@ describe('service-worker.ts', () => {
       });
     });
 
+    describe('OPEN_OPTIONS message', () => {
+      it('should open options page and respond with success', () => {
+        const request = { type: 'OPEN_OPTIONS' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+        expect(result).toBe(true);
+      });
+
+      it('should handle error when opening options page fails', () => {
+        const request = { type: 'OPEN_OPTIONS' };
+        const mockError = { message: 'Failed to open options page' };
+        chrome.runtime.lastError = mockError;
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: mockError,
+        });
+        expect(result).toBe(true);
+
+        // Clean up
+        chrome.runtime.lastError = undefined;
+      });
+    });
+
     describe('unknown message types', () => {
       it('should not respond to unknown message types', () => {
         const request = { type: 'UNKNOWN_MESSAGE' };

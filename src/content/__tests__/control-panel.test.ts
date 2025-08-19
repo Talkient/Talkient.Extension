@@ -13,7 +13,12 @@ const mockChrome = {
     onMessage: {
       addListener: jest.fn(),
     },
-    sendMessage: jest.fn(),
+    sendMessage: jest.fn((message, callback) => {
+      // Mock successful response for OPEN_OPTIONS
+      if (message.type === 'OPEN_OPTIONS') {
+        callback({ success: true });
+      }
+    }),
     lastError: null,
   },
   storage: {
@@ -100,6 +105,40 @@ describe('Control Panel Module', () => {
       const slider = panel?.querySelector('.talkient-rate-slider');
       expect(slider).toBeTruthy();
       expect((slider as HTMLInputElement)?.disabled).toBe(true);
+    });
+
+    it('should enable settings button by default', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel');
+      const settingsBtn = panel?.querySelector(
+        '.talkient-control-btn.settings'
+      ) as HTMLButtonElement;
+
+      expect(settingsBtn).toBeTruthy();
+      expect(settingsBtn.disabled).toBe(false);
+    });
+
+    it('should create panel collapsed by default', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel');
+      const content = panel?.querySelector(
+        '.talkient-panel-content'
+      ) as HTMLElement;
+      const toggleBtn = panel?.querySelector(
+        '.talkient-panel-toggle'
+      ) as HTMLButtonElement;
+
+      expect(panel).toBeTruthy();
+      expect(content).toBeTruthy();
+      expect(toggleBtn).toBeTruthy();
+
+      // Should be collapsed by default
+      expect(content.style.display).toBe('none');
+      expect(toggleBtn.textContent).toBe('+');
+      expect(toggleBtn.title).toBe('Expand panel');
+      expect(panel?.classList.contains('talkient-collapsed')).toBe(true);
     });
   });
 
@@ -203,12 +242,7 @@ describe('Control Panel Module', () => {
       expect(toggleBtn).toBeTruthy();
       expect(content).toBeTruthy();
 
-      // Initial state - expanded
-      expect(content.style.display).not.toBe('none');
-      expect(toggleBtn.textContent).toBe('−');
-
-      // Click to collapse
-      toggleBtn.click();
+      // Initial state - collapsed by default
       expect(content.style.display).toBe('none');
       expect(toggleBtn.textContent).toBe('+');
       expect(panel?.classList.contains('talkient-collapsed')).toBe(true);
@@ -218,6 +252,12 @@ describe('Control Panel Module', () => {
       expect(content.style.display).toBe('block');
       expect(toggleBtn.textContent).toBe('−');
       expect(panel?.classList.contains('talkient-collapsed')).toBe(false);
+
+      // Click to collapse
+      toggleBtn.click();
+      expect(content.style.display).toBe('none');
+      expect(toggleBtn.textContent).toBe('+');
+      expect(panel?.classList.contains('talkient-collapsed')).toBe(true);
     });
 
     it('should set up drag functionality', () => {
@@ -261,6 +301,71 @@ describe('Control Panel Module', () => {
 
       // Cursor should remain grab (not change to grabbing)
       expect(header.style.cursor).toBe('grab');
+    });
+  });
+
+  describe('Settings Button Functionality', () => {
+    beforeEach(() => {
+      createControlPanel();
+      jest.clearAllMocks();
+    });
+
+    it('should send OPEN_OPTIONS message when settings button is clicked', () => {
+      const panel = document.getElementById('talkient-control-panel');
+      const settingsBtn = panel?.querySelector(
+        '.talkient-control-btn.settings'
+      ) as HTMLButtonElement;
+
+      expect(settingsBtn).toBeTruthy();
+      expect(settingsBtn.disabled).toBe(false);
+
+      settingsBtn.click();
+
+      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledTimes(1);
+      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
+        { type: 'OPEN_OPTIONS' },
+        expect.any(Function)
+      );
+    });
+
+    it('should handle response from background script', () => {
+      // Mock sendMessage to simulate background script response
+      const mockCallback = jest.fn();
+      mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
+        if (message.type === 'OPEN_OPTIONS') {
+          callback({ success: true });
+        }
+      });
+
+      const panel = document.getElementById('talkient-control-panel');
+      const settingsBtn = panel?.querySelector(
+        '.talkient-control-btn.settings'
+      ) as HTMLButtonElement;
+
+      expect(settingsBtn).toBeTruthy();
+
+      settingsBtn.click();
+
+      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
+        { type: 'OPEN_OPTIONS' },
+        expect.any(Function)
+      );
+    });
+
+    it('should have settings button enabled and clickable', () => {
+      const panel = document.getElementById('talkient-control-panel');
+      const settingsBtn = panel?.querySelector(
+        '.talkient-control-btn.settings'
+      ) as HTMLButtonElement;
+
+      expect(settingsBtn).toBeTruthy();
+      expect(settingsBtn.disabled).toBe(false);
+      expect(settingsBtn.title).toBe('Settings');
+
+      // Verify it has the correct SVG icon
+      const icon = settingsBtn.querySelector('.talkient-control-icon');
+      expect(icon).toBeTruthy();
+      expect(icon?.tagName.toLowerCase()).toBe('svg');
     });
   });
 });

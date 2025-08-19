@@ -12,6 +12,7 @@
 
 ## TO DO
 
+- [] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [] Sometimes the extension stuck and the entire browser needs to be reopen
 - [] Play raw text within <p> elements when there are others sub-elements within the p tag.
 - [] Estimate time in minutes
@@ -19,6 +20,7 @@
 - [] Button to remove Talkient in the current page
 - [] play/pause buttons at the left and showing up on hover
 - [] Control panel including play/pause, rate, voice
+- [] Restart the current audio
 - [] Ignore text elements within <code>
 - [] Options page
   - [] Reset default settings

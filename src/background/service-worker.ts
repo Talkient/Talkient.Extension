@@ -148,6 +148,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       );
     }
     sendResponse({ success: true });
+  } else if (request.type === 'OPEN_OPTIONS') {
+    console.log('[Talkient.SW] Opening options page...');
+    chrome.runtime.openOptionsPage();
+    if (chrome.runtime.lastError) {
+      console.error(
+        '[Talkient.SW] Error opening options page:',
+        chrome.runtime.lastError
+      );
+      sendResponse({ success: false, error: chrome.runtime.lastError });
+    } else {
+      sendResponse({ success: true });
+    }
   } else console.warn(`[Talkient.SW] Event ${request.type} not implemented`);
 
   return true;
