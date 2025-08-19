@@ -12,6 +12,12 @@ import {
 } from './highlight';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from './icons';
+import {
+  createControlPanel,
+  removeControlPanel,
+  isControlPanelVisible,
+  toggleControlPanel,
+} from './control-panel';
 
 // Re-export highlighting functions for backward compatibility
 export {
@@ -22,6 +28,14 @@ export {
   getCurrentHighlightedElement,
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
+};
+
+// Re-export control panel functions
+export {
+  createControlPanel,
+  removeControlPanel,
+  isControlPanelVisible,
+  toggleControlPanel,
 };
 
 // Utility function to safely click on elements without triggering parent events (like link navigation)
@@ -85,6 +99,10 @@ export function shouldProcessNode(node: Node): boolean {
 
   // Skip if parent is already processed
   if (parent.classList.contains('talkient-processed')) return false;
+
+  // Skip if node is inside the control panel
+  const controlPanel = parent.closest('#talkient-control-panel');
+  if (controlPanel) return false;
 
   return true;
 }

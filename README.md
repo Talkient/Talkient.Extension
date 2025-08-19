@@ -15,6 +15,8 @@
 - [] Sometimes the extension stuck and the entire browser needs to be reopen
 - [] Play raw text within <p> elements when there are others sub-elements within the p tag.
 - [] Estimate time in minutes
+- [] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
+- [] Button to remove Talkient in the current page
 - [] play/pause buttons at the left and showing up on hover
 - [] Control panel including play/pause, rate, voice
 - [] Ignore text elements within <code>
@@ -24,6 +26,7 @@
   - [] Skip tags
   - [] Max elements per page
   - [] Elements to ignore
+  - [] Follow scroll
 - [] Popup page
 - [] Add support for `"file:///*"` like PDF
 - [] E2E tests (could start by loading the extension, e.g to get error is adding a title within manifest.json)

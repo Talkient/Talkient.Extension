@@ -9,6 +9,7 @@ import {
   getCurrentHighlightedElement,
   findNextTextElement,
   safeClickButton,
+  createControlPanel,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -63,6 +64,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Load highlight style from storage
 loadHighlightStyleFromStorage();
+
+// Create and inject the control panel
+createControlPanel();
 
 // Listen for storage changes to update highlight style in real-time
 chrome.storage.onChanged.addListener((changes, namespace) => {

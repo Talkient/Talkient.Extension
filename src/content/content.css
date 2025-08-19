@@ -15,6 +15,255 @@
     Cantarell, sans-serif;
 }
 
+/* Talkient Control Panel */
+#talkient-control-panel {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  z-index: 999999;
+  background: rgba(26, 32, 44, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  box-shadow:
+    0 15px 30px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  width: 120px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.talkient-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  user-select: none; /* Prevent text selection during drag */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.talkient-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: #f7fafc;
+  pointer-events: none; /* Prevent title from interfering with drag */
+}
+
+.talkient-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.talkient-panel-toggle,
+.talkient-panel-close {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.talkient-panel-toggle:hover,
+.talkient-panel-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.talkient-panel-content {
+  transition: all 0.3s ease;
+}
+
+.talkient-collapsed .talkient-panel-header {
+  margin-bottom: 0;
+}
+
+.talkient-control-section {
+  margin-bottom: 12px;
+}
+
+.talkient-section-title {
+  font-size: 10px;
+  font-weight: 500;
+  color: #a0aec0;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.talkient-main-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.talkient-control-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  opacity: 0.5;
+  cursor: not-allowed;
+  min-height: 32px;
+}
+
+.talkient-control-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.talkient-control-btn:active {
+  transform: translateY(0);
+}
+
+.talkient-control-btn.primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+}
+
+.talkient-control-btn.settings {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2d3748;
+  box-shadow: 0 4px 12px rgba(168, 237, 234, 0.3);
+}
+
+.talkient-control-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.talkient-speech-rate {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.talkient-rate-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.talkient-rate-label {
+  font-size: 12px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.talkient-rate-value {
+  font-size: 12px;
+  color: #4facfe;
+  font-weight: 600;
+  background: rgba(79, 172, 254, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.talkient-rate-slider {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.talkient-rate-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+  cursor: pointer;
+}
+
+.talkient-rate-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+  cursor: pointer;
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  #talkient-control-panel {
+    background: rgba(255, 255, 255, 0.95);
+    color: #2d3748;
+    box-shadow:
+      0 15px 30px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    width: 120px;
+  }
+  .talkient-panel-title {
+    color: #2d3748;
+  }
+
+  .talkient-panel-close {
+    color: #718096;
+  }
+
+  .talkient-panel-toggle:hover,
+  .talkient-panel-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #2d3748;
+  }
+
+  .talkient-section-title {
+    color: #718096;
+  }
+
+  .talkient-speech-rate {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .talkient-rate-label {
+    color: #4a5568;
+  }
+
+  .talkient-rate-slider {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+
 /* Text highlighting styles */
 .talkient-highlighted {
   background: linear-gradient(
