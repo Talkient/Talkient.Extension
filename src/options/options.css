@@ -132,6 +132,23 @@ input:checked + .toggle-slider:before {
   min-width: 200px;
 }
 
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+input[type='number'] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 14px;
+  color: #333;
+  width: 80px;
+}
+
 input[type='range'] {
   flex: 1;
   height: 4px;

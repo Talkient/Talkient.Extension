@@ -21,6 +21,7 @@ describe('options.ts - using actual HTML', () => {
   let rateValue: HTMLSpanElement;
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
+  let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -46,6 +47,9 @@ describe('options.ts - using actual HTML', () => {
     autoPlayNextToggle = document.getElementById(
       'auto-play-next-toggle'
     ) as HTMLInputElement;
+    minimumWordsInput = document.getElementById(
+      'minimum-words-input'
+    ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -56,6 +60,7 @@ describe('options.ts - using actual HTML', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
+          minimumWords: 2,
         });
       }
     );
@@ -149,6 +154,7 @@ describe('options.ts - using actual HTML', () => {
           'speechPitch',
           'highlightStyle',
           'autoPlayNext',
+          'minimumWords',
         ],
         expect.any(Function)
       );

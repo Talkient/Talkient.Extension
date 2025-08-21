@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const autoPlayNextToggle = document.getElementById(
     'auto-play-next-toggle'
   ) as HTMLInputElement;
+  const minimumWordsInput = document.getElementById(
+    'minimum-words-input'
+  ) as HTMLInputElement;
 
   if (
     !voiceSelect ||
@@ -22,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     !highlightStyleSelect ||
     !rateValue ||
     !pitchValue ||
-    !autoPlayNextToggle
+    !autoPlayNextToggle ||
+    !minimumWordsInput
   )
     return;
 
@@ -34,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'speechPitch',
       'highlightStyle',
       'autoPlayNext',
+      'minimumWords',
     ],
     (result) => {
       const selectedVoice =
@@ -50,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
           : 'default';
       const autoPlayNext =
         typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
+      const minimumWords =
+        typeof result.minimumWords === 'number' ? result.minimumWords : 2;
 
       populateVoices(selectedVoice);
 
@@ -66,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set auto play next toggle
       autoPlayNextToggle.checked = autoPlayNext;
+
+      // Set minimum words input
+      minimumWordsInput.value = minimumWords.toString();
     }
   );
 
@@ -114,6 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Auto play next item setting saved!', 'success');
+  });
+
+  // Save minimum words setting to storage
+  minimumWordsInput.addEventListener('input', () => {
+    const minimumWords = parseInt(minimumWordsInput.value);
+    chrome.storage.local.set({ minimumWords });
+
+    // Show a brief status message
+    showStatus('Minimum words setting saved!', 'success');
   });
 });
 

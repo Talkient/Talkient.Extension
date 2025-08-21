@@ -22,6 +22,7 @@ describe('options.ts', () => {
   let rateValue: HTMLSpanElement;
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
+  let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -50,6 +51,9 @@ describe('options.ts', () => {
     autoPlayNextToggle = document.getElementById(
       'auto-play-next-toggle'
     ) as HTMLInputElement;
+    minimumWordsInput = document.getElementById(
+      'minimum-words-input'
+    ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -60,6 +64,7 @@ describe('options.ts', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
+          minimumWords: 2,
         });
       }
     );
@@ -111,6 +116,7 @@ describe('options.ts', () => {
       expect(highlightStyleSelect).toBeTruthy();
       expect(rateValue).toBeTruthy();
       expect(pitchValue).toBeTruthy();
+      expect(minimumWordsInput).toBeTruthy();
     });
 
     it('should have correct slider attributes from HTML', () => {
@@ -164,6 +170,7 @@ describe('options.ts', () => {
           'speechPitch',
           'highlightStyle',
           'autoPlayNext',
+          'minimumWords',
         ],
         expect.any(Function)
       );
