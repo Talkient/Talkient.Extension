@@ -14,7 +14,6 @@
 
 - [] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [] Sometimes the extension stuck and the entire browser needs to be reopen
-- [] Play raw text within <p> elements when there are others sub-elements within the p tag.
 - [] Estimate time in minutes
 - [] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
 - [] Button to remove Talkient in the current page

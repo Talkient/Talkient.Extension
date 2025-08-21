@@ -94,11 +94,37 @@ export function shouldProcessNode(node: Node): boolean {
   )
     return false;
 
-  // Skip if parent or any ancestor already has a play button
-  if (parent.querySelector('.talkient-play-button')) return false;
+  // Skip if the node itself already has a play button directly attached to it
+  // This handles the case where a text node has been wrapped with a span + button
+  const nextSibling = node.nextSibling;
+  if (
+    nextSibling &&
+    nextSibling instanceof HTMLElement &&
+    nextSibling.classList.contains('talkient-play-button')
+  ) {
+    return false;
+  }
 
   // Skip if parent is already processed
   if (parent.classList.contains('talkient-processed')) return false;
+
+  // Skip if parent's direct children contain a play button for this specific text node
+  // But allow other text nodes in the same parent to be processed
+  const isDirectlyNextToButton = Array.from(parent.childNodes).some(
+    (childNode, index, array) => {
+      if (childNode === node) {
+        const nextNode = array[index + 1];
+        return (
+          nextNode &&
+          nextNode instanceof HTMLElement &&
+          nextNode.classList.contains('talkient-play-button')
+        );
+      }
+      return false;
+    }
+  );
+
+  if (isDirectlyNextToButton) return false;
 
   // Skip if node is inside the control panel
   const controlPanel = parent.closest('#talkient-control-panel');
@@ -191,6 +217,19 @@ export function processTextElements(): void {
 
       // Skip if already processed
       if (processedNodes.has(textNode)) continue;
+
+      // Skip if the parent of the text node is already processed
+      const parentEl = textNode.parentElement;
+      if (parentEl && parentEl.classList.contains('talkient-processed'))
+        continue;
+
+      // Skip if direct parent is a span that already has a play button
+      if (
+        parentEl &&
+        parentEl.tagName === 'SPAN' &&
+        parentEl.querySelector('.talkient-play-button')
+      )
+        continue;
 
       // Create a wrapper span if the text node is not already wrapped
       const wrapper = document.createElement('span');
