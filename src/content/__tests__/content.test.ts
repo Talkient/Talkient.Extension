@@ -5,6 +5,7 @@ import {
   highlightText,
   clearHighlight,
   getCurrentHighlightedElement,
+  loadMinimumWordsFromStorage,
 } from '../content-lib';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
@@ -83,9 +84,12 @@ describe('createPlayButton', () => {
 describe('shouldProcessNode', () => {
   let container: HTMLDivElement;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
+
+    // Load minimum words setting
+    await loadMinimumWordsFromStorage();
   });
 
   afterEach(() => {
@@ -207,9 +211,10 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should return true for text nodes with multiple characters', () => {
+  test('should return true for text nodes with multiple characters', async () => {
     const div = document.createElement('div');
-    const textNode = document.createTextNode('ab');
+    // Use three words to satisfy the minimum words requirement
+    const textNode = document.createTextNode('three words here');
     div.appendChild(textNode);
     container.appendChild(div);
 

@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const autoPlayNext =
         typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
       const minimumWords =
-        typeof result.minimumWords === 'number' ? result.minimumWords : 2;
+        typeof result.minimumWords === 'number' ? result.minimumWords : 3;
 
       populateVoices(selectedVoice);
 

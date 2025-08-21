@@ -10,6 +10,8 @@ import {
   findNextTextElement,
   safeClickButton,
   createControlPanel,
+  loadMinimumWordsFromStorage,
+  setMinimumWords,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -65,17 +67,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Load highlight style from storage
 loadHighlightStyleFromStorage();
 
+// Load minimum words setting from storage
+loadMinimumWordsFromStorage();
+
 // Create and inject the control panel
 createControlPanel();
 
 // Listen for storage changes to update highlight style in real-time
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.highlightStyle) {
-    const newStyle = changes.highlightStyle.newValue;
-    if (newStyle && typeof newStyle === 'string') {
-      setHighlightingStyle(
-        newStyle as 'default' | 'minimal' | 'bold' | 'elegant'
-      );
+  if (namespace === 'local') {
+    if (changes.highlightStyle) {
+      const newStyle = changes.highlightStyle.newValue;
+      if (newStyle && typeof newStyle === 'string') {
+        setHighlightingStyle(
+          newStyle as 'default' | 'minimal' | 'bold' | 'elegant'
+        );
+      }
+    }
+
+    if (changes.minimumWords) {
+      const newMinWords = changes.minimumWords.newValue;
+      if (typeof newMinWords === 'number') {
+        // Update the cached value
+        setMinimumWords(newMinWords);
+        console.log(
+          `[Talkient] Minimum words setting updated to: ${newMinWords}`
+        );
+        // Re-process text elements to apply the new setting
+        processTextElements();
+      }
     }
   }
 });

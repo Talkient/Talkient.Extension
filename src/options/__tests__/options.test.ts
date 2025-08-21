@@ -64,7 +64,7 @@ describe('options.ts', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
-          minimumWords: 2,
+          minimumWords: 3,
         });
       }
     );

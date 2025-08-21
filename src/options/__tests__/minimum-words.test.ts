@@ -36,7 +36,7 @@ describe('Minimum words setting', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
-          minimumWords: 2, // Default value
+          minimumWords: 3, // Default value
         });
       }
     );
@@ -95,10 +95,10 @@ describe('Minimum words setting', () => {
         expect.any(Function)
       );
 
-      expect(minimumWordsInput.value).toBe('2');
+      expect(minimumWordsInput.value).toBe('3');
     });
 
-    it('should default to 2 when minimum words is not stored', async () => {
+    it('should default to 3 when minimum words is not stored', async () => {
       // Mock storage with missing minimum words setting
       (chrome.storage.local.get as jest.Mock).mockImplementation(
         (keys, callback) => {
@@ -121,7 +121,7 @@ describe('Minimum words setting', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(minimumWordsInput.value).toBe('2');
+      expect(minimumWordsInput.value).toBe('3');
     });
   });
 

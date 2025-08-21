@@ -71,6 +71,33 @@ export function createPlayButton(): HTMLButtonElement {
   return button;
 }
 
+// Cache for settings
+let minimumWordsCache = 3; // Default minimum words
+
+// Load minimum words setting from storage
+export function loadMinimumWordsFromStorage(): Promise<number> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['minimumWords'], (result) => {
+      minimumWordsCache =
+        typeof result.minimumWords === 'number' ? result.minimumWords : 3;
+      console.log(
+        `[Talkient] Loaded minimum words setting: ${minimumWordsCache}`
+      );
+      resolve(minimumWordsCache);
+    });
+  });
+}
+
+// Get the current minimum words setting
+export function getMinimumWords(): number {
+  return minimumWordsCache;
+}
+
+// Set the minimum words setting (used when it changes in storage)
+export function setMinimumWords(value: number): void {
+  minimumWordsCache = value;
+}
+
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
   // Skip if node is null or not a text node
@@ -79,6 +106,12 @@ export function shouldProcessNode(node: Node): boolean {
   // Skip if text is empty or just whitespace
   const text = node.textContent?.trim();
   if (!text || text.length < 2) return false;
+
+  // Count words in text
+  const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
+
+  // Skip if text doesn't have enough words
+  if (wordCount < minimumWordsCache) return false;
 
   // Skip if parent is null
   const parent = node.parentElement;
