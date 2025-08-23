@@ -61,6 +61,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }, 500);
       }
     }
+  } else if (
+    message.type === 'SPEECH_CANCELLED' ||
+    message.type === 'SPEECH_ERROR'
+  ) {
+    // Handle speech cancellation or errors by resetting UI
+    console.warn(
+      `[Talkient] Speech ${message.type === 'SPEECH_CANCELLED' ? 'cancelled' : 'error'}: `,
+      message
+    );
+
+    // Reset all play buttons to their initial state
+    document.querySelectorAll('.talkient-play-button').forEach((button) => {
+      if (button instanceof HTMLButtonElement) {
+        button.innerHTML = getSvgIcon('play');
+      }
+    });
+
+    // Clear text highlighting
+    clearHighlight();
+
+    if (message.type === 'SPEECH_ERROR') {
+      // Show a small notification about the error (optional)
+      console.error('[Talkient] Speech error occurred:', message.error);
+    }
   } else if (message.type === 'RELOAD_PLAY_BUTTONS') {
     // Check if play buttons are enabled before processing
     chrome.storage.local.get(['playButtonsEnabled'], (result) => {
@@ -79,6 +103,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
     return true; // Keep the message channel open for the async response
+  } else {
+    console.log('[Talkient] Message received but skipped.');
   }
 
   return true; // Keep the message channel open for async responses

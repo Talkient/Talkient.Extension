@@ -371,4 +371,83 @@ describe('Content Script Message Handling', () => {
     expect(isSvgPauseIcon(svg as SVGElement)).toBe(true);
     expect(getCurrentHighlightedElement()).toBe(testElement);
   });
+
+  test('should handle SPEECH_CANCELLED message correctly', () => {
+    // Simulate highlighting
+    const testElement = document.createElement('span');
+    testElement.textContent = 'Test content';
+    container.appendChild(testElement);
+    highlightText(testElement);
+
+    // Import content script
+    require('../content');
+
+    // Get the registered message listener
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    // Need to mock the getCurrentHighlightedElement function
+    // since it's not actually changing the highlight in the test environment
+    jest
+      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .mockReturnValue(null);
+
+    // Simulate SPEECH_CANCELLED message
+    const message = { type: 'SPEECH_CANCELLED' };
+    messageListener(message, {}, jest.fn());
+
+    // Check that play button is reset to play icon
+    const svg = playButton.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
+
+    // In a real environment, highlighting would be cleared
+    // but we can't check that directly in the test since it's mocked
+    expect(testElement.classList.contains('talkient-highlighted')).toBe(false);
+  });
+
+  test('should handle SPEECH_ERROR message correctly', () => {
+    // Simulate highlighting
+    const testElement = document.createElement('span');
+    testElement.textContent = 'Test content';
+    container.appendChild(testElement);
+    highlightText(testElement);
+
+    // Spy on console.error
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    // Import content script
+    require('../content');
+
+    // Need to mock the getCurrentHighlightedElement function
+    // since it's not actually changing the highlight in the test environment
+    jest
+      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .mockReturnValue(null);
+
+    // Get the registered message listener
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    // Simulate SPEECH_ERROR message
+    const message = { type: 'SPEECH_ERROR', error: 'Test error' };
+    messageListener(message, {}, jest.fn());
+
+    // Check that play button is reset to play icon
+    const svg = playButton.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
+
+    // In a real environment, highlighting would be cleared
+    // but we can't check that directly in the test since it's mocked
+    expect(testElement.classList.contains('talkient-highlighted')).toBe(false);
+
+    // Check that error was logged
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[Talkient] Speech error occurred:',
+      'Test error'
+    );
+
+    consoleSpy.mockRestore();
+  });
 });
