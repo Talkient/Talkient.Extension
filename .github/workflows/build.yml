@@ -41,7 +41,7 @@ jobs:
         run: pnpm install
 
       - name: Build project
-        run: pnpm publish
+        run: pnpm run publish
 
       - name: Get version from package.json
         id: package-version
