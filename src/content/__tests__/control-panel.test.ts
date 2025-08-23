@@ -101,6 +101,18 @@ describe('Control Panel Module', () => {
       expect(playBtn).toBeTruthy();
       expect(settingsBtn).toBeTruthy();
 
+      // Check script control buttons
+      const scriptControlsSection = panel?.querySelector(
+        '.talkient-control-section:nth-child(2)'
+      );
+      expect(scriptControlsSection).toBeTruthy();
+
+      // Check for toggle switch instead of reload/remove buttons
+      const toggleSwitch = panel?.querySelector('.talkient-toggle-switch');
+      const toggleInput = panel?.querySelector('.talkient-toggle-input');
+      expect(toggleSwitch).toBeTruthy();
+      expect(toggleInput).toBeTruthy();
+
       // Check slider
       const slider = panel?.querySelector('.talkient-rate-slider');
       expect(slider).toBeTruthy();

@@ -16,11 +16,10 @@
 - [] Sometimes the extension stuck and the entire browser needs to be reopen
 - [] Estimate time in minutes
 - [] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
-- [] Button to remove Talkient in the current page
+- [] Button to remove Talkient in the current page (turn on/off)
 - [] play/pause buttons at the left and showing up on hover
 - [] Control panel including play/pause, rate, voice
 - [] Restart the current audio
-- [] Ignore text elements within <code>
 - [] Options page
   - [] Reset default settings
   - [] Min words to add play button

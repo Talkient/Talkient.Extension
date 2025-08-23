@@ -226,6 +226,110 @@
   cursor: pointer;
 }
 
+/* Script control buttons */
+.talkient-script-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center; /* Center the toggle switch horizontally */
+}
+
+/* Toggle Switch Styles */
+.talkient-toggle-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the toggle switch horizontally */
+  width: 100%;
+  cursor: pointer;
+}
+
+.talkient-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.talkient-toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.talkient-toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 1px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.talkient-toggle-input:checked + .talkient-toggle-slider {
+  background-color: #4facfe;
+}
+
+.talkient-toggle-input:checked + .talkient-toggle-slider:before {
+  transform: translateX(16px);
+}
+
+.talkient-toggle-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  user-select: none;
+}
+
+.talkient-script-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.talkient-script-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.talkient-script-btn:active {
+  transform: translateY(0);
+}
+
+.talkient-script-btn .talkient-control-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.talkient-script-btn.reload {
+  color: #4facfe;
+}
+
+.talkient-script-btn.remove {
+  color: #fc8181;
+}
+
 /* Light mode support */
 @media (prefers-color-scheme: light) {
   #talkient-control-panel {
@@ -266,6 +370,42 @@
 
   .talkient-rate-slider {
     background: rgba(0, 0, 0, 0.1);
+  }
+
+  .talkient-script-btn {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #2d3748;
+  }
+
+  .talkient-script-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .talkient-script-btn.reload {
+    color: #3182ce;
+  }
+
+  .talkient-script-btn.remove {
+    color: #e53e3e;
+  }
+
+  /* Light mode toggle switch */
+  .talkient-toggle-slider {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .talkient-toggle-slider:before {
+    background-color: #2d3748;
+  }
+
+  .talkient-toggle-input:checked + .talkient-toggle-slider {
+    background-color: #3182ce;
+  }
+
+  .talkient-toggle-label {
+    color: #2d3748;
   }
 }
 

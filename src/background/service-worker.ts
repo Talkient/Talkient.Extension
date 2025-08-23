@@ -160,6 +160,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else {
       sendResponse({ success: true });
     }
+  } else if (request.type === 'RELOAD_PLAY_BUTTONS') {
+    console.log('[Talkient.SW] Reloading play buttons...');
+    // Forward the request to the content script
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { type: 'RELOAD_PLAY_BUTTONS' },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                '[Talkient.SW] Error sending reload message:',
+                chrome.runtime.lastError
+              );
+              sendResponse({ success: false, error: chrome.runtime.lastError });
+            } else {
+              sendResponse({ success: true });
+            }
+          }
+        );
+      } else {
+        sendResponse({ success: false, error: 'No active tab found' });
+      }
+    });
   } else console.warn(`[Talkient.SW] Event ${request.type} not implemented`);
 
   return true;

@@ -42,6 +42,16 @@ export function createControlPanel(): void {
           </button>
         </div>
       </div>
+      
+      <div class="talkient-control-section">
+        <div class="talkient-section-title">Talkient Scripts</div>
+        <div class="talkient-script-controls">
+          <label class="talkient-toggle-switch">
+            <input type="checkbox" class="talkient-toggle-input" checked>
+            <span class="talkient-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
 
       <div class="talkient-control-section">
         <div class="talkient-section-title">Speech Rate</div>
@@ -85,6 +95,7 @@ function setupControlPanelEventListeners(panel: HTMLElement): void {
   setupCloseButton(panel);
   setupToggleButton(panel);
   setupSettingsButton(panel);
+  setupScriptControlButtons(panel);
   setupDragFunctionality(panel);
 }
 
@@ -151,6 +162,86 @@ function setupSettingsButton(panel: HTMLElement): void {
       }
     });
   });
+}
+
+/**
+ * Sets up the play buttons toggle switch functionality
+ */
+function setupScriptControlButtons(panel: HTMLElement): void {
+  // Setup toggle switch
+  const toggleInput = panel.querySelector(
+    '.talkient-toggle-input'
+  ) as HTMLInputElement;
+
+  // Load the current state from storage
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+    // Default to true if not set
+    const isEnabled = result.playButtonsEnabled !== false;
+    toggleInput.checked = isEnabled;
+
+    // Apply initial state
+    if (!isEnabled) {
+      removeAllPlayButtons();
+    }
+  });
+
+  toggleInput?.addEventListener('change', () => {
+    const isEnabled = toggleInput.checked;
+
+    // Save the state to storage
+    chrome.storage.local.set({ playButtonsEnabled: isEnabled });
+
+    if (isEnabled) {
+      // Remove existing buttons and re-add them
+      removeAllPlayButtons();
+
+      // Re-process text elements to add new play buttons
+      chrome.runtime.sendMessage(
+        { type: 'RELOAD_PLAY_BUTTONS' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(
+              '[Talkient.Content] Error sending RELOAD_PLAY_BUTTONS message:',
+              chrome.runtime.lastError
+            );
+          } else {
+            console.log(
+              '[Talkient.Content] Play buttons enabled and loaded successfully'
+            );
+          }
+        }
+      );
+    } else {
+      // Remove all play buttons without re-adding them
+      removeAllPlayButtons();
+      console.log('[Talkient.Content] Play buttons disabled and removed');
+    }
+  });
+}
+
+/**
+ * Removes all play buttons from the page
+ */
+function removeAllPlayButtons(): void {
+  // Remove all processed elements
+  const processedElements = document.querySelectorAll('.talkient-processed');
+  processedElements.forEach((element) => {
+    // Get the text content
+    const textContent = element.textContent || '';
+
+    // Create a text node with the original content
+    const textNode = document.createTextNode(textContent.replace(/\s*$/, ''));
+
+    // Replace the processed element with the original text node
+    if (element.parentNode) {
+      element.parentNode.insertBefore(textNode, element);
+      element.remove();
+    }
+  });
+
+  // Remove all play buttons that might not be in processed elements
+  const playButtons = document.querySelectorAll('.talkient-play-button');
+  playButtons.forEach((button) => button.remove());
 }
 
 /**

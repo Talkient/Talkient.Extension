@@ -61,7 +61,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }, 500);
       }
     }
+  } else if (message.type === 'RELOAD_PLAY_BUTTONS') {
+    // Check if play buttons are enabled before processing
+    chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+      // Default to true if not set
+      const isEnabled = result.playButtonsEnabled !== false;
+
+      if (isEnabled) {
+        // Process text elements to re-add play buttons
+        processTextElements();
+        sendResponse({ success: true });
+      } else {
+        console.log(
+          '[Talkient] Play buttons are disabled. Skipping processing.'
+        );
+        sendResponse({ success: false, disabled: true });
+      }
+    });
+    return true; // Keep the message channel open for the async response
   }
+
+  return true; // Keep the message channel open for async responses
 });
 
 // Load highlight style from storage
@@ -72,6 +92,21 @@ loadMinimumWordsFromStorage();
 
 // Create and inject the control panel
 createControlPanel();
+
+// Check if play buttons are enabled before initial processing
+chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+  // Default to true if not set
+  const isEnabled = result.playButtonsEnabled !== false;
+
+  if (isEnabled) {
+    // Initial processing
+    processTextElements();
+  } else {
+    console.log(
+      '[Talkient] Play buttons are disabled. Skipping initial processing.'
+    );
+  }
+});
 
 // Listen for storage changes to update highlight style in real-time
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -94,6 +129,18 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           `[Talkient] Minimum words setting updated to: ${newMinWords}`
         );
         // Re-process text elements to apply the new setting
+        processTextElements();
+      }
+    }
+
+    if (changes.playButtonsEnabled) {
+      const isEnabled = changes.playButtonsEnabled.newValue;
+      console.log(
+        `[Talkient] Play buttons enabled setting updated to: ${isEnabled}`
+      );
+
+      // If changing from disabled to enabled, process text elements
+      if (isEnabled && !changes.playButtonsEnabled.oldValue) {
         processTextElements();
       }
     }
