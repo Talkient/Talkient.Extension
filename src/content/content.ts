@@ -12,6 +12,8 @@ import {
   createControlPanel,
   loadMinimumWordsFromStorage,
   setMinimumWords,
+  loadSpeechRateFromStorage,
+  setSpeechRate,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -116,6 +118,9 @@ loadHighlightStyleFromStorage();
 // Load minimum words setting from storage
 loadMinimumWordsFromStorage();
 
+// Load speech rate setting from storage
+loadSpeechRateFromStorage();
+
 // Create and inject the control panel
 createControlPanel();
 
@@ -156,6 +161,33 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         );
         // Re-process text elements to apply the new setting
         processTextElements();
+      }
+    }
+
+    if (changes.speechRate) {
+      const newRate = changes.speechRate.newValue;
+      if (typeof newRate === 'number') {
+        // Update the cached value
+        setSpeechRate(newRate);
+        console.log(`[Talkient] Speech rate updated to: ${newRate}`);
+
+        // Update control panel rate slider if it exists
+        const panel = document.getElementById('talkient-control-panel');
+        if (panel) {
+          const rateSlider = panel.querySelector(
+            '.talkient-rate-slider'
+          ) as HTMLInputElement;
+          const rateValue = panel.querySelector(
+            '.talkient-rate-value'
+          ) as HTMLSpanElement;
+
+                  if (rateSlider && rateValue) {
+          // Enforce 0.05 step increment by rounding to nearest 0.05
+          const roundedRate = Math.round(newRate * 20) / 20;
+          rateSlider.value = roundedRate.toString();
+          rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+        }
+        }
       }
     }
 

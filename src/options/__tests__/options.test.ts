@@ -123,7 +123,7 @@ describe('options.ts', () => {
       // Check that sliders have the correct min/max from actual HTML
       expect(rateSlider.min).toBe('0.5');
       expect(rateSlider.max).toBe('2');
-      expect(rateSlider.step).toBe('0.1');
+      expect(rateSlider.step).toBe('0.05');
 
       expect(pitchSlider.min).toBe('0.5');
       expect(pitchSlider.max).toBe('2');
@@ -176,7 +176,7 @@ describe('options.ts', () => {
       );
 
       expect(rateSlider.value).toBe('1.1');
-      expect(rateValue.textContent).toBe('1.1x');
+             expect(rateValue.textContent).toBe('1.10x');
       expect(pitchSlider.value).toBe('1.2');
       expect(pitchValue.textContent).toBe('1.2x');
       expect(highlightStyleSelect.value).toBe('default');
@@ -199,7 +199,7 @@ describe('options.ts', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(rateSlider.value).toBe('1');
-      expect(rateValue.textContent).toBe('1.0x');
+             expect(rateValue.textContent).toBe('1.00x');
       expect(pitchSlider.value).toBe('1');
       expect(pitchValue.textContent).toBe('1.0x');
       expect(highlightStyleSelect.value).toBe('default');
@@ -223,7 +223,7 @@ describe('options.ts', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('0.5x');
+             expect(rateValue.textContent).toBe('0.50x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 0.5,
       });
@@ -236,7 +236,7 @@ describe('options.ts', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('2.0x');
+             expect(rateValue.textContent).toBe('2.00x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 2.0,
       });
@@ -249,7 +249,7 @@ describe('options.ts', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('1.5x');
+      expect(rateValue.textContent).toBe('1.50x');
     });
 
     it('should save rate to storage when slider changes', async () => {
@@ -262,6 +262,31 @@ describe('options.ts', () => {
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 1.8,
       });
+    });
+
+    it('should enforce 0.05 step increment by rounding values', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Test values that should be rounded to nearest 0.05
+      const testCases = [
+        { input: '1.23', expected: 1.25 }, // Should round up to 1.25
+        { input: '1.27', expected: 1.25 }, // Should round down to 1.25
+        { input: '1.30', expected: 1.30 }, // Should stay at 1.30
+        { input: '0.52', expected: 0.50 }, // Should round down to 0.50
+        { input: '0.53', expected: 0.55 }, // Should round up to 0.55
+      ];
+
+      for (const testCase of testCases) {
+        rateSlider.value = testCase.input;
+        const inputEvent = new Event('input');
+        rateSlider.dispatchEvent(inputEvent);
+
+        expect(chrome.storage.local.set).toHaveBeenCalledWith({
+          speechRate: testCase.expected,
+        });
+        expect(rateSlider.value).toBe(testCase.expected.toString());
+        expect(rateValue.textContent).toBe(`${testCase.expected.toFixed(2)}x`);
+      }
     });
   });
 
@@ -471,7 +496,7 @@ describe('options.ts', () => {
       // Test extreme values - HTML range inputs clamp to min/max
       // The actual HTML has min="0.5" max="2"
       const testValues = ['100', '0.1', '999.99'];
-      const expectedValues = ['2.0', '0.5', '2.0']; // Values clamped to HTML range
+             const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
 
       for (let i = 0; i < testValues.length; i++) {
         rateSlider.value = testValues[i];
@@ -610,6 +635,175 @@ describe('options.ts', () => {
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         autoPlayNext: false,
       });
+    });
+  });
+
+  describe('real-time synchronization', () => {
+    let storageChangeListener: ((changes: any, namespace: string) => void) | null = null;
+
+    beforeEach(() => {
+      // Mock the storage change listener
+      (chrome.storage.onChanged.addListener as jest.Mock).mockImplementation(
+        (listener) => {
+          storageChangeListener = listener;
+        }
+      );
+
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should update speech rate slider when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify the listener was set up
+      expect(chrome.storage.onChanged.addListener).toHaveBeenCalled();
+
+      // Simulate a storage change from control panel
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            speechRate: {
+              newValue: 1.5,
+              oldValue: 1.0,
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was updated
+        expect(rateSlider.value).toBe('1.5');
+        expect(rateValue.textContent).toBe('1.50x');
+      }
+    });
+
+    it('should update speech pitch slider when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Simulate a storage change from control panel
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            speechPitch: {
+              newValue: 0.8,
+              oldValue: 1.0,
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was updated
+        expect(pitchSlider.value).toBe('0.8');
+        expect(pitchValue.textContent).toBe('0.8x');
+      }
+    });
+
+    it('should update highlight style when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Simulate a storage change from control panel
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            highlightStyle: {
+              newValue: 'minimal',
+              oldValue: 'default',
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was updated
+        expect(highlightStyleSelect.value).toBe('minimal');
+      }
+    });
+
+    it('should update auto play next toggle when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Simulate a storage change from control panel
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            autoPlayNext: {
+              newValue: true,
+              oldValue: false,
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was updated
+        expect(autoPlayNextToggle.checked).toBe(true);
+      }
+    });
+
+    it('should update minimum words input when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Simulate a storage change from control panel
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            minimumWords: {
+              newValue: 5,
+              oldValue: 3,
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was updated
+        expect(minimumWordsInput.value).toBe('5');
+      }
+    });
+
+    it('should not update UI for non-local namespace changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const originalValue = rateSlider.value;
+
+      // Simulate a storage change from sync namespace
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            speechRate: {
+              newValue: 2.0,
+              oldValue: 1.0,
+            },
+          },
+          'sync'
+        );
+
+        // Check that the UI was NOT updated
+        expect(rateSlider.value).toBe(originalValue);
+      }
+    });
+
+    it('should handle invalid storage change values gracefully', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const originalValue = rateSlider.value;
+
+      // Simulate a storage change with invalid value
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            speechRate: {
+              newValue: 'invalid',
+              oldValue: 1.0,
+            },
+          },
+          'local'
+        );
+
+        // Check that the UI was NOT updated
+        expect(rateSlider.value).toBe(originalValue);
+      }
     });
   });
 });

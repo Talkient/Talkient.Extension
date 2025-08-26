@@ -12,6 +12,7 @@
 
 ## TO DO
 
+- play button for a tags
 - [ ] CI/CD to publish a new version on Chrome Web Store
 - [] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [] Sometimes the extension stuck and the entire browser needs to be reopen

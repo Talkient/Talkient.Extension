@@ -30,7 +30,7 @@ export function createControlPanel(): void {
     <div class="talkient-panel-content">
       <div class="talkient-control-section">
         <div class="talkient-main-controls">
-          <button class="talkient-control-btn primary" disabled title="Play/Pause">
+          <button class="talkient-control-btn primary" title="Play/Pause" disabled>
             <svg class="talkient-control-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
@@ -65,7 +65,7 @@ export function createControlPanel(): void {
             class="talkient-rate-slider" 
             min="0.5" 
             max="2.0" 
-            step="0.1" 
+            step="0.05" 
             value="1.0"
             disabled
           />
@@ -96,6 +96,8 @@ function setupControlPanelEventListeners(panel: HTMLElement): void {
   setupToggleButton(panel);
   setupSettingsButton(panel);
   setupScriptControlButtons(panel);
+  setupSpeechRateSlider(panel);
+  setupMainControlButton(panel);
   setupDragFunctionality(panel);
 }
 
@@ -216,6 +218,120 @@ function setupScriptControlButtons(panel: HTMLElement): void {
       removeAllPlayButtons();
       console.log('[Talkient.Content] Play buttons disabled and removed');
     }
+  });
+}
+
+/**
+ * Sets up the speech rate slider functionality
+ */
+function setupSpeechRateSlider(panel: HTMLElement): void {
+  const rateSlider = panel.querySelector(
+    '.talkient-rate-slider'
+  ) as HTMLInputElement;
+  const rateValue = panel.querySelector(
+    '.talkient-rate-value'
+  ) as HTMLSpanElement;
+
+  if (!rateSlider || !rateValue) return;
+
+  // Load the current rate from storage
+  chrome.storage.local.get(['speechRate'], (result) => {
+    const speechRate =
+      typeof result.speechRate === 'number' ? result.speechRate : 1.0;
+
+    // Enforce 0.05 step increment by rounding to nearest 0.05
+    const roundedRate = Math.round(speechRate * 20) / 20;
+
+    // Set rate slider and display value
+    rateSlider.value = roundedRate.toString();
+    rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+  });
+
+  // Save rate to storage and update display on change
+  rateSlider.addEventListener('input', () => {
+    // Enforce 0.05 step increment by rounding to nearest 0.05
+    const rawValue = parseFloat(rateSlider.value);
+    const speechRate = Math.round(rawValue * 20) / 20; // Round to nearest 0.05
+    
+    // Update the slider value to the rounded value
+    rateSlider.value = speechRate.toString();
+    rateValue.textContent = `${speechRate.toFixed(2)}x`;
+    chrome.storage.local.set({ speechRate });
+
+    // Enable the play button if it's disabled
+    const playButton = panel.querySelector(
+      '.talkient-control-btn.primary'
+    ) as HTMLButtonElement;
+    if (playButton && playButton.disabled) {
+      playButton.disabled = false;
+    }
+
+    // Update content-lib cache for sync
+    import('./content-lib').then(({ setSpeechRate }) => {
+      setSpeechRate(speechRate);
+    });
+
+    console.log('[Talkient.Content] Speech rate updated to:', speechRate);
+  });
+}
+
+/**
+ * Sets up the main play/pause control button
+ */
+function setupMainControlButton(panel: HTMLElement): void {
+  const mainButton = panel.querySelector(
+    '.talkient-control-btn.primary'
+  ) as HTMLButtonElement;
+
+  if (!mainButton) return;
+
+  // Import the required icons
+  import('./icons').then(({ getSvgIcon, isSvgPlayIcon, isSvgPauseIcon }) => {
+    // Set the initial icon to play
+    mainButton.innerHTML = getSvgIcon('play');
+
+    // Keep the button disabled by default
+    // mainButton.disabled = false; // Removed to keep button disabled
+
+    // Enable the speech rate slider when the play button is enabled
+    const rateSlider = panel.querySelector(
+      '.talkient-rate-slider'
+    ) as HTMLInputElement;
+    if (rateSlider) {
+      rateSlider.disabled = false;
+    }
+
+    mainButton.addEventListener('click', () => {
+      const isPlaying = isSvgPauseIcon(
+        mainButton.querySelector('svg') as SVGElement
+      );
+
+      if (isPlaying) {
+        // Pause the speech
+        chrome.runtime.sendMessage({ type: 'PAUSE_SPEECH' }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(
+              '[Talkient.Content] Error sending PAUSE_SPEECH message:',
+              chrome.runtime.lastError
+            );
+          } else {
+            // Set play icon
+            mainButton.innerHTML = getSvgIcon('play');
+
+            // Import and use the clearHighlight function
+            import('./highlight').then(({ clearHighlight }) => {
+              clearHighlight();
+            });
+          }
+        });
+      } else {
+        // Currently, we can't play from the control panel because we don't have a text selection
+        // Show a notification or hint to the user
+        alert(
+          'Please select text on the page to speak, or use the play buttons next to paragraphs.'
+        );
+      }
+    });
   });
 }
 

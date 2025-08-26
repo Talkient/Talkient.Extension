@@ -131,6 +131,18 @@ describe('Control Panel Module', () => {
       expect(settingsBtn.disabled).toBe(false);
     });
 
+    it('should keep play button disabled by default', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel');
+      const playBtn = panel?.querySelector(
+        '.talkient-control-btn.primary'
+      ) as HTMLButtonElement;
+
+      expect(playBtn).toBeTruthy();
+      expect(playBtn.disabled).toBe(true);
+    });
+
     it('should create panel collapsed by default', () => {
       createControlPanel();
 

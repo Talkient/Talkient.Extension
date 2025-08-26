@@ -117,7 +117,7 @@ describe('options.ts - using actual HTML', () => {
       // Check that sliders have the correct min/max from actual HTML
       expect(rateSlider.min).toBe('0.5');
       expect(rateSlider.max).toBe('2');
-      expect(rateSlider.step).toBe('0.1');
+      expect(rateSlider.step).toBe('0.05');
 
       expect(pitchSlider.min).toBe('0.5');
       expect(pitchSlider.max).toBe('2');
@@ -160,7 +160,7 @@ describe('options.ts - using actual HTML', () => {
       );
 
       expect(rateSlider.value).toBe('1.1');
-      expect(rateValue.textContent).toBe('1.1x');
+      expect(rateValue.textContent).toBe('1.10x');
       expect(pitchSlider.value).toBe('1.2');
       expect(pitchValue.textContent).toBe('1.2x');
     });
@@ -182,7 +182,7 @@ describe('options.ts - using actual HTML', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(rateSlider.value).toBe('1');
-      expect(rateValue.textContent).toBe('1.0x');
+      expect(rateValue.textContent).toBe('1.00x');
       expect(pitchSlider.value).toBe('1');
       expect(pitchValue.textContent).toBe('1.0x');
     });
@@ -205,7 +205,7 @@ describe('options.ts - using actual HTML', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('0.5x');
+      expect(rateValue.textContent).toBe('0.50x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 0.5,
       });
@@ -218,7 +218,7 @@ describe('options.ts - using actual HTML', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('2.0x');
+      expect(rateValue.textContent).toBe('2.00x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 2.0,
       });
@@ -231,7 +231,7 @@ describe('options.ts - using actual HTML', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-      expect(rateValue.textContent).toBe('1.5x');
+      expect(rateValue.textContent).toBe('1.50x');
     });
 
     it('should save rate to storage when slider changes', async () => {
@@ -365,7 +365,7 @@ describe('options.ts - using actual HTML', () => {
       // Test extreme values - HTML range inputs clamp to min/max
       // The actual HTML has min="0.5" max="2"
       const testValues = ['100', '0.1', '999.99'];
-      const expectedValues = ['2.0', '0.5', '2.0']; // Values clamped to HTML range
+             const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
 
       for (let i = 0; i < testValues.length; i++) {
         rateSlider.value = testValues[i];

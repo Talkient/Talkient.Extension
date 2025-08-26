@@ -73,6 +73,7 @@ export function createPlayButton(): HTMLButtonElement {
 
 // Cache for settings
 let minimumWordsCache = 3; // Default minimum words
+let speechRateCache = 1.0; // Default speech rate
 
 // Load minimum words setting from storage
 export function loadMinimumWordsFromStorage(): Promise<number> {
@@ -88,14 +89,36 @@ export function loadMinimumWordsFromStorage(): Promise<number> {
   });
 }
 
+// Load speech rate setting from storage
+export function loadSpeechRateFromStorage(): Promise<number> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['speechRate'], (result) => {
+      speechRateCache =
+        typeof result.speechRate === 'number' ? result.speechRate : 1.0;
+      console.log(`[Talkient] Loaded speech rate setting: ${speechRateCache}`);
+      resolve(speechRateCache);
+    });
+  });
+}
+
 // Get the current minimum words setting
 export function getMinimumWords(): number {
   return minimumWordsCache;
 }
 
+// Get the current speech rate setting
+export function getSpeechRate(): number {
+  return speechRateCache;
+}
+
 // Set the minimum words setting (used when it changes in storage)
 export function setMinimumWords(value: number): void {
   minimumWordsCache = value;
+}
+
+// Set the speech rate setting (used when it changes in storage)
+export function setSpeechRate(value: number): void {
+  speechRateCache = value;
 }
 
 // Function to check if a node should be processed
