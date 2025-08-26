@@ -23,7 +23,8 @@
         "https://docs.aws.amazon.com/*",
         "https://medium.com/*",
         "https://aws.amazon.com/*/blogs/*",
-        "https://newsletter.eng-leadership.com/*"
+        "https://newsletter.eng-leadership.com/*",
+        "file:///**/*.html"
       ],
       "css": ["./content/content.css"],
       "js": ["./content/content.js"]
