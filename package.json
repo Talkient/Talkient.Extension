@@ -13,13 +13,17 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58"
+    "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/chrome": "^0.0.326",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.15.30",
