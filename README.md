@@ -33,6 +33,7 @@
   - Play/Pause
   - Verify if it's covering the play next item with a span within an ancore tag
   - Verify the extension load with title within manifest
+  - Mock fixed HTML instead of navigating to external pages
 - Github Actions
   - [ ] E2E tests
   - [ ] Submit a new version on Chrome Web Store
