@@ -83,60 +83,60 @@ document.addEventListener('DOMContentLoaded', () => {
   // Listen for storage changes to update UI in real-time
   if (chrome.storage?.onChanged?.addListener) {
     chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local') {
-      // Update speech rate if changed
-      if (changes.speechRate) {
-        const newRate = changes.speechRate.newValue;
-        if (typeof newRate === 'number') {
-          // Enforce 0.05 step increment by rounding to nearest 0.05
-          const roundedRate = Math.round(newRate * 20) / 20;
-          rateSlider.value = roundedRate.toString();
-          rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+      if (namespace === 'local') {
+        // Update speech rate if changed
+        if (changes.speechRate) {
+          const newRate = changes.speechRate.newValue;
+          if (typeof newRate === 'number') {
+            // Enforce 0.05 step increment by rounding to nearest 0.05
+            const roundedRate = Math.round(newRate * 20) / 20;
+            rateSlider.value = roundedRate.toString();
+            rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+          }
         }
-      }
 
-      // Update speech pitch if changed
-      if (changes.speechPitch) {
-        const newPitch = changes.speechPitch.newValue;
-        if (typeof newPitch === 'number') {
-          pitchSlider.value = newPitch.toString();
-          pitchValue.textContent = `${newPitch.toFixed(1)}x`;
+        // Update speech pitch if changed
+        if (changes.speechPitch) {
+          const newPitch = changes.speechPitch.newValue;
+          if (typeof newPitch === 'number') {
+            pitchSlider.value = newPitch.toString();
+            pitchValue.textContent = `${newPitch.toFixed(1)}x`;
+          }
         }
-      }
 
-      // Update highlight style if changed
-      if (changes.highlightStyle) {
-        const newStyle = changes.highlightStyle.newValue;
-        if (typeof newStyle === 'string') {
-          highlightStyleSelect.value = newStyle;
+        // Update highlight style if changed
+        if (changes.highlightStyle) {
+          const newStyle = changes.highlightStyle.newValue;
+          if (typeof newStyle === 'string') {
+            highlightStyleSelect.value = newStyle;
+          }
         }
-      }
 
-      // Update auto play next if changed
-      if (changes.autoPlayNext) {
-        const newAutoPlay = changes.autoPlayNext.newValue;
-        if (typeof newAutoPlay === 'boolean') {
-          autoPlayNextToggle.checked = newAutoPlay;
+        // Update auto play next if changed
+        if (changes.autoPlayNext) {
+          const newAutoPlay = changes.autoPlayNext.newValue;
+          if (typeof newAutoPlay === 'boolean') {
+            autoPlayNextToggle.checked = newAutoPlay;
+          }
         }
-      }
 
-      // Update minimum words if changed
-      if (changes.minimumWords) {
-        const newMinWords = changes.minimumWords.newValue;
-        if (typeof newMinWords === 'number') {
-          minimumWordsInput.value = newMinWords.toString();
+        // Update minimum words if changed
+        if (changes.minimumWords) {
+          const newMinWords = changes.minimumWords.newValue;
+          if (typeof newMinWords === 'number') {
+            minimumWordsInput.value = newMinWords.toString();
+          }
         }
-      }
 
-      // Update voice selection if changed
-      if (changes.selectedVoice) {
-        const newVoice = changes.selectedVoice.newValue;
-        if (typeof newVoice === 'string') {
-          voiceSelect.value = newVoice;
+        // Update voice selection if changed
+        if (changes.selectedVoice) {
+          const newVoice = changes.selectedVoice.newValue;
+          if (typeof newVoice === 'string') {
+            voiceSelect.value = newVoice;
+          }
         }
       }
-    }
-  });
+    });
   }
 
   // Save selected voice to storage
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enforce 0.05 step increment by rounding to nearest 0.05
     const rawValue = parseFloat(rateSlider.value);
     const speechRate = Math.round(rawValue * 20) / 20; // Round to nearest 0.05
-    
+
     // Update the slider value to the rounded value
     rateSlider.value = speechRate.toString();
     rateValue.textContent = `${speechRate.toFixed(2)}x`;
@@ -193,7 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save minimum words setting to storage
   minimumWordsInput.addEventListener('input', () => {
-    const minimumWords = parseInt(minimumWordsInput.value);
+    let minimumWords = parseInt(minimumWordsInput.value);
+    // Ensure minimumWords is at least 1
+    if (isNaN(minimumWords) || minimumWords < 1) {
+      minimumWords = 1;
+      minimumWordsInput.value = minimumWords.toString();
+    }
     chrome.storage.local.set({ minimumWords });
 
     // Show a brief status message

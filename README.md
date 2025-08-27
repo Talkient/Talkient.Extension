@@ -13,30 +13,26 @@
 ## TO DO
 
 - play button for a tags
-- [ ] CI/CD to publish a new version on Chrome Web Store
-- [] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
-- [] Sometimes the extension stuck and the entire browser needs to be reopen
-- [] Estimate time in minutes
-- [] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
-- [] Button to remove Talkient in the current page (turn on/off)
-- [] play/pause buttons at the left and showing up on hover
-- [] Control panel including play/pause, rate, voice
-- [] Restart the current audio
-- [] Options page
-  - [] Reset default settings
-  - [] Min words to add play button
-  - [] Skip tags
-  - [] Max elements per page
-  - [] Elements to ignore
-  - [] Follow scroll
-- [] Popup page
-- [] Add support for `"file:///*"` like PDF
-- [] E2E tests (could start by loading the extension, e.g to get error is adding a title within manifest.json)
+- [ ] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
+- [ ] Sometimes the extension stuck and the entire browser needs to be reopen
+- [ ] Estimate time in minutes
+- [ ] Highlight chunks
+- [ ] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
+- [ ] play/pause buttons at the left and showing up on hover
+- [ ] Control panel including play/pause, rate, voice
+- [ ] Restart the current audio
+- [ ] Options page
+  - [ ] Reset default settings
+  - [ ] Skip tags
+  - [ ] Max elements per page
+  - [ ] Elements to ignore
+  - [ ] Follow scroll
+- [ ] Popup page
+- [ ] Add support for `"file:///*"` like PDF
+- [ ] E2E tests
+  - Play/Pause
+  - Verify if it's covering the play next item with a span within an ancore tag
+  - Verify the extension load with title within manifest
 - Github Actions
-  - [] E2E tests
-  - [] build
-
-## E2E tests
-
-- Verify if it's covering the play next item with a span within an ancore tag
-- Verify the extension load with title within manifest
+  - [ ] E2E tests
+  - [ ] Submit a new version on Chrome Web Store
