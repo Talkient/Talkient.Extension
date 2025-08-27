@@ -14,9 +14,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e": "pnpm run publish && playwright test",
+    "test:e2e:ui": "pnpm run publish && playwright test --ui",
+    "test:e2e:debug": "pnpm run publish && playwright test --debug"
   },
   "keywords": [],
   "author": "",
