@@ -1,5 +1,16 @@
 # Talkient.Extenion
 
+## Features
+
+- Text-to-speech conversion for web page content
+- Customizable speech settings (rate, pitch, voice)
+- Visual highlighting of text being read
+- Multiple highlighting styles
+- Auto-play next text section
+- Configurable minimum word count for processing
+- Configurable maximum nodes processed limit for performance optimization
+- Control panel for easy access to common settings
+
 ## Deploy new version
 
 - Update the version within `manifest.json` and `package.json`
@@ -28,10 +39,12 @@
   - [ ] Skip tags
   - [ ] Elements to ignore
   - [ ] Follow scroll
+  - [x] Configure maximum nodes processed (performance optimization)
 - [ ] Popup page
 - [ ] Add support for `"file:///*"` like PDF
 - [ ] E2E tests
   - Play/Pause
+  - Ask LLMs to find test-gaps
   - Verify if it's covering the play next item with a span within an ancore tag
   - Verify the extension load with title within manifest
   - Mock fixed HTML instead of navigating to external pages

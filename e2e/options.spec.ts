@@ -223,6 +223,9 @@ test.describe('Talkient Extension Options Page', () => {
     // Change minimum words
     await page.locator('#minimum-words-input').fill('7');
 
+    // Change maximum nodes processed
+    await page.locator('#max-nodes-input').fill('1200');
+
     // Change highlight style
     await page.selectOption('#highlight-style-select', 'elegant');
 
@@ -248,6 +251,7 @@ test.describe('Talkient Extension Options Page', () => {
 
     // Verify settings were persisted
     await expect(page.locator('#minimum-words-input')).toHaveValue('7');
+    await expect(page.locator('#max-nodes-input')).toHaveValue('1200');
     await expect(page.locator('#highlight-style-select')).toHaveValue(
       'elegant'
     );
