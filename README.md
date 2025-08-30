@@ -12,7 +12,9 @@
 
 ## TO DO
 
-- play button for a tags
+- [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+- [ ] Skip hidden elements
+- [ ] play button for a tags
 - [ ] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
 - [ ] Estimate time in minutes
@@ -34,6 +36,8 @@
   - Verify if it's covering the play next item with a span within an ancore tag
   - Verify the extension load with title within manifest
   - Mock fixed HTML instead of navigating to external pages
+  - Make sure everything done via control panel reflect on options page and vice-versa
+  - Complex flows: play/pause directly and via control panel, alternatively
 - Github Actions
   - [ ] E2E tests
   - [ ] Submit a new version on Chrome Web Store
