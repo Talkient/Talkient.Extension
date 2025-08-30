@@ -61,6 +61,7 @@ describe('options.ts - using actual HTML', () => {
           highlightStyle: 'default',
           autoPlayNext: false,
           minimumWords: 3,
+          maxNodesProcessed: 1000,
         });
       }
     );
@@ -155,6 +156,7 @@ describe('options.ts - using actual HTML', () => {
           'highlightStyle',
           'autoPlayNext',
           'minimumWords',
+          'maxNodesProcessed',
         ],
         expect.any(Function)
       );
@@ -365,7 +367,7 @@ describe('options.ts - using actual HTML', () => {
       // Test extreme values - HTML range inputs clamp to min/max
       // The actual HTML has min="0.5" max="2"
       const testValues = ['100', '0.1', '999.99'];
-             const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
+      const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
 
       for (let i = 0; i < testValues.length; i++) {
         rateSlider.value = testValues[i];

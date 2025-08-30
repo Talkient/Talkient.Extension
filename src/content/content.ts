@@ -14,6 +14,8 @@ import {
   setMinimumWords,
   loadSpeechRateFromStorage,
   setSpeechRate,
+  loadMaxNodesFromStorage,
+  setMaxNodesProcessed,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -121,6 +123,9 @@ loadMinimumWordsFromStorage();
 // Load speech rate setting from storage
 loadSpeechRateFromStorage();
 
+// Load maximum nodes setting from storage
+loadMaxNodesFromStorage();
+
 // Create and inject the control panel
 createControlPanel();
 
@@ -181,13 +186,26 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
             '.talkient-rate-value'
           ) as HTMLSpanElement;
 
-                  if (rateSlider && rateValue) {
-          // Enforce 0.05 step increment by rounding to nearest 0.05
-          const roundedRate = Math.round(newRate * 20) / 20;
-          rateSlider.value = roundedRate.toString();
-          rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+          if (rateSlider && rateValue) {
+            // Enforce 0.05 step increment by rounding to nearest 0.05
+            const roundedRate = Math.round(newRate * 20) / 20;
+            rateSlider.value = roundedRate.toString();
+            rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+          }
         }
-        }
+      }
+    }
+
+    if (changes.maxNodesProcessed) {
+      const newMaxNodes = changes.maxNodesProcessed.newValue;
+      if (typeof newMaxNodes === 'number') {
+        // Update the cached value
+        setMaxNodesProcessed(newMaxNodes);
+        console.log(
+          `[Talkient] Maximum nodes setting updated to: ${newMaxNodes}`
+        );
+        // Re-process text elements to apply the new setting
+        processTextElements();
       }
     }
 

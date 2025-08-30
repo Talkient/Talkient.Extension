@@ -65,6 +65,7 @@ describe('options.ts', () => {
           highlightStyle: 'default',
           autoPlayNext: false,
           minimumWords: 3,
+          maxNodesProcessed: 1000,
         });
       }
     );
@@ -171,12 +172,13 @@ describe('options.ts', () => {
           'highlightStyle',
           'autoPlayNext',
           'minimumWords',
+          'maxNodesProcessed',
         ],
         expect.any(Function)
       );
 
       expect(rateSlider.value).toBe('1.1');
-             expect(rateValue.textContent).toBe('1.10x');
+      expect(rateValue.textContent).toBe('1.10x');
       expect(pitchSlider.value).toBe('1.2');
       expect(pitchValue.textContent).toBe('1.2x');
       expect(highlightStyleSelect.value).toBe('default');
@@ -199,7 +201,7 @@ describe('options.ts', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(rateSlider.value).toBe('1');
-             expect(rateValue.textContent).toBe('1.00x');
+      expect(rateValue.textContent).toBe('1.00x');
       expect(pitchSlider.value).toBe('1');
       expect(pitchValue.textContent).toBe('1.0x');
       expect(highlightStyleSelect.value).toBe('default');
@@ -223,7 +225,7 @@ describe('options.ts', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-             expect(rateValue.textContent).toBe('0.50x');
+      expect(rateValue.textContent).toBe('0.50x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 0.5,
       });
@@ -236,7 +238,7 @@ describe('options.ts', () => {
       const inputEvent = new Event('input');
       rateSlider.dispatchEvent(inputEvent);
 
-             expect(rateValue.textContent).toBe('2.00x');
+      expect(rateValue.textContent).toBe('2.00x');
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         speechRate: 2.0,
       });
@@ -271,8 +273,8 @@ describe('options.ts', () => {
       const testCases = [
         { input: '1.23', expected: 1.25 }, // Should round up to 1.25
         { input: '1.27', expected: 1.25 }, // Should round down to 1.25
-        { input: '1.30', expected: 1.30 }, // Should stay at 1.30
-        { input: '0.52', expected: 0.50 }, // Should round down to 0.50
+        { input: '1.30', expected: 1.3 }, // Should stay at 1.30
+        { input: '0.52', expected: 0.5 }, // Should round down to 0.50
         { input: '0.53', expected: 0.55 }, // Should round up to 0.55
       ];
 
@@ -496,7 +498,7 @@ describe('options.ts', () => {
       // Test extreme values - HTML range inputs clamp to min/max
       // The actual HTML has min="0.5" max="2"
       const testValues = ['100', '0.1', '999.99'];
-             const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
+      const expectedValues = ['2.00', '0.50', '2.00']; // Values clamped to HTML range
 
       for (let i = 0; i < testValues.length; i++) {
         rateSlider.value = testValues[i];
@@ -639,7 +641,9 @@ describe('options.ts', () => {
   });
 
   describe('real-time synchronization', () => {
-    let storageChangeListener: ((changes: any, namespace: string) => void) | null = null;
+    let storageChangeListener:
+      | ((changes: any, namespace: string) => void)
+      | null = null;
 
     beforeEach(() => {
       // Mock the storage change listener

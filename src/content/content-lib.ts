@@ -74,6 +74,7 @@ export function createPlayButton(): HTMLButtonElement {
 // Cache for settings
 let minimumWordsCache = 3; // Default minimum words
 let speechRateCache = 1.0; // Default speech rate
+let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 
 // Load minimum words setting from storage
 export function loadMinimumWordsFromStorage(): Promise<number> {
@@ -119,6 +120,32 @@ export function setMinimumWords(value: number): void {
 // Set the speech rate setting (used when it changes in storage)
 export function setSpeechRate(value: number): void {
   speechRateCache = value;
+}
+
+// Load maximum nodes processed setting from storage
+export function loadMaxNodesFromStorage(): Promise<number> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['maxNodesProcessed'], (result) => {
+      maxNodesProcessedCache =
+        typeof result.maxNodesProcessed === 'number'
+          ? result.maxNodesProcessed
+          : 1000;
+      console.log(
+        `[Talkient] Loaded maximum nodes setting: ${maxNodesProcessedCache}`
+      );
+      resolve(maxNodesProcessedCache);
+    });
+  });
+}
+
+// Get the current maximum nodes setting
+export function getMaxNodesProcessed(): number {
+  return maxNodesProcessedCache;
+}
+
+// Set the maximum nodes setting (used when it changes in storage)
+export function setMaxNodesProcessed(value: number): void {
+  maxNodesProcessedCache = value;
 }
 
 // Function to check if a node should be processed
@@ -378,8 +405,8 @@ export function processTextElements(): void {
     }
 
     // If we processed a batch and there might be more nodes, schedule the next batch
-    if (batchCount > 0 && processedCount < 1000) {
-      // Safety limit of 1000 nodes
+    if (batchCount > 0 && processedCount < maxNodesProcessedCache) {
+      // Safety limit based on user setting
       requestAnimationFrame(processBatch);
     } else {
       console.log(

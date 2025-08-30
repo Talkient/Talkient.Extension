@@ -37,6 +37,7 @@ describe('Minimum words setting', () => {
           highlightStyle: 'default',
           autoPlayNext: false,
           minimumWords: 3, // Default value
+          maxNodesProcessed: 1000, // Default value
         });
       }
     );

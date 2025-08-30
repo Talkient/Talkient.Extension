@@ -12,6 +12,7 @@
 
 ## TO DO
 
+- [ ] play/pause buttons at the left and showing up on hover
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [ ] Skip hidden elements
 - [ ] play button for a tags
@@ -20,13 +21,11 @@
 - [ ] Estimate time in minutes
 - [ ] Highlight chunks
 - [ ] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
-- [ ] play/pause buttons at the left and showing up on hover
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
 - [ ] Options page
   - [ ] Reset default settings
   - [ ] Skip tags
-  - [ ] Max elements per page
   - [ ] Elements to ignore
   - [ ] Follow scroll
 - [ ] Popup page

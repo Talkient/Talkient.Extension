@@ -50,6 +50,8 @@ jest.mock('../content-lib', () => {
     safeClickButton: jest.fn(),
     loadMinimumWordsFromStorage: jest.fn(),
     setMinimumWords: jest.fn(),
+    loadMaxNodesFromStorage: jest.fn(),
+    setMaxNodesProcessed: jest.fn(),
   };
 });
 

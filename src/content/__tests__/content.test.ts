@@ -6,6 +6,7 @@ import {
   clearHighlight,
   getCurrentHighlightedElement,
   loadMinimumWordsFromStorage,
+  loadMaxNodesFromStorage,
 } from '../content-lib';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
@@ -90,6 +91,8 @@ describe('shouldProcessNode', () => {
 
     // Load minimum words setting
     await loadMinimumWordsFromStorage();
+    // Load maximum nodes setting
+    await loadMaxNodesFromStorage();
   });
 
   afterEach(() => {

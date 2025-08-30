@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const minimumWordsInput = document.getElementById(
     'minimum-words-input'
   ) as HTMLInputElement;
+  const maxNodesInput = document.getElementById(
+    'max-nodes-input'
+  ) as HTMLInputElement;
 
   if (
     !voiceSelect ||
@@ -26,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     !rateValue ||
     !pitchValue ||
     !autoPlayNextToggle ||
-    !minimumWordsInput
+    !minimumWordsInput ||
+    !maxNodesInput
   )
     return;
 
@@ -39,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'highlightStyle',
       'autoPlayNext',
       'minimumWords',
+      'maxNodesProcessed',
     ],
     (result) => {
       const selectedVoice =
@@ -57,6 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
       const minimumWords =
         typeof result.minimumWords === 'number' ? result.minimumWords : 3;
+      const maxNodesProcessed =
+        typeof result.maxNodesProcessed === 'number'
+          ? result.maxNodesProcessed
+          : 1000;
 
       populateVoices(selectedVoice);
 
@@ -77,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set minimum words input
       minimumWordsInput.value = minimumWords.toString();
+
+      // Set maximum nodes input
+      maxNodesInput.value = maxNodesProcessed.toString();
     }
   );
 
@@ -125,6 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const newMinWords = changes.minimumWords.newValue;
           if (typeof newMinWords === 'number') {
             minimumWordsInput.value = newMinWords.toString();
+          }
+        }
+
+        // Update maximum nodes if changed
+        if (changes.maxNodesProcessed) {
+          const newMaxNodes = changes.maxNodesProcessed.newValue;
+          if (typeof newMaxNodes === 'number') {
+            maxNodesInput.value = newMaxNodes.toString();
           }
         }
 
@@ -203,6 +223,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Minimum words setting saved!', 'success');
+  });
+
+  // Save maximum nodes setting to storage
+  maxNodesInput.addEventListener('input', () => {
+    let maxNodesProcessed = parseInt(maxNodesInput.value);
+    // Ensure maxNodesProcessed is at least 0
+    if (isNaN(maxNodesProcessed) || maxNodesProcessed < 0) {
+      maxNodesProcessed = 0;
+      maxNodesInput.value = maxNodesProcessed.toString();
+    }
+    chrome.storage.local.set({ maxNodesProcessed });
+
+    // Show a brief status message
+    showStatus('Maximum nodes setting saved!', 'success');
   });
 });
 
