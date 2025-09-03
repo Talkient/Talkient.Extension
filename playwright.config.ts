@@ -11,7 +11,7 @@ export default defineConfig({
   use: {
     baseURL: 'chrome-extension://[extension-id]/', // Will be replaced during test setup
     trace: 'on-first-retry',
-    headless: false, // Headless doesn't work well with extensions
+    headless: process.env.CI ? true : false, // Use headless in CI, headed locally
   },
   projects: [
     {

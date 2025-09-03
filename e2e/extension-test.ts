@@ -18,7 +18,7 @@ export const test = base.extend<{
 
     // Launch browser with the extension loaded
     const context = await chromium.launchPersistentContext('', {
-      headless: false, // Extensions require a head
+      headless: process.env.CI ? true : false, // Use headless in CI, headed locally
       args: [
         `--disable-extensions-except=${distPath}`,
         `--load-extension=${distPath}`,
