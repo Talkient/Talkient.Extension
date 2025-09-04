@@ -23,6 +23,7 @@
 
 ## TO DO
 
+- [ ] e2e tests: replace links to fixed htmls
 - [ ] play/pause buttons at the left and showing up on hover
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [ ] Skip hidden elements

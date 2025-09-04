@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talkient Play-Pause Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        line-height: 1.6;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .test-paragraph {
+        margin-bottom: 15px;
+      }
+      .status-indicator {
+        font-weight: bold;
+        padding: 5px;
+        display: inline-block;
+        margin-top: 10px;
+      }
+      .playing {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .paused {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Talkient Play-Pause Test Page</h1>
+      <p>
+        This page contains multiple sections to test play and pause
+        functionality of the Talkient extension.
+      </p>
+
+      <div id="section1" class="test-section">
+        <h2>Section 1: Introduction</h2>
+        <p id="para1" class="test-paragraph">
+          Welcome to the Talkient extension testing page. This paragraph is
+          designed to test the play functionality of the extension. When you
+          click the play button, the extension should start reading this text
+          aloud and highlight the text being read. The highlighting should move
+          with the reading progress.
+        </p>
+        <p id="para2" class="test-paragraph">
+          This is the second paragraph in this section. It continues with more
+          text that can be read by the Talkient extension. Testing with multiple
+          paragraphs helps ensure the extension works correctly with different
+          blocks of text on the same page.
+        </p>
+        <div id="status1" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div id="section2" class="test-section">
+        <h2>Section 2: Technical Details</h2>
+        <p id="para3" class="test-paragraph">
+          Talkient is a browser extension that provides text-to-speech
+          functionality for web pages. It processes text content, adds play
+          buttons, and converts text to speech when triggered. The extension
+          supports various voice options, speech rates, and highlighting styles.
+        </p>
+        <p id="para4" class="test-paragraph">
+          The extension uses the browser's built-in TTS capabilities and
+          enhances them with a user-friendly interface. It works by injecting
+          content scripts into web pages, which modify the DOM to add play
+          buttons and handle text-to-speech interactions.
+        </p>
+        <div id="status2" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div id="section3" class="test-section">
+        <h2>Section 3: User Experience</h2>
+        <p id="para5" class="test-paragraph">
+          When using Talkient, users can control speech playback through
+          intuitive controls. The extension provides visual feedback through
+          text highlighting, making it easier to follow along with the spoken
+          content. This paragraph is particularly long to test how the extension
+          handles longer blocks of text. It should maintain consistent
+          performance regardless of text length, and the highlighting should
+          continue to match the spoken words throughout the entire paragraph.
+        </p>
+        <div id="status3" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div id="section4" class="test-section">
+        <h2>Section 4: Advanced Features</h2>
+        <p id="para6" class="test-paragraph">
+          Talkient includes advanced features such as adjustable speech rate,
+          voice selection, and customizable highlighting styles. Users can
+          personalize their experience by selecting from available system voices
+          and adjusting speech parameters to match their preferences.
+        </p>
+        <p id="para7" class="test-paragraph">
+          The extension also includes a control panel for easy access to
+          settings while browsing. This allows users to make adjustments on the
+          fly without navigating to a separate options page. The control panel
+          can be collapsed when not in use to minimize visual distraction.
+        </p>
+        <div id="status4" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div id="section5" class="test-section">
+        <h2>Section 5: Accessibility Benefits</h2>
+        <p id="para8" class="test-paragraph">
+          Text-to-speech functionality provides significant accessibility
+          benefits for users with visual impairments, reading difficulties, or
+          learning disabilities. It can also be helpful for multitasking,
+          allowing users to consume content while engaged in other activities.
+        </p>
+        <p id="para9" class="test-paragraph">
+          By making web content more accessible through audio presentation,
+          Talkient helps create a more inclusive browsing experience. The
+          extension is designed with accessibility principles in mind, ensuring
+          that all users can benefit from its features.
+        </p>
+        <div id="status5" class="status-indicator">Ready for testing</div>
+      </div>
+    </div>
+
+    <script>
+      // This script is for visual feedback during manual testing
+      // The actual functionality will be handled by the Talkient extension
+      document.addEventListener('talkient:play-started', function (e) {
+        if (e.detail && e.detail.elementId) {
+          const section = document
+            .getElementById(e.detail.elementId)
+            .closest('.test-section');
+          if (section) {
+            const status = section.querySelector('.status-indicator');
+            if (status) {
+              status.textContent = 'Playing';
+              status.className = 'status-indicator playing';
+            }
+          }
+        }
+      });
+
+      document.addEventListener('talkient:play-paused', function (e) {
+        if (e.detail && e.detail.elementId) {
+          const section = document
+            .getElementById(e.detail.elementId)
+            .closest('.test-section');
+          if (section) {
+            const status = section.querySelector('.status-indicator');
+            if (status) {
+              status.textContent = 'Paused';
+              status.className = 'status-indicator paused';
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
