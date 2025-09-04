@@ -5,6 +5,9 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
+    // Wait for page to be fully loaded
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
+
     // Take a screenshot for verification
     await page.screenshot({ path: 'e2e-results/options-page-screenshot.png' });
 
@@ -55,6 +58,9 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
+    // Wait for input to be ready
+    await page.waitForSelector('#minimum-words-input');
+
     // Get the current value
     const initialValue = await page
       .locator('#minimum-words-input')
@@ -62,6 +68,9 @@ test.describe('Talkient Extension Options Page', () => {
 
     // Set a new value
     await page.locator('#minimum-words-input').fill('5');
+
+    // Wait for the status message to appear, confirming the change was processed
+    await page.waitForSelector('#status.visible.success');
 
     // Verify the value changed
     await expect(page.locator('#minimum-words-input')).toHaveValue('5');
@@ -109,17 +118,26 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
+    // Wait for slider to be ready
+    await page.waitForSelector('#rate-slider');
+
     // Get the current value
     const initialValue = await page.locator('#rate-slider').inputValue();
 
     // Set a new speech rate
     await page.locator('#rate-slider').fill('1.5');
 
-    // Need to dispatch an input event since fill() might not trigger it for range inputs
+    // Use Playwright's more reliable fill + dispatchEvent approach
     await page.evaluate(() => {
-      const event = new Event('input', { bubbles: true });
-      document.getElementById('rate-slider')?.dispatchEvent(event);
+      const slider = document.getElementById('rate-slider') as HTMLInputElement;
+      slider.value = '1.5';
+      // Dispatch both input and change events for better reliability
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+      slider.dispatchEvent(new Event('change', { bubbles: true }));
     });
+
+    // Wait for the status message to appear, confirming the change was processed
+    await page.waitForSelector('#status.visible.success');
 
     // Verify the value changed
     await expect(page.locator('#rate-slider')).toHaveValue('1.5');
