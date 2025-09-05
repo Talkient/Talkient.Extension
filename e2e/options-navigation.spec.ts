@@ -40,8 +40,13 @@ test.describe('Talkient Extension - Options Navigation', () => {
     extensionId,
     context,
   }) => {
+    // Calculate the path to the local example test page
+    const path = require('path');
+    const testPagePath = path.join(__dirname, 'test-pages', 'example.html');
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
     // Navigate to a test page
-    await page.goto('https://example.com');
+    await page.goto(fileUrl);
     await page.waitForLoadState('networkidle');
 
     // Wait a moment to ensure content script is loaded

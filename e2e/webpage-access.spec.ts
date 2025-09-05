@@ -6,10 +6,17 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     context,
     extensionId,
   }) => {
-    // Navigate to the Microsoft Learn documentation page
-    await page.goto(
-      'https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-contextual-function-selection?programming-languages=programming-language-csharp&pivots=programming-language-csharp'
+    // Calculate the path to the local Microsoft Learn test page
+    const path = require('path');
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'semantic-kernel-agent-contextual-function-selection.html'
     );
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
+    // Navigate to the local Microsoft Learn test page
+    await page.goto(fileUrl);
 
     // Wait for the page to fully load
     await page.waitForLoadState('networkidle');
@@ -170,10 +177,17 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     context,
     extensionId,
   }) => {
-    // Navigate to the AWS blog page
-    await page.goto(
-      'https://aws.amazon.com/pt/blogs/aws/prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview/'
+    // Calculate the path to the local AWS blog test page
+    const path = require('path');
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html'
     );
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
+    // Navigate to the local AWS blog test page
+    await page.goto(fileUrl);
 
     // Wait for the page to fully load
     await page.waitForLoadState('networkidle');
@@ -285,10 +299,17 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     context,
     extensionId,
   }) => {
-    // Navigate to AWS blog page (which seems to work better in tests)
-    await page.goto(
-      'https://aws.amazon.com/pt/blogs/aws/prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview/'
+    // Calculate the path to the local AWS blog test page
+    const path = require('path');
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html'
     );
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
+    // Navigate to local AWS blog test page
+    await page.goto(fileUrl);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 

@@ -3,10 +3,17 @@ import { test, expect } from './extension-test';
 test.describe('Talkient Control Panel', () => {
   // Setup before each test - navigate to a test page and make sure the control panel exists
   test.beforeEach(async ({ page, context }) => {
-    // Navigate to a test page
-    await page.goto(
-      'https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-contextual-function-selection?programming-languages=programming-language-csharp&pivots=programming-language-csharp'
+    // Calculate the path to the local semantic kernel test page
+    const path = require('path');
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'semantic-kernel-agent-contextual-function-selection.html'
     );
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
+    // Navigate to a test page
+    await page.goto(fileUrl);
 
     // Wait for page to be fully loaded
     await page.waitForLoadState('networkidle');
