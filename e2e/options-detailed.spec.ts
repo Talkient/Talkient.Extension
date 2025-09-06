@@ -176,9 +176,16 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
     await navigateToOptionsPage(page, extensionId);
 
     await test.step('Test minimum words input constraints', async () => {
-      // We'll bypass the test of negative numbers and just test the validation in the code directly
-      // First, set to a valid value
+      // First, ensure the input field is visible and interactive
+      await page.locator('#minimum-words-input').waitFor({ state: 'visible' });
+
+      // Set to a valid value and explicitly wait for the input to stabilize
+      await page.locator('#minimum-words-input').clear();
       await page.locator('#minimum-words-input').fill('10');
+      await page.locator('#minimum-words-input').blur(); // Blur to trigger validation
+
+      // Wait briefly for any validation to occur
+      await page.waitForTimeout(300);
 
       // Check that the value is accepted
       const valueAfterValid = await page
@@ -187,25 +194,23 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       expect(valueAfterValid).toBe('10');
 
       // Try to set a non-integer value
+      await page.locator('#minimum-words-input').clear();
       await page.locator('#minimum-words-input').fill('5.5');
 
-      // Trigger the input event to validate the value
-      await page.evaluate(() => {
-        const input = document.getElementById(
-          'minimum-words-input'
-        ) as HTMLInputElement;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      });
+      // Use focus/blur instead of direct event dispatch for more reliability
+      await page.locator('#minimum-words-input').focus();
+      await page.locator('#minimum-words-input').blur();
 
-      // Wait for validation to take effect
-      await page.waitForTimeout(100);
+      // Wait longer for validation to take effect
+      await page.waitForTimeout(500);
 
       // Check that the value is constrained to an integer (as step="1")
       const valueAfterFloat = await page
         .locator('#minimum-words-input')
         .inputValue();
-      // Different browsers may handle this differently, so check if it's an integer
-      expect(parseInt(valueAfterFloat)).toBe(parseFloat(valueAfterFloat));
+
+      // More robust validation that handles different browser behaviors
+      expect(Number.isInteger(parseFloat(valueAfterFloat))).toBe(true);
     });
 
     // Take a screenshot for verification
