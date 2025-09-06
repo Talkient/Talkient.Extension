@@ -232,7 +232,7 @@ describe('service-worker.ts', () => {
 
           expect(consoleSpy).toHaveBeenCalledWith(
             '[Talkient.SW] not handled tts.speak event: ',
-            { type: 'unknown_event' }
+            JSON.stringify({ type: 'unknown_event' })
           );
           consoleSpy.mockRestore();
         });
@@ -550,7 +550,7 @@ describe('service-worker.ts', () => {
 
         expect(consoleSpy).toHaveBeenCalledWith(
           '[Talkient.SW] not handled tts.speak event: ',
-          { type: 'start' }
+          JSON.stringify({ type: 'start' })
         );
         consoleSpy.mockRestore();
       });

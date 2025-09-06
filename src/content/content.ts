@@ -72,7 +72,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Handle speech cancellation or errors by resetting UI
     console.warn(
       `[Talkient] Speech ${message.type === 'SPEECH_CANCELLED' ? 'cancelled' : 'error'}: `,
-      message
+      JSON.stringify(message)
     );
 
     // Reset all play buttons to their initial state

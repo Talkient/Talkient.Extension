@@ -23,8 +23,8 @@
 
 ## TO DO
 
-- [ ] e2e tests: replace links to fixed htmls
 - [ ] play/pause buttons at the left and showing up on hover
+- [ ] If the page is reloaded the audio should be stopped
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [ ] Skip hidden elements
 - [ ] play button for a tags
@@ -35,6 +35,7 @@
 - [ ] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
+- [ ] Play option if a range is selcted and right clicked
 - [ ] Options page
   - [ ] Reset default settings
   - [ ] Skip tags

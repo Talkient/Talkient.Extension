@@ -102,10 +102,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const speechPitch =
             typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
 
-          console.log('[Talkient.SW] Selected voice:', selectedVoice);
-          console.log('[Talkient.SW] Speech rate:', speechRate);
-          console.log('[Talkient.SW] Speech pitch:', speechPitch);
-
           const ttsOptions: chrome.tts.TtsOptions = {
             rate: speechRate,
             pitch: speechPitch,
@@ -132,7 +128,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if (chrome.runtime.lastError) {
                       console.error(
                         '[Talkient.SW] Error getting autoPlayNext setting:',
-                        chrome.runtime.lastError
+                        JSON.stringify(chrome.runtime.lastError)
                       );
                       return;
                     }
@@ -181,14 +177,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   if (chrome.runtime.lastError) {
                     console.error(
                       '[Talkient.SW] Error stopping TTS:',
-                      chrome.runtime.lastError
+                      JSON.stringify(chrome.runtime.lastError)
                     );
                   }
                   break;
                 default:
                   console.warn(
                     '[Talkient.SW] not handled tts.speak event: ',
-                    event
+                    JSON.stringify(event)
                   );
                   break;
               }
