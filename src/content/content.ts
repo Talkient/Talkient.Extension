@@ -226,6 +226,23 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // Initial processing
 processTextElements();
 
+// Add event listener to stop speech when page is unloaded/refreshed
+window.addEventListener('beforeunload', () => {
+  console.log('[Talkient] Page unloading, stopping speech...');
+  chrome.runtime.sendMessage(
+    { type: 'PAUSE_SPEECH', isPageUnload: true },
+    (response) => {
+      // This callback might not execute if the page is already unloading
+      if (chrome.runtime.lastError) {
+        console.error(
+          '[Talkient] Error sending pause message:',
+          chrome.runtime.lastError
+        );
+      }
+    }
+  );
+});
+
 // Watch for DOM changes to process new text elements
 // const observer = new MutationObserver((mutations: MutationRecord[]) => {
 //     for (const mutation of mutations) {

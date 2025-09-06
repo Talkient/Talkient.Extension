@@ -274,6 +274,7 @@ describe('Content Script Message Handling', () => {
 
     // Reset chrome mock
     mockChrome.runtime.onMessage.addListener.mockClear();
+    mockChrome.runtime.sendMessage.mockClear();
   });
 
   afterEach(() => {
@@ -452,5 +453,20 @@ describe('Content Script Message Handling', () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  test('should send stop message on beforeunload event', () => {
+    // Import content script to register event listeners
+    require('../content');
+
+    // Trigger beforeunload event
+    const beforeUnloadEvent = new Event('beforeunload');
+    window.dispatchEvent(beforeUnloadEvent);
+
+    // Check that correct message was sent
+    expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
+      { type: 'PAUSE_SPEECH', isPageUnload: true },
+      expect.any(Function)
+    );
   });
 });

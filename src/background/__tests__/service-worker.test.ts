@@ -249,6 +249,28 @@ describe('service-worker.ts', () => {
         expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
         expect(result).toBe(true);
       });
+
+      it('should stop TTS when isPageUnload is true', () => {
+        const request = { type: 'PAUSE_SPEECH', isPageUnload: true };
+
+        // Set up console spy to capture logs
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        // Should call stop instead of pause
+        expect(chrome.tts.stop).toHaveBeenCalled();
+        expect(chrome.tts.pause).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+        expect(result).toBe(true);
+
+        // Should log the correct message
+        expect(consoleSpy).toHaveBeenCalledWith(
+          '[Talkient.SW] Page is unloading, stopping speech completely...'
+        );
+
+        consoleSpy.mockRestore();
+      });
     });
 
     describe('OPEN_OPTIONS message', () => {
@@ -452,6 +474,27 @@ describe('service-worker.ts', () => {
 
         expect(chrome.tts.pause).toHaveBeenCalledTimes(2);
         expect(mockSendResponse).toHaveBeenCalledTimes(2);
+      });
+
+      it('should completely stop speech when isPageUnload flag is set', () => {
+        // Set up console spy to capture logs
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+        const request = { type: 'PAUSE_SPEECH', isPageUnload: true };
+
+        messageHandler(request, mockSender, mockSendResponse);
+
+        // Should stop instead of pause
+        expect(chrome.tts.stop).toHaveBeenCalled();
+        expect(chrome.tts.pause).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+
+        // Should log that page is unloading
+        expect(consoleSpy).toHaveBeenCalledWith(
+          '[Talkient.SW] Page is unloading, stopping speech completely...'
+        );
+
+        consoleSpy.mockRestore();
       });
     });
 
@@ -838,6 +881,100 @@ describe('service-worker.ts', () => {
           type: 'SPEECH_ENDED',
           autoPlayNext: false,
         });
+      });
+    });
+
+    describe('tab event handling', () => {
+      beforeEach(() => {
+        // Reset all tab-related mocks
+        (chrome.tabs.onActivated.addListener as jest.Mock).mockClear();
+        (chrome.tabs.onRemoved.addListener as jest.Mock).mockClear();
+        (chrome.tabs.onUpdated.addListener as jest.Mock).mockClear();
+        (chrome.tts.stop as jest.Mock).mockClear();
+      });
+
+      it('should register tab event listeners when service worker loads', () => {
+        // Re-import service worker to register the event listeners
+        jest.resetModules();
+        require('./mocks/chrome');
+
+        // Import service worker module which should register tab event listeners
+        require('../service-worker');
+
+        // Verify that event listeners were registered
+        expect(chrome.tabs.onActivated.addListener).toHaveBeenCalled();
+        expect(chrome.tabs.onRemoved.addListener).toHaveBeenCalled();
+        expect(chrome.tabs.onUpdated.addListener).toHaveBeenCalled();
+      });
+
+      it('should handle tab removal correctly', () => {
+        // Re-import service worker to register the event listeners
+        jest.resetModules();
+        require('./mocks/chrome');
+        require('../service-worker');
+
+        // Get the registered event handler
+        const onRemovedHandler = (
+          chrome.tabs.onRemoved.addListener as jest.Mock
+        ).mock.calls[0][0];
+
+        // Verify handler exists
+        expect(typeof onRemovedHandler).toBe('function');
+
+        // First set active tab ID through a speech request
+        const speakRequest = { type: 'SPEAK_TEXT', text: 'Test text' };
+        const mockSender = { tab: { id: 123 } };
+        const mockSendResponse = jest.fn();
+
+        // Get the message handler
+        const messageHandler = (
+          chrome.runtime.onMessage.addListener as jest.Mock
+        ).mock.calls[0][0];
+        messageHandler(speakRequest, mockSender, mockSendResponse);
+
+        // Reset stop mock
+        (chrome.tts.stop as jest.Mock).mockClear();
+
+        // Now simulate tab removal for active tab
+        onRemovedHandler(123);
+
+        // Should stop speech
+        expect(chrome.tts.stop).toHaveBeenCalled();
+      });
+
+      it('should handle tab update (refresh) correctly', () => {
+        // Re-import service worker to register the event listeners
+        jest.resetModules();
+        require('./mocks/chrome');
+        require('../service-worker');
+
+        // Get the registered event handler
+        const onUpdatedHandler = (
+          chrome.tabs.onUpdated.addListener as jest.Mock
+        ).mock.calls[0][0];
+
+        // Verify handler exists
+        expect(typeof onUpdatedHandler).toBe('function');
+
+        // First set active tab ID through a speech request
+        const speakRequest = { type: 'SPEAK_TEXT', text: 'Test text' };
+        const mockSender = { tab: { id: 123 } };
+        const mockSendResponse = jest.fn();
+
+        // Get the message handler
+        const messageHandler = (
+          chrome.runtime.onMessage.addListener as jest.Mock
+        ).mock.calls[0][0];
+        messageHandler(speakRequest, mockSender, mockSendResponse);
+
+        // Reset stop mock
+        (chrome.tts.stop as jest.Mock).mockClear();
+
+        // Now simulate tab refresh
+        onUpdatedHandler(123, { status: 'loading' });
+
+        // Should stop speech
+        expect(chrome.tts.stop).toHaveBeenCalled();
       });
     });
   });

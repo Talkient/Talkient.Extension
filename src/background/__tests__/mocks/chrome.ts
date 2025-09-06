@@ -33,6 +33,16 @@
   },
   tabs: {
     sendMessage: jest.fn(),
+    query: jest.fn(),
+    onActivated: {
+      addListener: jest.fn(),
+    },
+    onRemoved: {
+      addListener: jest.fn(),
+    },
+    onUpdated: {
+      addListener: jest.fn(),
+    },
   },
   runtime: {
     onMessage: {

@@ -5,6 +5,7 @@ let isPaused = false;
 let currentText = '';
 let availableVoices: chrome.tts.TtsVoice[] = [];
 let ttsAvailable = false;
+let activeTabId: number | null = null;
 
 // Function to check if TTS is available
 function checkTtsAvailability() {
@@ -47,6 +48,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === 'SPEAK_TEXT') {
     console.log('[Talkient.SW] Starting to speak... ');
+
+    // Store the tab ID that started speech
+    if (sender.tab?.id) {
+      activeTabId = sender.tab.id;
+    }
+
     if (isPaused && currentText != request.text) {
       console.log('[Talkient.SW] Playing new audio after a paused speech...');
       chrome.tts.stop();
@@ -236,10 +243,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.type === 'PAUSE_SPEECH') {
     console.log('[Talkient.SW] Pausing the speak...');
     isPaused = true;
-    chrome.tts.pause();
+
+    // If this is coming from a page unload event, we should stop completely rather than pause
+    if (request.isPageUnload) {
+      console.log(
+        '[Talkient.SW] Page is unloading, stopping speech completely...'
+      );
+      chrome.tts.stop();
+      isPaused = false;
+      currentText = '';
+    } else {
+      chrome.tts.pause();
+    }
+
     if (chrome.runtime.lastError) {
       console.error(
-        '[Talkient.SW] Error pausing speech:',
+        '[Talkient.SW] Error pausing/stopping speech:',
         chrome.runtime.lastError
       );
     }
@@ -283,4 +302,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else console.warn(`[Talkient.SW] Event ${request.type} not implemented`);
 
   return true;
+});
+
+// Track active tab for managing speech
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  activeTabId = activeInfo.tabId;
+});
+
+// Stop speech when tab is refreshed or closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  if (tabId === activeTabId) {
+    console.log('[Talkient.SW] Active tab closed, stopping speech...');
+    chrome.tts.stop();
+    isPaused = false;
+    currentText = '';
+    activeTabId = null;
+  }
+});
+
+// Also stop speech when tab is updated (refreshed)
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (tabId === activeTabId && changeInfo.status === 'loading') {
+    console.log('[Talkient.SW] Active tab refreshed, stopping speech...');
+    chrome.tts.stop();
+    isPaused = false;
+    currentText = '';
+  }
 });
