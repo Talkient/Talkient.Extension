@@ -54,9 +54,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       activeTabId = sender.tab.id;
     }
 
-    if (isPaused && currentText != request.text) {
-      console.log('[Talkient.SW] Playing new audio after a paused speech...');
+    // Always stop current speech when starting a new one with different text
+    if (currentText !== '' && currentText !== request.text) {
+      console.log(
+        '[Talkient.SW] Playing new audio, stopping current speech...'
+      );
       chrome.tts.stop();
+      isPaused = false;
     }
 
     // Check if TTS is available

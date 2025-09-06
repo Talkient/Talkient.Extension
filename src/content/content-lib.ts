@@ -363,6 +363,18 @@ export function processTextElements(): void {
                 // Set play icon
                 playButton.innerHTML = getSvgIcon('play');
                 clearHighlight();
+
+                // Reset all other buttons that might be in pause state
+                document
+                  .querySelectorAll('.talkient-play-button')
+                  .forEach((btn) => {
+                    if (
+                      btn !== playButton &&
+                      isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
+                    ) {
+                      btn.innerHTML = getSvgIcon('play');
+                    }
+                  });
               }
             }
           );
@@ -376,6 +388,16 @@ export function processTextElements(): void {
           } else if (event.altKey) {
             highlightStyle = 'elegant';
           }
+
+          // Reset all other buttons that might be in pause state
+          document.querySelectorAll('.talkient-play-button').forEach((btn) => {
+            if (
+              btn !== playButton &&
+              isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
+            ) {
+              btn.innerHTML = getSvgIcon('play');
+            }
+          });
 
           // Play the speech and highlight the text
           const textElement = wrapper.querySelector('span') || wrapper;
