@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talkient Hidden Elements Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        line-height: 1.6;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .test-paragraph {
+        margin-bottom: 15px;
+      }
+      /* Hidden element styles */
+      .display-none {
+        display: none;
+      }
+      .visibility-hidden {
+        visibility: hidden;
+      }
+      .opacity-zero {
+        opacity: 0;
+      }
+      /* Toggle container styles */
+      .toggle-container {
+        margin: 20px 0;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+      }
+      button {
+        padding: 8px 15px;
+        margin-right: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0069d9;
+      }
+      .status {
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      .visible-control {
+        background-color: #d4edda;
+        padding: 5px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Talkient Hidden Elements Test Page</h1>
+      <p>This page tests how the Talkient extension handles hidden elements.</p>
+
+      <div class="visible-control">
+        <p id="control-paragraph" class="test-paragraph">
+          This is a visible control paragraph. The Talkient extension should
+          process this paragraph and add a play button. It serves as a reference
+          point to verify that the extension is working correctly on this page.
+        </p>
+      </div>
+
+      <!-- Test Section 1: Display None -->
+      <div id="section1" class="test-section">
+        <h2>Section 1: Display None</h2>
+        <p class="test-paragraph">
+          The paragraph below is hidden with display:none. It should not be
+          processed by the Talkient extension.
+        </p>
+        <div class="display-none">
+          <p id="display-none-paragraph" class="test-paragraph">
+            This paragraph is hidden with display:none. The Talkient extension
+            should not process this text or add any play buttons to it. This
+            text has enough words to normally qualify for processing, but since
+            it's hidden, it should be ignored.
+          </p>
+        </div>
+        <div class="toggle-container">
+          <button onclick="toggleDisplayNone()">Toggle Display</button>
+          <div id="display-none-status" class="status">
+            Status: Hidden (display:none)
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Section 2: Visibility Hidden -->
+      <div id="section2" class="test-section">
+        <h2>Section 2: Visibility Hidden</h2>
+        <p class="test-paragraph">
+          The paragraph below is hidden with visibility:hidden. It should not be
+          processed by the Talkient extension.
+        </p>
+        <div class="visibility-hidden">
+          <p id="visibility-hidden-paragraph" class="test-paragraph">
+            This paragraph is hidden with visibility:hidden. The Talkient
+            extension should not process this text or add any play buttons to
+            it. This text has enough words to normally qualify for processing,
+            but since it's hidden, it should be ignored.
+          </p>
+        </div>
+        <div class="toggle-container">
+          <button onclick="toggleVisibilityHidden()">Toggle Visibility</button>
+          <div id="visibility-hidden-status" class="status">
+            Status: Hidden (visibility:hidden)
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Section 3: Opacity Zero -->
+      <div id="section3" class="test-section">
+        <h2>Section 3: Opacity Zero</h2>
+        <p class="test-paragraph">
+          The paragraph below is hidden with opacity:0. It should not be
+          processed by the Talkient extension.
+        </p>
+        <div class="opacity-zero">
+          <p id="opacity-zero-paragraph" class="test-paragraph">
+            This paragraph is hidden with opacity:0. The Talkient extension
+            should not process this text or add any play buttons to it. This
+            text has enough words to normally qualify for processing, but since
+            it's hidden, it should be ignored.
+          </p>
+        </div>
+        <div class="toggle-container">
+          <button onclick="toggleOpacityZero()">Toggle Opacity</button>
+          <div id="opacity-zero-status" class="status">
+            Status: Hidden (opacity:0)
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Section 4: Nested Hidden Elements -->
+      <div id="section4" class="test-section">
+        <h2>Section 4: Nested Hidden Elements</h2>
+        <p class="test-paragraph">
+          The div below contains multiple nested elements, with the parent being
+          hidden. None of the nested content should be processed.
+        </p>
+        <div id="nested-container" class="display-none">
+          <div>
+            <p id="nested-paragraph-1" class="test-paragraph">
+              This is the first nested paragraph inside a hidden parent. The
+              Talkient extension should not process this text.
+            </p>
+            <div>
+              <p id="nested-paragraph-2" class="test-paragraph">
+                This is a deeply nested paragraph that should also not be
+                processed by the extension since its ancestor is hidden.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="toggle-container">
+          <button onclick="toggleNestedElements()">
+            Toggle Nested Elements
+          </button>
+          <div id="nested-elements-status" class="status">
+            Status: Hidden (display:none)
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Section 5: Dynamic Visibility Changes -->
+      <div id="section5" class="test-section">
+        <h2>Section 5: Dynamic Visibility Changes</h2>
+        <p class="test-paragraph">
+          This section tests how the extension handles elements that change
+          visibility after the page loads.
+        </p>
+        <div id="dynamic-container">
+          <p id="dynamic-paragraph" class="test-paragraph">
+            This paragraph starts visible but will be hidden when you click the
+            button below. When hidden, any play buttons should disappear. When
+            made visible again, the extension should process it and add a play
+            button after reprocessing.
+          </p>
+        </div>
+        <div class="toggle-container">
+          <button onclick="toggleDynamicVisibility()">
+            Toggle Dynamic Visibility
+          </button>
+          <button onclick="triggerReprocessing()">Trigger Reprocessing</button>
+          <div id="dynamic-visibility-status" class="status">
+            Status: Visible
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Toggle functions for the test elements
+      function toggleDisplayNone() {
+        const element = document.querySelector('.display-none');
+        const status = document.getElementById('display-none-status');
+
+        if (element.style.display === 'block') {
+          element.style.display = 'none';
+          status.textContent = 'Status: Hidden (display:none)';
+        } else {
+          element.style.display = 'block';
+          status.textContent = 'Status: Visible';
+        }
+
+        // Trigger reprocessing
+        triggerReprocessing();
+      }
+
+      function toggleVisibilityHidden() {
+        const element = document.querySelector('.visibility-hidden');
+        const status = document.getElementById('visibility-hidden-status');
+
+        if (element.style.visibility === 'visible') {
+          element.style.visibility = 'hidden';
+          status.textContent = 'Status: Hidden (visibility:hidden)';
+        } else {
+          element.style.visibility = 'visible';
+          status.textContent = 'Status: Visible';
+        }
+
+        // Trigger reprocessing
+        triggerReprocessing();
+      }
+
+      function toggleOpacityZero() {
+        const element = document.querySelector('.opacity-zero');
+        const status = document.getElementById('opacity-zero-status');
+
+        if (element.style.opacity === '1') {
+          element.style.opacity = '0';
+          status.textContent = 'Status: Hidden (opacity:0)';
+        } else {
+          element.style.opacity = '1';
+          status.textContent = 'Status: Visible';
+        }
+
+        // Trigger reprocessing
+        triggerReprocessing();
+      }
+
+      function toggleNestedElements() {
+        const element = document.getElementById('nested-container');
+        const status = document.getElementById('nested-elements-status');
+
+        if (element.style.display === 'block') {
+          element.style.display = 'none';
+          status.textContent = 'Status: Hidden (display:none)';
+        } else {
+          element.style.display = 'block';
+          status.textContent = 'Status: Visible';
+        }
+
+        // Trigger reprocessing
+        triggerReprocessing();
+      }
+
+      function toggleDynamicVisibility() {
+        const element = document.getElementById('dynamic-container');
+        const status = document.getElementById('dynamic-visibility-status');
+
+        if (element.style.display === 'none') {
+          element.style.display = 'block';
+          status.textContent = 'Status: Visible';
+        } else {
+          element.style.display = 'none';
+          status.textContent = 'Status: Hidden (display:none)';
+        }
+
+        // Trigger reprocessing
+        triggerReprocessing();
+      }
+
+      function triggerReprocessing() {
+        // Create and dispatch a custom event to trigger reprocessing
+        const reloadEvent = new CustomEvent('talkient:reload-play-buttons');
+        document.dispatchEvent(reloadEvent);
+
+        // Also create a dummy element and remove it to trigger mutation observer
+        const dummyElem = document.createElement('div');
+        dummyElem.id = 'talkient-mutation-trigger';
+        document.body.appendChild(dummyElem);
+        setTimeout(() => dummyElem.remove(), 500);
+      }
+    </script>
+  </body>
+</html>

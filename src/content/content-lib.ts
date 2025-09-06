@@ -167,6 +167,20 @@ export function shouldProcessNode(node: Node): boolean {
   const parent = node.parentElement;
   if (!parent) return false;
 
+  // Check if the node is within a hidden element
+  let current: HTMLElement | null = parent;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0'
+    ) {
+      return false;
+    }
+    current = current.parentElement;
+  }
+
   // Skip if parent is a script, style, or button
   if (
     parent.tagName === 'SCRIPT' ||

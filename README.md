@@ -24,9 +24,8 @@
 ## TO DO
 
 - [ ] play/pause buttons at the left and showing up on hover
-- [ ] If the page is reloaded the audio should be stopped
+- [ ] Bug: Play text1, then play text2 and try to pause it
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
-- [ ] Skip hidden elements
 - [ ] play button for a tags
 - [ ] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
