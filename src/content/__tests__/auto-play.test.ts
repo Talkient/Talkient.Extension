@@ -63,7 +63,7 @@ describe('Auto-play functionality', () => {
         speechRate: 1.0,
         speechPitch: 1.0,
         highlightStyle: 'default',
-        autoPlayNext: false,
+        autoPlayNext: true,
       });
     });
   });

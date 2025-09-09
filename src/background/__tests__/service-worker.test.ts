@@ -166,7 +166,7 @@ describe('service-worker.ts', () => {
 
           expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
             type: 'SPEECH_ENDED',
-            autoPlayNext: false,
+            autoPlayNext: true,
           });
         });
 
@@ -851,7 +851,7 @@ describe('service-worker.ts', () => {
 
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
           type: 'SPEECH_ENDED',
-          autoPlayNext: false,
+          autoPlayNext: true,
         });
       });
 
@@ -879,7 +879,7 @@ describe('service-worker.ts', () => {
 
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(123, {
           type: 'SPEECH_ENDED',
-          autoPlayNext: false,
+          autoPlayNext: true,
         });
       });
     });

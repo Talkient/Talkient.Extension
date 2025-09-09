@@ -143,7 +143,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                       );
                       return;
                     }
-                    const autoPlayNext = result.autoPlayNext || false;
+                    const autoPlayNext = result.autoPlayNext !== false;
                     // Notify content script that speech has ended
                     if (sender.tab?.id) {
                       chrome.tabs.sendMessage(sender.tab.id, {

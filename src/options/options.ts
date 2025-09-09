@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? result.highlightStyle
           : 'default';
       const autoPlayNext =
-        typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
+        typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : true;
       const followHighlight =
         typeof result.followHighlight === 'boolean'
           ? result.followHighlight

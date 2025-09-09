@@ -43,6 +43,7 @@
   - [ ] Follow scroll
   - [x] Configure maximum nodes processed (performance optimization)
 - [ ] Popup page
+- [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
 - [ ] Add support for `"file:///*"` like PDF
 - [ ] E2E tests
   - Play/Pause

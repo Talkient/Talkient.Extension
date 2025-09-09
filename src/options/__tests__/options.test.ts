@@ -594,7 +594,7 @@ describe('options.ts', () => {
       expect(autoPlayNextToggle.checked).toBe(true);
     });
 
-    it('should default to false when auto play next is not stored', async () => {
+    it('should default to true when auto play next is not stored', async () => {
       // Mock storage with missing auto play next setting
       (chrome.storage.local.get as jest.Mock).mockImplementation(
         (keys, callback) => {
@@ -616,7 +616,7 @@ describe('options.ts', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(autoPlayNextToggle.checked).toBe(false);
+      expect(autoPlayNextToggle.checked).toBe(true);
     });
 
     it('should save auto play next setting to storage when changed', async () => {
