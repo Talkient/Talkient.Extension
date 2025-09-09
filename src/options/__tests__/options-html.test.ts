@@ -21,6 +21,7 @@ describe('options.ts - using actual HTML', () => {
   let rateValue: HTMLSpanElement;
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
+  let followHighlightToggle: HTMLInputElement;
   let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
@@ -47,6 +48,9 @@ describe('options.ts - using actual HTML', () => {
     autoPlayNextToggle = document.getElementById(
       'auto-play-next-toggle'
     ) as HTMLInputElement;
+    followHighlightToggle = document.getElementById(
+      'follow-highlight-toggle'
+    ) as HTMLInputElement;
     minimumWordsInput = document.getElementById(
       'minimum-words-input'
     ) as HTMLInputElement;
@@ -60,6 +64,7 @@ describe('options.ts - using actual HTML', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
+          followHighlight: true,
           minimumWords: 3,
           maxNodesProcessed: 1000,
         });
@@ -155,6 +160,7 @@ describe('options.ts - using actual HTML', () => {
           'speechPitch',
           'highlightStyle',
           'autoPlayNext',
+          'followHighlight',
           'minimumWords',
           'maxNodesProcessed',
         ],
@@ -451,6 +457,43 @@ describe('options.ts - using actual HTML', () => {
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         autoPlayNext: true,
+      });
+    });
+  });
+
+  describe('follow highlight functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should have follow highlight toggle element', () => {
+      expect(followHighlightToggle).toBeTruthy();
+      expect(followHighlightToggle.type).toBe('checkbox');
+      expect(followHighlightToggle.id).toBe('follow-highlight-toggle');
+    });
+
+    it('should restore follow highlight setting from storage', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Element should be checked based on mock storage (followHighlight: true)
+      expect(followHighlightToggle.checked).toBe(true);
+    });
+
+    it('should save follow highlight setting when toggled', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Toggle the checkbox
+      followHighlightToggle.checked = false;
+      const changeEvent = new Event('change');
+      followHighlightToggle.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        followHighlight: false,
       });
     });
   });

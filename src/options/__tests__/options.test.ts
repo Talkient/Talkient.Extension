@@ -22,6 +22,7 @@ describe('options.ts', () => {
   let rateValue: HTMLSpanElement;
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
+  let followHighlightToggle: HTMLInputElement;
   let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
@@ -51,6 +52,9 @@ describe('options.ts', () => {
     autoPlayNextToggle = document.getElementById(
       'auto-play-next-toggle'
     ) as HTMLInputElement;
+    followHighlightToggle = document.getElementById(
+      'follow-highlight-toggle'
+    ) as HTMLInputElement;
     minimumWordsInput = document.getElementById(
       'minimum-words-input'
     ) as HTMLInputElement;
@@ -64,6 +68,7 @@ describe('options.ts', () => {
           speechPitch: 1.2,
           highlightStyle: 'default',
           autoPlayNext: false,
+          followHighlight: true,
           minimumWords: 3,
           maxNodesProcessed: 1000,
         });
@@ -171,6 +176,7 @@ describe('options.ts', () => {
           'speechPitch',
           'highlightStyle',
           'autoPlayNext',
+          'followHighlight',
           'minimumWords',
           'maxNodesProcessed',
         ],
@@ -636,6 +642,93 @@ describe('options.ts', () => {
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         autoPlayNext: false,
+      });
+    });
+  });
+
+  describe('follow highlight functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should restore follow highlight setting from storage', async () => {
+      // Mock storage with specific follow highlight setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            followHighlight: true,
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(followHighlightToggle.checked).toBe(true);
+    });
+
+    it('should default to true when follow highlight is not stored', async () => {
+      // Mock storage with missing follow highlight setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            // followHighlight is missing
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(followHighlightToggle.checked).toBe(true);
+    });
+
+    it('should save follow highlight setting to storage when changed', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change follow highlight setting
+      followHighlightToggle.checked = false;
+      const changeEvent = new Event('change');
+      followHighlightToggle.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        followHighlight: false,
+      });
+    });
+
+    it('should save true when toggled on', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change follow highlight setting to true
+      followHighlightToggle.checked = true;
+      const changeEvent = new Event('change');
+      followHighlightToggle.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        followHighlight: true,
       });
     });
   });

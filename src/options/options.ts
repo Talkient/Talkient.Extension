@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const autoPlayNextToggle = document.getElementById(
     'auto-play-next-toggle'
   ) as HTMLInputElement;
+  const followHighlightToggle = document.getElementById(
+    'follow-highlight-toggle'
+  ) as HTMLInputElement;
   const minimumWordsInput = document.getElementById(
     'minimum-words-input'
   ) as HTMLInputElement;
@@ -29,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     !rateValue ||
     !pitchValue ||
     !autoPlayNextToggle ||
+    !followHighlightToggle ||
     !minimumWordsInput ||
     !maxNodesInput
   )
@@ -42,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'speechPitch',
       'highlightStyle',
       'autoPlayNext',
+      'followHighlight',
       'minimumWords',
       'maxNodesProcessed',
     ],
@@ -60,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
           : 'default';
       const autoPlayNext =
         typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : false;
+      const followHighlight =
+        typeof result.followHighlight === 'boolean'
+          ? result.followHighlight
+          : true;
       const minimumWords =
         typeof result.minimumWords === 'number' ? result.minimumWords : 3;
       const maxNodesProcessed =
@@ -83,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set auto play next toggle
       autoPlayNextToggle.checked = autoPlayNext;
+
+      // Set follow highlight toggle
+      followHighlightToggle.checked = followHighlight;
 
       // Set minimum words input
       minimumWordsInput.value = minimumWords.toString();
@@ -129,6 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const newAutoPlay = changes.autoPlayNext.newValue;
           if (typeof newAutoPlay === 'boolean') {
             autoPlayNextToggle.checked = newAutoPlay;
+          }
+        }
+
+        // Update follow highlight if changed
+        if (changes.followHighlight) {
+          const newFollowHighlight = changes.followHighlight.newValue;
+          if (typeof newFollowHighlight === 'boolean') {
+            followHighlightToggle.checked = newFollowHighlight;
           }
         }
 
@@ -209,6 +229,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Auto play next item setting saved!', 'success');
+  });
+
+  // Save follow highlight setting to storage
+  followHighlightToggle.addEventListener('change', () => {
+    const followHighlight = followHighlightToggle.checked;
+    chrome.storage.local.set({ followHighlight });
+
+    // Show a brief status message
+    showStatus('Follow highlight setting saved!', 'success');
   });
 
   // Save minimum words setting to storage

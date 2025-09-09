@@ -36,6 +36,21 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       });
     });
 
+    await test.step('Change follow highlight toggle', async () => {
+      const initialState = await page
+        .locator('#follow-highlight-toggle')
+        .isChecked();
+
+      // Click the toggle using JavaScript to avoid visibility issues
+      await page.evaluate(() => {
+        const toggle = document.getElementById(
+          'follow-highlight-toggle'
+        ) as HTMLInputElement;
+        toggle.checked = !toggle.checked;
+        toggle.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+
     await test.step('Change minimum words', async () => {
       await page.locator('#minimum-words-input').fill('8');
     });
@@ -82,6 +97,9 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
     await test.step('Verify all settings were persisted after reload', async () => {
       const autoPlayChecked = await page
         .locator('#auto-play-next-toggle')
+        .isChecked();
+      const followHighlightChecked = await page
+        .locator('#follow-highlight-toggle')
         .isChecked();
       const minimumWords = await page
         .locator('#minimum-words-input')

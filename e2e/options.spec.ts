@@ -54,6 +54,44 @@ test.describe('Talkient Extension Options Page', () => {
     });
   });
 
+  test('should toggle follow highlight setting', async ({
+    page,
+    extensionId,
+  }) => {
+    // Navigate to the options page
+    await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+
+    // Get the current state of the toggle
+    const initialState = await page
+      .locator('#follow-highlight-toggle')
+      .isChecked();
+
+    // Click the toggle to change its state using JavaScript
+    await page.evaluate(() => {
+      const toggle = document.getElementById(
+        'follow-highlight-toggle'
+      ) as HTMLInputElement;
+      toggle.checked = !toggle.checked;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    // Verify the toggle state changed
+    await expect(page.locator('#follow-highlight-toggle')).toBeChecked({
+      checked: !initialState,
+    });
+
+    // Verify status message appears
+    await expect(page.locator('#status')).toHaveClass(/visible success/);
+    await expect(page.locator('#status')).toContainText(
+      'Follow highlight setting saved!'
+    );
+
+    // Take a screenshot for verification
+    await page.screenshot({
+      path: 'e2e-results/options-follow-highlight-toggle-screenshot.png',
+    });
+  });
+
   test('should change minimum words setting', async ({ page, extensionId }) => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
