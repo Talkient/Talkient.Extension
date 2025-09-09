@@ -49,6 +49,9 @@ export function highlightText(element: HTMLElement, style?: string): void {
   }
 
   currentHighlightedElement = element;
+
+  // Scroll to the highlighted element if follow highlight is enabled
+  scrollToHighlightedElement(element);
 }
 
 // Function to clear text highlighting
@@ -97,6 +100,48 @@ export function testHighlightingStyle(
       firstTextElement.textContent?.substring(0, 50)
     );
   }
+}
+
+// Function to smoothly scroll to highlighted element if followHighlight is enabled
+export function scrollToHighlightedElement(element: HTMLElement): void {
+  // Check if chrome API is available
+  if (
+    typeof chrome === 'undefined' ||
+    !chrome.storage ||
+    !chrome.storage.local
+  ) {
+    return;
+  }
+
+  // Check if followHighlight setting is enabled
+  chrome.storage.local.get(['followHighlight'], (result) => {
+    const followHighlight = result.followHighlight === true;
+
+    if (followHighlight && element) {
+      const rect = element.getBoundingClientRect();
+      const elementTop = rect.top;
+      const elementBottom = rect.bottom;
+      const viewportHeight = window.innerHeight;
+
+      // Only scroll if the element is not fully visible in the viewport
+      // or not close to the vertical center
+      const buffer = viewportHeight * 0.2; // 20% buffer zone
+      const isInCenterArea =
+        elementTop > buffer && elementBottom < viewportHeight - buffer;
+
+      if (!isInCenterArea) {
+        // Calculate position to center the element in the viewport
+        const scrollTo =
+          window.scrollY + elementTop - viewportHeight / 2 + rect.height / 2;
+
+        // Smoothly scroll to the position
+        window.scrollTo({
+          top: scrollTo,
+          behavior: 'smooth',
+        });
+      }
+    }
+  });
 }
 
 // Make functions available globally for console testing

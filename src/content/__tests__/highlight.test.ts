@@ -9,18 +9,34 @@ import {
   getHighlightingStyle,
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
+  scrollToHighlightedElement,
 } from '../highlight';
+
+// Mock scrollTo function
+window.scrollTo = jest.fn();
 
 // Mock chrome runtime for storage tests
 const mockChrome = {
   storage: {
     local: {
-      get: jest.fn(),
+      get: jest.fn((keys, callback) => {
+        // Default mock behavior for get - provide default values
+        if (Array.isArray(keys) && keys.includes('highlightStyle')) {
+          callback({ highlightStyle: 'default' });
+        } else if (Array.isArray(keys) && keys.includes('followHighlight')) {
+          callback({ followHighlight: false });
+        } else {
+          callback({});
+        }
+      }),
       set: jest.fn(),
     },
     onChanged: {
       addListener: jest.fn(),
     },
+  },
+  runtime: {
+    sendMessage: jest.fn(),
   },
 };
 (global as any).chrome = mockChrome;
@@ -338,5 +354,117 @@ describe('loadHighlightStyleFromStorage', () => {
 
       expect(getHighlightingStyle()).toBe(style);
     });
+  });
+});
+
+describe('scrollToHighlightedElement', () => {
+  let container: HTMLDivElement;
+  let testElement: HTMLElement;
+
+  beforeEach(() => {
+    // Reset mocks
+    jest.clearAllMocks();
+
+    // Create test element
+    container = document.createElement('div');
+    testElement = document.createElement('p');
+    testElement.textContent = 'Test element for scrolling';
+    testElement.style.height = '50px';
+    container.appendChild(testElement);
+    document.body.appendChild(container);
+
+    // Mock getBoundingClientRect
+    testElement.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 500, // Element is below viewport
+      bottom: 550,
+      height: 50,
+      width: 200,
+    });
+
+    // Mock window properties
+    Object.defineProperty(window, 'innerHeight', { value: 400 });
+    Object.defineProperty(window, 'scrollY', { value: 0 });
+  });
+
+  afterEach(() => {
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  test('should not scroll when followHighlight is disabled', () => {
+    // Mock the storage to return followHighlight: false
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ followHighlight: false });
+      }
+    );
+
+    scrollToHighlightedElement(testElement);
+
+    // Verify storage was queried with the right key
+    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
+      ['followHighlight'],
+      expect.any(Function)
+    );
+
+    // Verify scrollTo was not called
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  test('should scroll to center element when followHighlight is enabled', () => {
+    // Mock the storage to return followHighlight: true
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ followHighlight: true });
+      }
+    );
+
+    scrollToHighlightedElement(testElement);
+
+    // Verify storage was queried
+    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
+      ['followHighlight'],
+      expect.any(Function)
+    );
+
+    // Verify scrollTo was called with correct parameters
+    expect(window.scrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    });
+
+    // Check that the scrollTo position centers the element
+    const scrollCall = (window.scrollTo as jest.Mock).mock.calls[0][0];
+    expect(scrollCall.top).toBeGreaterThan(0); // Should scroll down
+    expect(scrollCall.behavior).toBe('smooth');
+  });
+
+  test('should not scroll when element is already centered', () => {
+    // Mock element that is already in center
+    testElement.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 150,
+      bottom: 200,
+      height: 50,
+      width: 200,
+    });
+
+    // Mock the storage to return followHighlight: true
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ followHighlight: true });
+      }
+    );
+
+    scrollToHighlightedElement(testElement);
+
+    // Verify storage was queried
+    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
+      ['followHighlight'],
+      expect.any(Function)
+    );
+
+    // Verify scrollTo was not called since element is already centered
+    expect(window.scrollTo).not.toHaveBeenCalled();
   });
 });

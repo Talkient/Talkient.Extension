@@ -16,6 +16,7 @@ import {
   setSpeechRate,
   loadMaxNodesFromStorage,
   setMaxNodesProcessed,
+  scrollToHighlightedElement,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -126,6 +127,13 @@ loadSpeechRateFromStorage();
 // Load maximum nodes setting from storage
 loadMaxNodesFromStorage();
 
+// Load follow highlight setting (defaults to false if not set)
+chrome.storage.local.get(['followHighlight'], (result) => {
+  console.log(
+    `[Talkient] Follow highlight setting loaded: ${result.followHighlight === true}`
+  );
+});
+
 // Create and inject the control panel
 createControlPanel();
 
@@ -218,6 +226,22 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       // If changing from disabled to enabled, process text elements
       if (isEnabled && !changes.playButtonsEnabled.oldValue) {
         processTextElements();
+      }
+    }
+
+    if (changes.followHighlight) {
+      const followHighlight = changes.followHighlight.newValue === true;
+      console.log(
+        `[Talkient] Follow highlight setting updated to: ${followHighlight}`
+      );
+
+      // If there's a currently highlighted element and follow highlight was just enabled,
+      // scroll to it immediately
+      if (followHighlight && getCurrentHighlightedElement()) {
+        const currentHighlighted = getCurrentHighlightedElement();
+        if (currentHighlighted) {
+          scrollToHighlightedElement(currentHighlighted);
+        }
       }
     }
   }

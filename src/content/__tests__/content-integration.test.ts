@@ -15,7 +15,25 @@ const mockChrome = {
   },
   storage: {
     local: {
-      get: jest.fn(),
+      get: jest.fn((keys, callback) => {
+        // Mock implementation with default values
+        if (Array.isArray(keys) && keys.includes('followHighlight')) {
+          callback({ followHighlight: false });
+        } else if (Array.isArray(keys) && keys.includes('highlightStyle')) {
+          callback({ highlightStyle: 'default' });
+        } else if (Array.isArray(keys) && keys.includes('minimumWords')) {
+          callback({ minimumWords: 3 });
+        } else if (Array.isArray(keys) && keys.includes('maxNodesProcessed')) {
+          callback({ maxNodesProcessed: 1000 });
+        } else if (
+          keys === 'playButtonsEnabled' ||
+          (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
+        ) {
+          callback({ playButtonsEnabled: true });
+        } else {
+          callback({});
+        }
+      }),
       set: jest.fn(),
     },
     onChanged: {

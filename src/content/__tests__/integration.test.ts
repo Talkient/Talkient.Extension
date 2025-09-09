@@ -18,6 +18,29 @@ const mockChrome = {
     sendMessage: jest.fn(),
     lastError: null,
   },
+  storage: {
+    local: {
+      get: jest.fn((keys, callback) => {
+        // Mock implementation with default values
+        if (Array.isArray(keys) && keys.includes('followHighlight')) {
+          callback({ followHighlight: false });
+        } else if (Array.isArray(keys) && keys.includes('highlightStyle')) {
+          callback({ highlightStyle: 'default' });
+        } else if (
+          keys === 'playButtonsEnabled' ||
+          (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
+        ) {
+          callback({ playButtonsEnabled: true });
+        } else {
+          callback({});
+        }
+      }),
+      set: jest.fn(),
+    },
+    onChanged: {
+      addListener: jest.fn(),
+    },
+  },
 };
 (global as any).chrome = mockChrome;
 

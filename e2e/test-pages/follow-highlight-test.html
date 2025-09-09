@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talkient Follow Highlight Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        line-height: 1.6;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        border: 1px solid #e0e0e0;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      h1, h2 {
+        color: #333;
+      }
+      .test-paragraph {
+        margin-bottom: 15px;
+      }
+      .status-indicator {
+        font-weight: bold;
+        padding: 5px;
+        display: inline-block;
+        margin-top: 10px;
+      }
+      .playing {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .paused {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      /* Added spacer to force scrolling */
+      .spacer {
+        height: 800px;
+        background: linear-gradient(to bottom, #f9f9f9, #e9e9e9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed #ccc;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Talkient Follow Highlight Test Page</h1>
+      <p>
+        This page contains multiple sections separated by spacers to test the followHighlight feature of the Talkient extension.
+      </p>
+
+      <div id="section1" class="test-section">
+        <h2>Section 1: Top Content</h2>
+        <p id="para1" class="test-paragraph">
+          This is the first paragraph at the top of the page. When the followHighlight feature is enabled, 
+          clicking play on a paragraph further down the page should cause the page to scroll to that paragraph.
+          This helps test that the scrolling behavior works correctly when navigating between distant elements.
+        </p>
+        <div id="status1" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div class="spacer">
+        <p>Scroll spacer - Content below requires scrolling to view</p>
+      </div>
+
+      <div id="section2" class="test-section">
+        <h2>Section 2: Middle Content</h2>
+        <p id="para2" class="test-paragraph">
+          This paragraph is in the middle of the page. When playing this content with followHighlight enabled,
+          the browser should automatically scroll to keep this text visible in the viewport. This helps ensure 
+          that users can always see the text that is currently being read aloud.
+        </p>
+        <div id="status2" class="status-indicator">Ready for testing</div>
+      </div>
+
+      <div class="spacer">
+        <p>Another scroll spacer - More content below</p>
+      </div>
+
+      <div id="section3" class="test-section">
+        <h2>Section 3: Bottom Content</h2>
+        <p id="para3" class="test-paragraph">
+          This is the bottom paragraph on the page. Playing this content with followHighlight enabled should
+          cause the page to scroll down to make this paragraph visible. This tests the automatic scrolling
+          behavior for content at the bottom of the page.
+        </p>
+        <p id="para4" class="test-paragraph">
+          This final paragraph provides additional test content at the very bottom of the page. The Talkient 
+          extension should smoothly scroll to this content when it begins playing, ensuring that users can 
+          always see what's being read aloud even when it's far down on the page.
+        </p>
+        <div id="status3" class="status-indicator">Ready for testing</div>
+      </div>
+    </div>
+
+    <script>
+      // This script is for visual feedback during manual testing
+      // The actual functionality will be handled by the Talkient extension
+      document.addEventListener('talkient:play-started', function (e) {
+        if (e.detail && e.detail.elementId) {
+          const section = document
+            .getElementById(e.detail.elementId)
+            .closest('.test-section');
+          if (section) {
+            const status = section.querySelector('.status-indicator');
+            if (status) {
+              status.textContent = 'Playing';
+              status.className = 'status-indicator playing';
+            }
+          }
+        }
+      });
+
+      document.addEventListener('talkient:play-paused', function (e) {
+        if (e.detail && e.detail.elementId) {
+          const section = document
+            .getElementById(e.detail.elementId)
+            .closest('.test-section');
+          if (section) {
+            const status = section.querySelector('.status-indicator');
+            if (status) {
+              status.textContent = 'Paused';
+              status.className = 'status-indicator paused';
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

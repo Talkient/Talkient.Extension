@@ -9,6 +9,7 @@ import {
   getCurrentHighlightedElement,
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
+  scrollToHighlightedElement,
 } from './highlight';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from './icons';
@@ -28,6 +29,7 @@ export {
   getCurrentHighlightedElement,
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
+  scrollToHighlightedElement,
 };
 
 // Re-export control panel functions
