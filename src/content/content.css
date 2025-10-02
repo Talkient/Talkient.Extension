@@ -29,12 +29,54 @@
     0 15px 30px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
   padding: 12px;
-  width: 120px;
+  width: 120px !important;
+  max-width: 120px !important;
+  min-width: 120px !important;
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
     Cantarell, sans-serif;
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box !important;
+}
+
+/* Protect all child elements from page styles */
+#talkient-control-panel * {
+  box-sizing: border-box !important;
+}
+
+/* Reset all divs to prevent page styles from affecting them */
+#talkient-control-panel div {
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Restore specific padding for elements that need it */
+#talkient-control-panel .talkient-panel-toggle,
+#talkient-control-panel .talkient-panel-close {
+  padding: 4px !important;
+}
+
+#talkient-control-panel .talkient-control-btn {
+  padding: 8px !important;
+}
+
+#talkient-control-panel .talkient-speech-rate {
+  padding: 8px !important;
+}
+
+#talkient-control-panel .talkient-rate-value {
+  padding: 2px 6px !important;
+}
+
+#talkient-control-panel .talkient-script-btn {
+  padding: 8px !important;
 }
 
 .talkient-panel-header {
@@ -46,6 +88,8 @@
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .talkient-panel-title {
@@ -54,12 +98,14 @@
   margin: 0;
   color: #f7fafc;
   pointer-events: none; /* Prevent title from interfering with drag */
+  width: auto !important;
 }
 
 .talkient-header-controls {
   display: flex;
   align-items: center;
   gap: 4px;
+  width: auto !important;
 }
 
 .talkient-panel-toggle,
@@ -89,6 +135,7 @@
 
 .talkient-panel-content {
   transition: all 0.3s ease;
+  width: 100% !important;
 }
 
 .talkient-collapsed .talkient-panel-header {
@@ -97,6 +144,7 @@
 
 .talkient-control-section {
   margin-bottom: 12px;
+  width: 100% !important;
 }
 
 .talkient-section-title {
@@ -106,6 +154,7 @@
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  width: 100% !important;
 }
 
 .talkient-main-controls {
@@ -113,31 +162,32 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 12px;
+  width: 100% !important;
 }
 
 .talkient-control-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  opacity: 0.5;
-  cursor: not-allowed;
-  min-height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: white !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  min-height: 32px !important;
 }
 
 .talkient-control-btn:not(:disabled) {
-  opacity: 1;
-  cursor: pointer;
+  opacity: 1 !important;
+  cursor: pointer !important;
 }
 
 .talkient-control-btn:hover {
@@ -150,14 +200,14 @@
 }
 
 .talkient-control-btn.primary {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3) !important;
 }
 
 .talkient-control-btn.settings {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  color: #2d3748;
-  box-shadow: 0 4px 12px rgba(168, 237, 234, 0.3);
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
+  color: #2d3748 !important;
+  box-shadow: 0 4px 12px rgba(168, 237, 234, 0.3) !important;
 }
 
 .talkient-control-icon {
@@ -166,10 +216,11 @@
 }
 
 .talkient-speech-rate {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  width: 100% !important;
 }
 
 .talkient-rate-display {
@@ -177,6 +228,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  width: 100% !important;
 }
 
 .talkient-rate-label {
@@ -186,12 +238,12 @@
 }
 
 .talkient-rate-value {
-  font-size: 12px;
-  color: #4facfe;
-  font-weight: 600;
-  background: rgba(79, 172, 254, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 12px !important;
+  color: #4facfe !important;
+  font-weight: 600 !important;
+  background: rgba(79, 172, 254, 0.1) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
 }
 
 .talkient-rate-slider {
@@ -236,6 +288,7 @@
   flex-direction: column;
   gap: 6px;
   align-items: center; /* Center the toggle switch horizontally */
+  width: 100% !important;
 }
 
 /* Toggle Switch Styles */
@@ -256,36 +309,36 @@
 }
 
 .talkient-toggle-slider {
-  position: relative;
-  display: inline-block;
-  width: 32px;
-  height: 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  margin-right: 8px;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
+  position: relative !important;
+  display: inline-block !important;
+  width: 32px !important;
+  height: 16px !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  margin-right: 8px !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  flex-shrink: 0 !important;
 }
 
 .talkient-toggle-slider:before {
-  position: absolute;
-  content: '';
-  height: 12px;
-  width: 12px;
-  left: 2px;
-  bottom: 1px;
-  background-color: white;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  position: absolute !important;
+  content: '' !important;
+  height: 12px !important;
+  width: 12px !important;
+  left: 2px !important;
+  bottom: 1px !important;
+  background-color: white !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
 }
 
 .talkient-toggle-input:checked + .talkient-toggle-slider {
-  background-color: #4facfe;
+  background-color: #4facfe !important;
 }
 
 .talkient-toggle-input:checked + .talkient-toggle-slider:before {
-  transform: translateX(16px);
+  transform: translateX(16px) !important;
 }
 
 .talkient-toggle-label {
@@ -296,20 +349,20 @@
 }
 
 .talkient-script-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  color: white !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .talkient-script-btn:hover {
@@ -343,7 +396,9 @@
       0 15px 30px rgba(0, 0, 0, 0.1),
       0 0 0 1px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(0, 0, 0, 0.1);
-    width: 120px;
+    width: 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
   }
   .talkient-panel-title {
     color: #2d3748;
