@@ -18,14 +18,7 @@
   "options_page": "./options/options.html",
   "content_scripts": [
     {
-      "matches": [
-        "https://learn.microsoft.com/*",
-        "https://docs.aws.amazon.com/*",
-        "https://medium.com/*",
-        "https://aws.amazon.com/*/blogs/*",
-        "https://newsletter.eng-leadership.com/*",
-        "file:///**/*.html"
-      ],
+      "matches": ["<all_urls>"],
       "css": ["./content/content.css"],
       "js": ["./content/content.js"]
     }
