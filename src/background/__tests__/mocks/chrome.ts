@@ -48,7 +48,16 @@
     onMessage: {
       addListener: jest.fn(),
     },
+    onInstalled: {
+      addListener: jest.fn(),
+    },
     openOptionsPage: jest.fn(),
     lastError: undefined,
+  },
+  contextMenus: {
+    create: jest.fn(),
+    onClicked: {
+      addListener: jest.fn(),
+    },
   },
 };

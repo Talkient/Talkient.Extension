@@ -43,6 +43,126 @@ function checkTtsAvailability() {
 // Check TTS availability on startup
 checkTtsAvailability();
 
+// Create context menu item
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'talkient-play-text',
+    title: 'Play text',
+    contexts: ['selection'],
+    documentUrlPatterns: ['<all_urls>'],
+  });
+  console.log('[Talkient.SW] Context menu created');
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'talkient-play-text' && info.selectionText) {
+    console.log(
+      '[Talkient.SW] Context menu clicked with text:',
+      info.selectionText
+    );
+
+    // Store the tab ID that started speech
+    if (tab?.id) {
+      activeTabId = tab.id;
+    }
+
+    // Stop any current speech
+    if (currentText !== '') {
+      console.log(
+        '[Talkient.SW] Stopping current speech for context menu selection...'
+      );
+      chrome.tts.stop();
+      isPaused = false;
+    }
+
+    // Check if TTS is available
+    if (!ttsAvailable) {
+      console.error('[Talkient.SW] TTS is not available');
+      checkTtsAvailability();
+      if (!ttsAvailable) {
+        return;
+      }
+    }
+
+    currentText = info.selectionText;
+
+    // Get speech settings and speak
+    chrome.storage.local.get(
+      ['selectedVoice', 'speechRate', 'speechPitch'],
+      (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            '[Talkient.SW] Error getting storage data:',
+            chrome.runtime.lastError
+          );
+          return;
+        }
+
+        const selectedVoice = result.selectedVoice;
+        const speechRate =
+          typeof result.speechRate === 'number' ? result.speechRate : 1.0;
+        const speechPitch =
+          typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
+
+        const ttsOptions: chrome.tts.TtsOptions = {
+          rate: speechRate,
+          pitch: speechPitch,
+          voiceName: selectedVoice,
+          onEvent: (event) => {
+            console.log('[Talkient.SW] Context menu TTS event:', event);
+
+            switch (event.type) {
+              case 'error':
+                console.error('[Talkient.SW] TTS Error:', event);
+                isPaused = false;
+                currentText = '';
+                if (tab?.id) {
+                  chrome.tabs.sendMessage(tab.id, {
+                    type: 'SPEECH_ERROR',
+                    error: event,
+                  });
+                }
+                break;
+              case 'end':
+                console.log('[Talkient.SW] Context menu speech ended');
+                isPaused = false;
+                currentText = '';
+                break;
+              case 'cancelled':
+                console.warn('[Talkient.SW] Context menu speech cancelled');
+                isPaused = false;
+                currentText = '';
+                break;
+              case 'interrupted':
+                chrome.tts.stop();
+                break;
+            }
+          },
+        };
+
+        // Ensure we have a valid voice
+        if (
+          ttsOptions.voiceName &&
+          !availableVoices.some((v) => v.voiceName === ttsOptions.voiceName)
+        ) {
+          console.warn('[Talkient.SW] Selected voice not found, using default');
+          delete ttsOptions.voiceName;
+        }
+
+        console.log('[Talkient.SW] Speaking selected text from context menu');
+        chrome.tts.speak(info.selectionText!, ttsOptions);
+        if (chrome.runtime.lastError) {
+          console.error(
+            '[Talkient.SW] Error speaking text:',
+            chrome.runtime.lastError
+          );
+        }
+      }
+    );
+  }
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('[Talkient.SW] Firing a request type of ', request.type);
 

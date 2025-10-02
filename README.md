@@ -3,6 +3,7 @@
 ## Features
 
 - Text-to-speech conversion for web page content
+- Right-click context menu to play selected text
 - Customizable speech settings (rate, pitch, voice)
 - Visual highlighting of text being read
 - Multiple highlighting styles
@@ -24,7 +25,6 @@
 ## TO DO
 
 - [ ] service-worker: isolate functions into new files
-- [ ] play/pause buttons at the left and showing up on hover
 - [ ] Bug: Play text1, then play text2 and try to pause it
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [ ] play button for a tags
@@ -32,10 +32,9 @@
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
 - [ ] Estimate time in minutes
 - [ ] Highlight chunks
-- [ ] Button to apply Talkient in the current page even if this is not on manifest.json (is it possible?)
+- [ ] Ignore domains or urls list (user)
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
-- [ ] Play option if a range is selcted and right clicked
 - [ ] Options page
   - [ ] Reset default settings
   - [ ] Skip tags
