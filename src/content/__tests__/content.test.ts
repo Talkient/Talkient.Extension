@@ -7,6 +7,9 @@ import {
   getCurrentHighlightedElement,
   loadMinimumWordsFromStorage,
   loadMaxNodesFromStorage,
+  loadButtonPositionFromStorage,
+  getButtonPosition,
+  setButtonPosition,
 } from '../content-lib';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
@@ -486,5 +489,95 @@ describe('Content Script Message Handling', () => {
         call[0]?.type === 'PAUSE_SPEECH' && call[0]?.isPageUnload === true
     );
     expect(hasCorrectCall).toBe(true);
+  });
+});
+
+describe('Button Position Configuration', () => {
+  beforeEach(() => {
+    // Clear mock calls
+    mockChrome.storage.local.get.mockClear();
+    mockChrome.storage.local.set.mockClear();
+  });
+
+  describe('loadButtonPositionFromStorage', () => {
+    test('should load button position from storage (right)', async () => {
+      mockChrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({ buttonPosition: 'right' });
+      });
+
+      const position = await loadButtonPositionFromStorage();
+      expect(position).toBe('right');
+      expect(getButtonPosition()).toBe('right');
+    });
+
+    test('should default to left when not stored', async () => {
+      mockChrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({});
+      });
+
+      const position = await loadButtonPositionFromStorage();
+      expect(position).toBe('left');
+      expect(getButtonPosition()).toBe('left');
+    });
+
+    test('should default to left when invalid value is stored', async () => {
+      mockChrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({ buttonPosition: 'invalid' });
+      });
+
+      const position = await loadButtonPositionFromStorage();
+      expect(position).toBe('left');
+      expect(getButtonPosition()).toBe('left');
+    });
+  });
+
+  describe('setButtonPosition', () => {
+    test('should set button position to right', () => {
+      setButtonPosition('right');
+      expect(getButtonPosition()).toBe('right');
+    });
+
+    test('should set button position to left', () => {
+      setButtonPosition('left');
+      expect(getButtonPosition()).toBe('left');
+    });
+  });
+
+  describe('button position classes', () => {
+    test('button should have left class when position is set to left', () => {
+      setButtonPosition('left');
+
+      const button = createPlayButton();
+      button.classList.add('talkient-play-button');
+
+      // Simulate adding position class based on configuration
+      if (getButtonPosition() === 'left') {
+        button.classList.add('talkient-button-left');
+      }
+
+      expect(button.classList.contains('talkient-button-left')).toBe(true);
+    });
+
+    test('button should not have left class when position is set to right', () => {
+      setButtonPosition('right');
+
+      const button = createPlayButton();
+      button.classList.add('talkient-play-button');
+
+      // Simulate adding position class based on configuration
+      if (getButtonPosition() === 'left') {
+        button.classList.add('talkient-button-left');
+      }
+
+      expect(button.classList.contains('talkient-button-left')).toBe(false);
+    });
+
+    test('getButtonPosition should return the set position', () => {
+      setButtonPosition('left');
+      expect(getButtonPosition()).toBe('left');
+
+      setButtonPosition('right');
+      expect(getButtonPosition()).toBe('right');
+    });
   });
 });

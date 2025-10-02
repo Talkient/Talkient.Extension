@@ -78,6 +78,7 @@ export function createPlayButton(): HTMLButtonElement {
 let minimumWordsCache = 3; // Default minimum words
 let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
+let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 
 // Load minimum words setting from storage
 export function loadMinimumWordsFromStorage(): Promise<number> {
@@ -149,6 +150,30 @@ export function getMaxNodesProcessed(): number {
 // Set the maximum nodes setting (used when it changes in storage)
 export function setMaxNodesProcessed(value: number): void {
   maxNodesProcessedCache = value;
+}
+
+// Load button position setting from storage
+export function loadButtonPositionFromStorage(): Promise<'left' | 'right'> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['buttonPosition'], (result) => {
+      buttonPositionCache =
+        result.buttonPosition === 'right' ? 'right' : 'left';
+      console.log(
+        `[Talkient] Loaded button position setting: ${buttonPositionCache}`
+      );
+      resolve(buttonPositionCache);
+    });
+  });
+}
+
+// Get the current button position setting
+export function getButtonPosition(): 'left' | 'right' {
+  return buttonPositionCache;
+}
+
+// Set the button position setting (used when it changes in storage)
+export function setButtonPosition(value: 'left' | 'right'): void {
+  buttonPositionCache = value;
 }
 
 // Function to check if a node should be processed
@@ -340,6 +365,11 @@ export function processTextElements(): void {
       const playButton = createPlayButton();
       playButton.classList.add('talkient-play-button');
 
+      // Add position class based on configuration
+      if (buttonPositionCache === 'left') {
+        playButton.classList.add('talkient-button-left');
+      }
+
       // Add click handler
       playButton.addEventListener('click', (event) => {
         // Prevent event propagation to avoid triggering link navigation
@@ -417,7 +447,15 @@ export function processTextElements(): void {
       if (parentNode) {
         parentNode.insertBefore(wrapper, textNode);
         wrapper.appendChild(textNode);
-        wrapper.appendChild(playButton);
+
+        // Add button based on position configuration
+        if (buttonPositionCache === 'left') {
+          // Insert button before the text node
+          wrapper.insertBefore(playButton, textNode);
+        } else {
+          // Insert button after the text node (default behavior)
+          wrapper.appendChild(playButton);
+        }
       } else {
         // Parent node is null, skip this text node
         continue;

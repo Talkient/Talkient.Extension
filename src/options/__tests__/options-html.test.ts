@@ -22,6 +22,7 @@ describe('options.ts - using actual HTML', () => {
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
   let followHighlightToggle: HTMLInputElement;
+  let buttonPositionSelect: HTMLSelectElement;
   let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
@@ -51,6 +52,9 @@ describe('options.ts - using actual HTML', () => {
     followHighlightToggle = document.getElementById(
       'follow-highlight-toggle'
     ) as HTMLInputElement;
+    buttonPositionSelect = document.getElementById(
+      'button-position-select'
+    ) as HTMLSelectElement;
     minimumWordsInput = document.getElementById(
       'minimum-words-input'
     ) as HTMLInputElement;
@@ -161,6 +165,7 @@ describe('options.ts - using actual HTML', () => {
           'highlightStyle',
           'autoPlayNext',
           'followHighlight',
+          'buttonPosition',
           'minimumWords',
           'maxNodesProcessed',
         ],
@@ -494,6 +499,67 @@ describe('options.ts - using actual HTML', () => {
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         followHighlight: false,
+      });
+    });
+  });
+
+  describe('button position functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should have button position select element', () => {
+      expect(buttonPositionSelect).toBeTruthy();
+      expect(buttonPositionSelect.id).toBe('button-position-select');
+    });
+
+    it('should have left and right options', () => {
+      const options = Array.from(buttonPositionSelect.options);
+      expect(options.length).toBe(2);
+      expect(options[0].value).toBe('left');
+      expect(options[0].textContent).toBe('Left');
+      expect(options[1].value).toBe('right');
+      expect(options[1].textContent).toBe('Right');
+    });
+
+    it('should default to left', async () => {
+      // Mock storage with missing button position
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(buttonPositionSelect.value).toBe('left');
+    });
+
+    it('should save button position when changed', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change to right
+      buttonPositionSelect.value = 'right';
+      const changeEvent = new Event('change');
+      buttonPositionSelect.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        buttonPosition: 'right',
       });
     });
   });

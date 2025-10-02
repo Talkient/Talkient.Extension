@@ -547,7 +547,6 @@
   border: none !important;
   cursor: pointer !important;
   padding: 5px !important;
-  margin-left: 6px !important;
   font-size: 12px !important;
   line-height: 1 !important;
   opacity: 0.2 !important;
@@ -560,6 +559,18 @@
   align-items: center !important;
   justify-content: center !important;
   box-shadow: 0 2px 4px rgba(45, 108, 223, 0.3) !important;
+}
+
+/* Button on the right side (default) */
+.talkient-play-button:not(.talkient-button-left) {
+  margin-left: 6px !important;
+  margin-right: 0 !important;
+}
+
+/* Button on the left side */
+.talkient-play-button.talkient-button-left {
+  margin-left: 0 !important;
+  margin-right: 6px !important;
 }
 
 .talkient-play-button:hover {

@@ -16,6 +16,8 @@ import {
   setSpeechRate,
   loadMaxNodesFromStorage,
   setMaxNodesProcessed,
+  loadButtonPositionFromStorage,
+  setButtonPosition,
   scrollToHighlightedElement,
 } from './content-lib';
 
@@ -128,29 +130,32 @@ loadSpeechRateFromStorage();
 // Load maximum nodes setting from storage
 loadMaxNodesFromStorage();
 
-// Load follow highlight setting (defaults to false if not set)
-chrome.storage.local.get(['followHighlight'], (result) => {
-  console.log(
-    `[Talkient] Follow highlight setting loaded: ${result.followHighlight === true}`
-  );
-});
-
-// Create and inject the control panel
-createControlPanel();
-
-// Check if play buttons are enabled before initial processing
-chrome.storage.local.get(['playButtonsEnabled'], (result) => {
-  // Default to true if not set
-  const isEnabled = result.playButtonsEnabled !== false;
-
-  if (isEnabled) {
-    // Initial processing
-    processTextElements();
-  } else {
+// Load button position setting from storage and then process elements
+loadButtonPositionFromStorage().then(() => {
+  // Load follow highlight setting (defaults to false if not set)
+  chrome.storage.local.get(['followHighlight'], (result) => {
     console.log(
-      '[Talkient] Play buttons are disabled. Skipping initial processing.'
+      `[Talkient] Follow highlight setting loaded: ${result.followHighlight === true}`
     );
-  }
+  });
+
+  // Create and inject the control panel
+  createControlPanel();
+
+  // Check if play buttons are enabled before initial processing
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+    // Default to true if not set
+    const isEnabled = result.playButtonsEnabled !== false;
+
+    if (isEnabled) {
+      // Initial processing
+      processTextElements();
+    } else {
+      console.log(
+        '[Talkient] Play buttons are disabled. Skipping initial processing.'
+      );
+    }
+  });
 });
 
 // Listen for storage changes to update highlight style in real-time
@@ -245,11 +250,24 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         }
       }
     }
+
+    if (changes.buttonPosition) {
+      const newButtonPosition = changes.buttonPosition.newValue;
+      if (
+        typeof newButtonPosition === 'string' &&
+        (newButtonPosition === 'left' || newButtonPosition === 'right')
+      ) {
+        // Update the cached value
+        setButtonPosition(newButtonPosition);
+        console.log(
+          `[Talkient] Button position setting updated to: ${newButtonPosition}`
+        );
+        // Re-process text elements to apply the new setting
+        processTextElements();
+      }
+    }
   }
 });
-
-// Initial processing
-processTextElements();
 
 // Add event listener to stop speech when page is unloaded/refreshed
 window.addEventListener('beforeunload', () => {

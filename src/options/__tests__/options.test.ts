@@ -23,6 +23,7 @@ describe('options.ts', () => {
   let pitchValue: HTMLSpanElement;
   let autoPlayNextToggle: HTMLInputElement;
   let followHighlightToggle: HTMLInputElement;
+  let buttonPositionSelect: HTMLSelectElement;
   let minimumWordsInput: HTMLInputElement;
 
   beforeEach(async () => {
@@ -55,6 +56,9 @@ describe('options.ts', () => {
     followHighlightToggle = document.getElementById(
       'follow-highlight-toggle'
     ) as HTMLInputElement;
+    buttonPositionSelect = document.getElementById(
+      'button-position-select'
+    ) as HTMLSelectElement;
     minimumWordsInput = document.getElementById(
       'minimum-words-input'
     ) as HTMLInputElement;
@@ -69,6 +73,7 @@ describe('options.ts', () => {
           highlightStyle: 'default',
           autoPlayNext: false,
           followHighlight: true,
+          buttonPosition: 'left',
           minimumWords: 3,
           maxNodesProcessed: 1000,
         });
@@ -177,6 +182,7 @@ describe('options.ts', () => {
           'highlightStyle',
           'autoPlayNext',
           'followHighlight',
+          'buttonPosition',
           'minimumWords',
           'maxNodesProcessed',
         ],
@@ -729,6 +735,93 @@ describe('options.ts', () => {
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         followHighlight: true,
+      });
+    });
+  });
+
+  describe('button position functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should restore button position setting from storage', async () => {
+      // Mock storage with specific button position setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            buttonPosition: 'right',
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(buttonPositionSelect.value).toBe('right');
+    });
+
+    it('should default to left when button position is not stored', async () => {
+      // Mock storage with missing button position setting
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            // buttonPosition is missing
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(buttonPositionSelect.value).toBe('left');
+    });
+
+    it('should save button position setting to storage when changed', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change button position setting
+      buttonPositionSelect.value = 'right';
+      const changeEvent = new Event('change');
+      buttonPositionSelect.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        buttonPosition: 'right',
+      });
+    });
+
+    it('should save left when changed back', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Change button position setting to left
+      buttonPositionSelect.value = 'left';
+      const changeEvent = new Event('change');
+      buttonPositionSelect.dispatchEvent(changeEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        buttonPosition: 'left',
       });
     });
   });

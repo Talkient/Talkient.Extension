@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const followHighlightToggle = document.getElementById(
     'follow-highlight-toggle'
   ) as HTMLInputElement;
+  const buttonPositionSelect = document.getElementById(
+    'button-position-select'
+  ) as HTMLSelectElement;
   const minimumWordsInput = document.getElementById(
     'minimum-words-input'
   ) as HTMLInputElement;
@@ -33,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     !pitchValue ||
     !autoPlayNextToggle ||
     !followHighlightToggle ||
+    !buttonPositionSelect ||
     !minimumWordsInput ||
     !maxNodesInput
   )
@@ -47,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'highlightStyle',
       'autoPlayNext',
       'followHighlight',
+      'buttonPosition',
       'minimumWords',
       'maxNodesProcessed',
     ],
@@ -69,6 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.followHighlight === 'boolean'
           ? result.followHighlight
           : true;
+      const buttonPosition =
+        typeof result.buttonPosition === 'string'
+          ? result.buttonPosition
+          : 'left';
       const minimumWords =
         typeof result.minimumWords === 'number' ? result.minimumWords : 3;
       const maxNodesProcessed =
@@ -95,6 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set follow highlight toggle
       followHighlightToggle.checked = followHighlight;
+
+      // Set button position select
+      buttonPositionSelect.value = buttonPosition;
 
       // Set minimum words input
       minimumWordsInput.value = minimumWords.toString();
@@ -149,6 +161,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const newFollowHighlight = changes.followHighlight.newValue;
           if (typeof newFollowHighlight === 'boolean') {
             followHighlightToggle.checked = newFollowHighlight;
+          }
+        }
+
+        // Update button position if changed
+        if (changes.buttonPosition) {
+          const newButtonPosition = changes.buttonPosition.newValue;
+          if (typeof newButtonPosition === 'string') {
+            buttonPositionSelect.value = newButtonPosition;
           }
         }
 
@@ -238,6 +258,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Follow highlight setting saved!', 'success');
+  });
+
+  // Save button position setting to storage
+  buttonPositionSelect.addEventListener('change', () => {
+    const buttonPosition = buttonPositionSelect.value;
+    chrome.storage.local.set({ buttonPosition });
+
+    // Show a brief status message
+    showStatus('Button position setting saved!', 'success');
   });
 
   // Save minimum words setting to storage
