@@ -11,6 +11,19 @@ import {
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
 
+// Mock runtime-utils before importing content-lib
+jest.mock('../runtime-utils', () => ({
+  safeSendMessage: jest.fn((message, callback) => {
+    // Call the mocked chrome.runtime.sendMessage
+    const mockChrome = (global as any).chrome;
+    if (mockChrome?.runtime?.sendMessage) {
+      mockChrome.runtime.sendMessage(message, callback);
+    }
+    return true;
+  }),
+  isExtensionContextValid: jest.fn(() => true),
+}));
+
 // Mock chrome runtime
 const mockChrome = {
   runtime: {
@@ -456,6 +469,9 @@ describe('Content Script Message Handling', () => {
   });
 
   test('should send stop message on beforeunload event', () => {
+    // Clear any previous calls
+    mockChrome.runtime.sendMessage.mockClear();
+
     // Import content script to register event listeners
     require('../content');
 
@@ -463,10 +479,12 @@ describe('Content Script Message Handling', () => {
     const beforeUnloadEvent = new Event('beforeunload');
     window.dispatchEvent(beforeUnloadEvent);
 
-    // Check that correct message was sent
-    expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-      { type: 'PAUSE_SPEECH', isPageUnload: true },
-      expect.any(Function)
+    // Check that correct message was sent at least once
+    const calls = mockChrome.runtime.sendMessage.mock.calls;
+    const hasCorrectCall = calls.some(
+      (call) =>
+        call[0]?.type === 'PAUSE_SPEECH' && call[0]?.isPageUnload === true
     );
+    expect(hasCorrectCall).toBe(true);
   });
 });

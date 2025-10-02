@@ -7,6 +7,19 @@ import {
   toggleControlPanel,
 } from '../control-panel';
 
+// Mock runtime-utils before importing control-panel
+jest.mock('../runtime-utils', () => ({
+  safeSendMessage: jest.fn((message, callback) => {
+    // Call the mocked chrome.runtime.sendMessage
+    const mockChrome = (global as any).chrome;
+    if (mockChrome?.runtime?.sendMessage) {
+      mockChrome.runtime.sendMessage(message, callback);
+    }
+    return true;
+  }),
+  isExtensionContextValid: jest.fn(() => true),
+}));
+
 // Mock Chrome APIs
 const mockChrome = {
   runtime: {

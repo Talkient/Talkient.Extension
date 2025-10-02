@@ -1,6 +1,8 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
+import { safeSendMessage } from './runtime-utils';
+
 /**
  * Control Panel Module
  * Handles the creation and management of the Talkient control panel UI
@@ -150,13 +152,8 @@ function setupSettingsButton(panel: HTMLElement): void {
 
   settingsButton?.addEventListener('click', () => {
     // Send message to background script to open the options page
-    chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error(
-          '[Talkient.Content] Error sending OPEN_OPTIONS message:',
-          chrome.runtime.lastError
-        );
-      } else if (!response?.success) {
+    safeSendMessage({ type: 'OPEN_OPTIONS' }, (response) => {
+      if (!response?.success) {
         console.error(
           '[Talkient.Content] Failed to open options page:',
           response?.error
@@ -198,21 +195,11 @@ function setupScriptControlButtons(panel: HTMLElement): void {
       removeAllPlayButtons();
 
       // Re-process text elements to add new play buttons
-      chrome.runtime.sendMessage(
-        { type: 'RELOAD_PLAY_BUTTONS' },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              '[Talkient.Content] Error sending RELOAD_PLAY_BUTTONS message:',
-              chrome.runtime.lastError
-            );
-          } else {
-            console.log(
-              '[Talkient.Content] Play buttons enabled and loaded successfully'
-            );
-          }
-        }
-      );
+      safeSendMessage({ type: 'RELOAD_PLAY_BUTTONS' }, (response) => {
+        console.log(
+          '[Talkient.Content] Play buttons enabled and loaded successfully'
+        );
+      });
     } else {
       // Remove all play buttons without re-adding them
       removeAllPlayButtons();
@@ -252,7 +239,7 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
     // Enforce 0.05 step increment by rounding to nearest 0.05
     const rawValue = parseFloat(rateSlider.value);
     const speechRate = Math.round(rawValue * 20) / 20; // Round to nearest 0.05
-    
+
     // Update the slider value to the rounded value
     rateSlider.value = speechRate.toString();
     rateValue.textContent = `${speechRate.toFixed(2)}x`;
@@ -308,21 +295,14 @@ function setupMainControlButton(panel: HTMLElement): void {
 
       if (isPlaying) {
         // Pause the speech
-        chrome.runtime.sendMessage({ type: 'PAUSE_SPEECH' }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              '[Talkient.Content] Error sending PAUSE_SPEECH message:',
-              chrome.runtime.lastError
-            );
-          } else {
-            // Set play icon
-            mainButton.innerHTML = getSvgIcon('play');
+        safeSendMessage({ type: 'PAUSE_SPEECH' }, (response) => {
+          // Set play icon
+          mainButton.innerHTML = getSvgIcon('play');
 
-            // Import and use the clearHighlight function
-            import('./highlight').then(({ clearHighlight }) => {
-              clearHighlight();
-            });
-          }
+          // Import and use the clearHighlight function
+          import('./highlight').then(({ clearHighlight }) => {
+            clearHighlight();
+          });
         });
       } else {
         // Currently, we can't play from the control panel because we don't have a text selection

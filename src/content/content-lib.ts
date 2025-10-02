@@ -19,6 +19,7 @@ import {
   isControlPanelVisible,
   toggleControlPanel,
 } from './control-panel';
+import { safeSendMessage } from './runtime-utils';
 
 // Re-export highlighting functions for backward compatibility
 export {
@@ -351,33 +352,26 @@ export function processTextElements(): void {
 
         if (isPlaying) {
           // Pause the speech and clear highlighting
-          chrome.runtime.sendMessage(
+          safeSendMessage(
             {
               type: 'PAUSE_SPEECH',
             },
             (response) => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  'Error sending message:',
-                  chrome.runtime.lastError
-                );
-              } else {
-                // Set play icon
-                playButton.innerHTML = getSvgIcon('play');
-                clearHighlight();
+              // Set play icon
+              playButton.innerHTML = getSvgIcon('play');
+              clearHighlight();
 
-                // Reset all other buttons that might be in pause state
-                document
-                  .querySelectorAll('.talkient-play-button')
-                  .forEach((btn) => {
-                    if (
-                      btn !== playButton &&
-                      isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
-                    ) {
-                      btn.innerHTML = getSvgIcon('play');
-                    }
-                  });
-              }
+              // Reset all other buttons that might be in pause state
+              document
+                .querySelectorAll('.talkient-play-button')
+                .forEach((btn) => {
+                  if (
+                    btn !== playButton &&
+                    isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
+                  ) {
+                    btn.innerHTML = getSvgIcon('play');
+                  }
+                });
             }
           );
         } else {
@@ -405,22 +399,14 @@ export function processTextElements(): void {
           const textElement = wrapper.querySelector('span') || wrapper;
           highlightText(textElement as HTMLElement, highlightStyle);
 
-          chrome.runtime.sendMessage(
+          safeSendMessage(
             {
               type: 'SPEAK_TEXT',
               text: textNode.textContent || '',
             },
             (response) => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  'Error sending message:',
-                  chrome.runtime.lastError
-                );
-                clearHighlight();
-              } else {
-                // Set pause icon
-                playButton.innerHTML = getSvgIcon('pause');
-              }
+              // Set pause icon
+              playButton.innerHTML = getSvgIcon('pause');
             }
           );
         }

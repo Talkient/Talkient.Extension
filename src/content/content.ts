@@ -20,6 +20,7 @@ import {
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
+import { safeSendMessage } from './runtime-utils';
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -253,18 +254,7 @@ processTextElements();
 // Add event listener to stop speech when page is unloaded/refreshed
 window.addEventListener('beforeunload', () => {
   console.log('[Talkient] Page unloading, stopping speech...');
-  chrome.runtime.sendMessage(
-    { type: 'PAUSE_SPEECH', isPageUnload: true },
-    (response) => {
-      // This callback might not execute if the page is already unloading
-      if (chrome.runtime.lastError) {
-        console.error(
-          '[Talkient] Error sending pause message:',
-          chrome.runtime.lastError
-        );
-      }
-    }
-  );
+  safeSendMessage({ type: 'PAUSE_SPEECH', isPageUnload: true });
 });
 
 // Watch for DOM changes to process new text elements

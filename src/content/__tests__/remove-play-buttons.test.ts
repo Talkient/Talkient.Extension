@@ -6,6 +6,19 @@
 import { createControlPanel } from '../control-panel';
 import { processTextElements } from '../content-lib';
 
+// Mock runtime-utils before importing control-panel
+jest.mock('../runtime-utils', () => ({
+  safeSendMessage: jest.fn((message, callback) => {
+    // Call the mocked chrome.runtime.sendMessage
+    const mockChrome = (global as any).chrome;
+    if (mockChrome?.runtime?.sendMessage) {
+      mockChrome.runtime.sendMessage(message, callback);
+    }
+    return true;
+  }),
+  isExtensionContextValid: jest.fn(() => true),
+}));
+
 // Mock the content-lib module
 jest.mock('../content-lib', () => {
   const originalModule = jest.requireActual('../content-lib');
