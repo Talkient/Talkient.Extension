@@ -24,6 +24,9 @@
 
 ## TO DO
 
+- [ ] Bug: Follow highlight seems to not work
+- [ ] Bug: text elements within text elements should consider the father element
+- [ ] Bug: Talkient scripts switch (control panel) is a global config instead of current page config
 - [ ] service-worker: isolate functions into new files
 - [ ] Bug: Play text1, then play text2 and try to pause it
 - [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

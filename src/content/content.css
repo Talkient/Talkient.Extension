@@ -18,9 +18,9 @@
 /* Talkient Control Panel */
 #talkient-control-panel {
   position: fixed;
-  top: 50%;
+  top: 90%;
   left: 20px;
-  transform: translateY(-50%);
+  transform: translateY(-90%);
   z-index: 999999;
   background: rgba(26, 32, 44, 0.95);
   backdrop-filter: blur(10px);
