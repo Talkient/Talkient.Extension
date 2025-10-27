@@ -24,6 +24,7 @@
 
 ## TO DO
 
+- [ ] Verify if is a text page before loading the script and the control panel
 - [ ] Bug: Follow highlight seems to not work
 - [ ] Bug: text elements within text elements should consider the father element
 - [ ] Bug: Talkient scripts switch (control panel) is a global config instead of current page config
