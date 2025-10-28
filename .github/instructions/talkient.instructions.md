@@ -1,3 +1,7 @@
+---
+applyTo: '**'
+---
+
 # Talkient - Web Extension for TTS functionalities
 
 Talkient is a Web Extension for TTS functionalities. This follow the [Extensions Manifest V3](mdc:https:/developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) standards.

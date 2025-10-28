@@ -1,3 +1,7 @@
+---
+applyTo: '**/*.spec.ts'
+---
+
 # E2E Tests Instructions for Talkient Extension
 
 ## Overview
