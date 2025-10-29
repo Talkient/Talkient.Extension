@@ -24,6 +24,7 @@
 
 ## TO DO
 
+- [ ] Add a docs folder (or similar), one .md file for each feature like: highlight, followHighlight, control panel
 - [ ] Verify if is a text page before loading the script and the control panel
 - [ ] Bug: Follow highlight seems to not work
 - [ ] Bug: text elements within text elements should consider the father element
@@ -48,6 +49,7 @@
 - [ ] Popup page
 - [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
 - [ ] Add support for `"file:///*"` like PDF
+- [ ] Add content script for "run_at=document_idle"
 - [ ] E2E tests
   - Play/Pause
   - Ask LLMs to find test-gaps
