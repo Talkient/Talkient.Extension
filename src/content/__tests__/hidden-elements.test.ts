@@ -144,11 +144,13 @@ describe('Hidden element handling', () => {
   });
 
   test('should return true for visible text nodes', () => {
-    // Create a visible element
+    // Create a visible element inside an article tag
+    const article = document.createElement('article');
     const visibleDiv = document.createElement('div');
     const textNode = document.createTextNode('This is a visible text node');
     visibleDiv.appendChild(textNode);
-    container.appendChild(visibleDiv);
+    article.appendChild(visibleDiv);
+    container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
@@ -177,7 +179,8 @@ describe('Hidden element handling', () => {
   });
 
   test('processTextElements should not add buttons to hidden elements', async () => {
-    // Set up document with visible and hidden elements
+    // Set up document with visible and hidden elements inside article tags
+    const article = document.createElement('article');
     const visibleDiv = document.createElement('div');
     visibleDiv.innerHTML =
       '<p>This is visible text that should get a button</p>';
@@ -187,8 +190,9 @@ describe('Hidden element handling', () => {
     hiddenDiv.innerHTML =
       '<p>This is hidden text that should not get a button</p>';
 
-    container.appendChild(visibleDiv);
-    container.appendChild(hiddenDiv);
+    article.appendChild(visibleDiv);
+    article.appendChild(hiddenDiv);
+    container.appendChild(article);
 
     // Create a real TreeWalker to test the processTextElements function
     // But first save the original implementation
@@ -213,13 +217,15 @@ describe('Hidden element handling', () => {
   });
 
   test('should handle dynamically changed visibility', async () => {
-    // Create an element that starts visible
+    // Create an element that starts visible inside an article tag
+    const article = document.createElement('article');
     const dynamicDiv = document.createElement('div');
     const textNode = document.createTextNode(
       'This visibility will change dynamically'
     );
     dynamicDiv.appendChild(textNode);
-    container.appendChild(dynamicDiv);
+    article.appendChild(dynamicDiv);
+    container.appendChild(article);
 
     // Initially it should be processable
     expect(shouldProcessNode(textNode)).toBe(true);

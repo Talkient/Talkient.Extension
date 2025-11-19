@@ -69,15 +69,19 @@ describe('Minimum words functionality', () => {
   });
 
   test('should return true for text with exactly the minimum number of words', () => {
+    const article = document.createElement('article');
     const textNode = document.createTextNode('Three Words Here');
-    container.appendChild(textNode);
+    article.appendChild(textNode);
+    container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
   test('should return true for text with more than minimum number of words', () => {
+    const article = document.createElement('article');
     const textNode = document.createTextNode('This has four words');
-    container.appendChild(textNode);
+    article.appendChild(textNode);
+    container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
@@ -92,11 +96,13 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
+    const article = document.createElement('article');
     const threeWordsNode = document.createTextNode('Three Words Here');
-    container.appendChild(threeWordsNode);
+    article.appendChild(threeWordsNode);
 
     const fourWordsNode = document.createTextNode('This Has Four Words');
-    container.appendChild(fourWordsNode);
+    article.appendChild(fourWordsNode);
+    container.appendChild(article);
 
     // With minimum set to 4, three words should not be processed
     expect(shouldProcessNode(threeWordsNode)).toBe(false);
@@ -115,13 +121,15 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
+    const article = document.createElement('article');
     const fourWordsNode = document.createTextNode('This has four words');
-    container.appendChild(fourWordsNode);
+    article.appendChild(fourWordsNode);
 
     const fiveWordsNode = document.createTextNode(
       'This has exactly five words'
     );
-    container.appendChild(fiveWordsNode);
+    article.appendChild(fiveWordsNode);
+    container.appendChild(article);
 
     // Four words shouldn't be processed when minimum is 5
     expect(shouldProcessNode(fourWordsNode)).toBe(false);
@@ -138,11 +146,13 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
+    const article = document.createElement('article');
     const twoWordsNode = document.createTextNode('Two Words');
-    container.appendChild(twoWordsNode);
+    article.appendChild(twoWordsNode);
 
     const threeWordsNode = document.createTextNode('Three Words Here');
-    container.appendChild(threeWordsNode);
+    article.appendChild(threeWordsNode);
+    container.appendChild(article);
 
     // Two words shouldn't be processed (default minimum is 3)
     expect(shouldProcessNode(twoWordsNode)).toBe(false);
@@ -152,20 +162,24 @@ describe('Minimum words functionality', () => {
   });
 
   test('should handle punctuation when counting words', () => {
+    const article = document.createElement('article');
     const textWithPunctuation = document.createTextNode(
       'Hello, world! How are you?'
     );
-    container.appendChild(textWithPunctuation);
+    article.appendChild(textWithPunctuation);
+    container.appendChild(article);
 
     // "Hello, world! How are you?" has five words with punctuation
     expect(shouldProcessNode(textWithPunctuation)).toBe(true);
   });
 
   test('should handle multiple spaces between words', () => {
+    const article = document.createElement('article');
     const textWithExtraSpaces = document.createTextNode(
       'Three    Words    Here'
     );
-    container.appendChild(textWithExtraSpaces);
+    article.appendChild(textWithExtraSpaces);
+    container.appendChild(article);
 
     // "Three    Words    Here" has three words despite extra spaces
     expect(shouldProcessNode(textWithExtraSpaces)).toBe(true);

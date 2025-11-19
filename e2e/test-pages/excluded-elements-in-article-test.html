@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Excluded Elements in Article Test</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      article {
+        margin: 20px;
+        padding: 20px;
+        border: 2px solid #28a745;
+        background-color: #d4edda;
+      }
+      code {
+        background-color: #f4f4f4;
+        padding: 2px 5px;
+        border: 1px solid #ddd;
+      }
+      pre {
+        background-color: #f4f4f4;
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+      button {
+        padding: 5px 10px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <article>
+      <h2>Testing Excluded Elements Inside Articles</h2>
+
+      <p id="normal-para">
+        This is a normal paragraph that SHOULD get a play button.
+      </p>
+
+      <code id="code-elem"
+        >This is code text with enough words that should NOT get a button.</code
+      >
+
+      <pre><code id="nested-code">This is nested code inside pre tag with enough words that should NOT get button.</code></pre>
+
+      <button id="button-elem">
+        This button text has enough words but should NOT get a button.
+      </button>
+
+      <script id="script-elem">
+        console.log('This script text should NOT get a button');
+      </script>
+
+      <style id="style-elem">
+        body {
+          color: blue; /* This style text should NOT get a button */
+        }
+      </style>
+
+      <p id="another-normal-para">
+        This is another normal paragraph that SHOULD get a play button after
+        excluded elements.
+      </p>
+    </article>
+  </body>
+</html>

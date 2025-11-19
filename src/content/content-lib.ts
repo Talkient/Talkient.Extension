@@ -255,6 +255,10 @@ export function shouldProcessNode(node: Node): boolean {
   const controlPanel = parent.closest('#talkient-control-panel');
   if (controlPanel) return false;
 
+  // Only process nodes that are within an <article> tag
+  const article = parent.closest('article');
+  if (!article) return false;
+
   return true;
 }
 

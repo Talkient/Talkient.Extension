@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Article Requirement Test</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      header,
+      nav,
+      article,
+      aside,
+      footer {
+        margin: 20px 0;
+        padding: 20px;
+        border: 2px solid #ddd;
+      }
+      header {
+        background-color: #f0f0f0;
+      }
+      nav {
+        background-color: #e0e0e0;
+      }
+      article {
+        background-color: #d4edda;
+        border-color: #28a745;
+      }
+      aside {
+        background-color: #fff3cd;
+      }
+      footer {
+        background-color: #f8d7da;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>This is a header with enough words to qualify for processing</h1>
+      <p>
+        This paragraph is in the header and should NOT get a play button because
+        it is outside the article tag.
+      </p>
+    </header>
+
+    <nav>
+      <p>
+        This navigation text has enough words and should NOT get a play button
+        either.
+      </p>
+    </nav>
+
+    <article>
+      <h2>This is an article heading with enough words</h2>
+      <p id="article-para-1">
+        This paragraph is inside an article tag and SHOULD get a play button.
+      </p>
+      <p id="article-para-2">
+        This is another paragraph inside the article that SHOULD also get a play
+        button.
+      </p>
+
+      <section>
+        <p id="nested-para">
+          This deeply nested paragraph in a section inside the article SHOULD
+          get a button.
+        </p>
+      </section>
+    </article>
+
+    <aside>
+      <p>
+        This aside text has many words but should NOT get a play button because
+        aside is outside article.
+      </p>
+    </aside>
+
+    <footer>
+      <p>
+        This footer text with sufficient word count should NOT get a play button
+        either.
+      </p>
+    </footer>
+
+    <article>
+      <h2>Second Article on the Same Page</h2>
+      <p id="second-article-para">
+        This paragraph is in a second article and SHOULD get a play button too.
+      </p>
+    </article>
+  </body>
+</html>

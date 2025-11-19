@@ -55,61 +55,64 @@
     </style>
   </head>
   <body>
-    <div class="test-container">
-      <h1>Talkient Follow Highlight Test Page</h1>
-      <p>
-        This page contains multiple sections separated by spacers to test the
-        followHighlight feature of the Talkient extension.
-      </p>
-
-      <div id="section1" class="test-section">
-        <h2>Section 1: Top Content</h2>
-        <p id="para1" class="test-paragraph">
-          This is the first paragraph at the top of the page. When the
-          followHighlight feature is enabled, clicking play on a paragraph
-          further down the page should cause the page to scroll to that
-          paragraph. This helps test that the scrolling behavior works correctly
-          when navigating between distant elements.
+    <article>
+      <div class="test-container">
+        <h1>Talkient Follow Highlight Test Page</h1>
+        <p>
+          This page contains multiple sections separated by spacers to test the
+          followHighlight feature of the Talkient extension.
         </p>
-        <div id="status1" class="status-indicator">Ready for testing</div>
-      </div>
 
-      <div class="spacer">
-        <p>Scroll spacer - Content below requires scrolling to view</p>
-      </div>
+        <div id="section1" class="test-section">
+          <h2>Section 1: Top Content</h2>
+          <p id="para1" class="test-paragraph">
+            This is the first paragraph at the top of the page. When the
+            followHighlight feature is enabled, clicking play on a paragraph
+            further down the page should cause the page to scroll to that
+            paragraph. This helps test that the scrolling behavior works
+            correctly when navigating between distant elements.
+          </p>
+          <div id="status1" class="status-indicator">Ready for testing</div>
+        </div>
 
-      <div id="section2" class="test-section">
-        <h2>Section 2: Middle Content</h2>
-        <p id="para2" class="test-paragraph">
-          This paragraph is in the middle of the page. When playing this content
-          with followHighlight enabled, the browser should automatically scroll
-          to keep this text visible in the viewport. This helps ensure that
-          users can always see the text that is currently being read aloud.
-        </p>
-        <div id="status2" class="status-indicator">Ready for testing</div>
-      </div>
+        <div class="spacer">
+          <p>Scroll spacer - Content below requires scrolling to view</p>
+        </div>
 
-      <div class="spacer">
-        <p>Another scroll spacer - More content below</p>
-      </div>
+        <div id="section2" class="test-section">
+          <h2>Section 2: Middle Content</h2>
+          <p id="para2" class="test-paragraph">
+            This paragraph is in the middle of the page. When playing this
+            content with followHighlight enabled, the browser should
+            automatically scroll to keep this text visible in the viewport. This
+            helps ensure that users can always see the text that is currently
+            being read aloud.
+          </p>
+          <div id="status2" class="status-indicator">Ready for testing</div>
+        </div>
 
-      <div id="section3" class="test-section">
-        <h2>Section 3: Bottom Content</h2>
-        <p id="para3" class="test-paragraph">
-          This is the bottom paragraph on the page. Playing this content with
-          followHighlight enabled should cause the page to scroll down to make
-          this paragraph visible. This tests the automatic scrolling behavior
-          for content at the bottom of the page.
-        </p>
-        <p id="para4" class="test-paragraph">
-          This final paragraph provides additional test content at the very
-          bottom of the page. The Talkient extension should smoothly scroll to
-          this content when it begins playing, ensuring that users can always
-          see what's being read aloud even when it's far down on the page.
-        </p>
-        <div id="status3" class="status-indicator">Ready for testing</div>
+        <div class="spacer">
+          <p>Another scroll spacer - More content below</p>
+        </div>
+
+        <div id="section3" class="test-section">
+          <h2>Section 3: Bottom Content</h2>
+          <p id="para3" class="test-paragraph">
+            This is the bottom paragraph on the page. Playing this content with
+            followHighlight enabled should cause the page to scroll down to make
+            this paragraph visible. This tests the automatic scrolling behavior
+            for content at the bottom of the page.
+          </p>
+          <p id="para4" class="test-paragraph">
+            This final paragraph provides additional test content at the very
+            bottom of the page. The Talkient extension should smoothly scroll to
+            this content when it begins playing, ensuring that users can always
+            see what's being read aloud even when it's far down on the page.
+          </p>
+          <div id="status3" class="status-indicator">Ready for testing</div>
+        </div>
       </div>
-    </div>
+    </article>
 
     <script>
       // This script is for visual feedback during manual testing

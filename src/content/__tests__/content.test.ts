@@ -222,22 +222,137 @@ describe('shouldProcessNode', () => {
   });
 
   test('should return true for valid text nodes', () => {
+    const article = document.createElement('article');
     const div = document.createElement('div');
     const textNode = document.createTextNode('This is a valid text node');
     div.appendChild(textNode);
+    article.appendChild(div);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(true);
+  });
+
+  test('should return false for text nodes not inside article tags', () => {
+    const div = document.createElement('div');
+    const textNode = document.createTextNode('This text is not in an article');
+    div.appendChild(textNode);
     container.appendChild(div);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return true for text nodes deeply nested inside article tags', () => {
+    const article = document.createElement('article');
+    const section = document.createElement('section');
+    const div = document.createElement('div');
+    const p = document.createElement('p');
+    const textNode = document.createTextNode('Deeply nested valid text node');
+    p.appendChild(textNode);
+    div.appendChild(p);
+    section.appendChild(div);
+    article.appendChild(section);
+    container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
   test('should return true for text nodes with multiple characters', async () => {
+    const article = document.createElement('article');
     const div = document.createElement('div');
     // Use three words to satisfy the minimum words requirement
     const textNode = document.createTextNode('three words here');
     div.appendChild(textNode);
-    container.appendChild(div);
+    article.appendChild(div);
+    container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
+  });
+
+  test('should return false for code elements inside article tags', () => {
+    const article = document.createElement('article');
+    const code = document.createElement('code');
+    const textNode = document.createTextNode(
+      'console.log("test code in article")'
+    );
+    code.appendChild(textNode);
+    article.appendChild(code);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return false for script elements inside article tags', () => {
+    const article = document.createElement('article');
+    const script = document.createElement('script');
+    const textNode = document.createTextNode(
+      'console.log("test script in article")'
+    );
+    script.appendChild(textNode);
+    article.appendChild(script);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return false for button elements inside article tags', () => {
+    const article = document.createElement('article');
+    const button = document.createElement('button');
+    const textNode = document.createTextNode('Click me button in article');
+    button.appendChild(textNode);
+    article.appendChild(button);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return false for elements in control panel even if inside article', () => {
+    const article = document.createElement('article');
+    const controlPanel = document.createElement('div');
+    controlPanel.id = 'talkient-control-panel';
+    const div = document.createElement('div');
+    const textNode = document.createTextNode(
+      'text in control panel inside article'
+    );
+    div.appendChild(textNode);
+    controlPanel.appendChild(div);
+    article.appendChild(controlPanel);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return false for hidden elements inside article tags', () => {
+    const article = document.createElement('article');
+    const hiddenDiv = document.createElement('div');
+    hiddenDiv.style.display = 'none';
+    const textNode = document.createTextNode('hidden text in article element');
+    hiddenDiv.appendChild(textNode);
+    article.appendChild(hiddenDiv);
+    container.appendChild(article);
+
+    expect(shouldProcessNode(textNode)).toBe(false);
+  });
+
+  test('should return true for multiple article tags on same page', () => {
+    // Create first article
+    const article1 = document.createElement('article');
+    const div1 = document.createElement('div');
+    const textNode1 = document.createTextNode('text in first article');
+    div1.appendChild(textNode1);
+    article1.appendChild(div1);
+    container.appendChild(article1);
+
+    // Create second article
+    const article2 = document.createElement('article');
+    const div2 = document.createElement('div');
+    const textNode2 = document.createTextNode('text in second article');
+    div2.appendChild(textNode2);
+    article2.appendChild(div2);
+    container.appendChild(article2);
+
+    // Both should be processable
+    expect(shouldProcessNode(textNode1)).toBe(true);
+    expect(shouldProcessNode(textNode2)).toBe(true);
   });
 });
 

@@ -63,26 +63,31 @@ describe('Content Script Element Processing Integration', () => {
   });
 
   test('should not add play buttons to code elements during processing', () => {
+    // Create an article tag to wrap the content
+    const article = document.createElement('article');
+
     // Create a mixed content scenario with regular text and code
     const paragraph = document.createElement('p');
     paragraph.textContent =
       'Here is some regular text that should get a play button.';
-    container.appendChild(paragraph);
+    article.appendChild(paragraph);
 
     const codeBlock = document.createElement('code');
     codeBlock.textContent = 'console.log("this code should not get a button");';
-    container.appendChild(codeBlock);
+    article.appendChild(codeBlock);
 
     const preWithCode = document.createElement('pre');
     const nestedCode = document.createElement('code');
     nestedCode.textContent = 'function test() {\n  return "nested code";\n}';
     preWithCode.appendChild(nestedCode);
-    container.appendChild(preWithCode);
+    article.appendChild(preWithCode);
 
     const anotherParagraph = document.createElement('p');
     anotherParagraph.textContent =
       'More regular text that should also get a play button.';
-    container.appendChild(anotherParagraph);
+    article.appendChild(anotherParagraph);
+
+    container.appendChild(article);
 
     // Import the processTextElements function and test it
     const { processTextElements } = require('../content-lib');
