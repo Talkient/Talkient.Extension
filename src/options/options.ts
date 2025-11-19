@@ -26,9 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const maxNodesInput = document.getElementById(
     'max-nodes-input'
   ) as HTMLInputElement;
-  const controlPanelVisibilitySelect = document.getElementById(
-    'control-panel-visibility-select'
-  ) as HTMLSelectElement;
 
   if (
     !voiceSelect ||
@@ -41,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     !followHighlightToggle ||
     !buttonPositionSelect ||
     !minimumWordsInput ||
-    !maxNodesInput ||
-    !controlPanelVisibilitySelect
+    !maxNodesInput
   )
     return;
 
@@ -58,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
       'buttonPosition',
       'minimumWords',
       'maxNodesProcessed',
-      'controlPanelVisibility',
     ],
     (result) => {
       const selectedVoice =
@@ -89,11 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.maxNodesProcessed === 'number'
           ? result.maxNodesProcessed
           : 1000;
-      const controlPanelVisibility = Array.isArray(
-        result.controlPanelVisibility
-      )
-        ? result.controlPanelVisibility
-        : [];
 
       populateVoices(selectedVoice);
 
@@ -123,11 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set maximum nodes input
       maxNodesInput.value = maxNodesProcessed.toString();
-
-      // Set control panel visibility select
-      Array.from(controlPanelVisibilitySelect.options).forEach((option) => {
-        option.selected = controlPanelVisibility.includes(option.value);
-      });
     }
   );
 
@@ -200,18 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const newMaxNodes = changes.maxNodesProcessed.newValue;
           if (typeof newMaxNodes === 'number') {
             maxNodesInput.value = newMaxNodes.toString();
-          }
-        }
-
-        // Update control panel visibility if changed
-        if (changes.controlPanelVisibility) {
-          const newVisibility = changes.controlPanelVisibility.newValue;
-          if (Array.isArray(newVisibility)) {
-            Array.from(controlPanelVisibilitySelect.options).forEach(
-              (option) => {
-                option.selected = newVisibility.includes(option.value);
-              }
-            );
           }
         }
 
@@ -322,17 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Maximum nodes setting saved!', 'success');
-  });
-
-  // Save control panel visibility setting to storage
-  controlPanelVisibilitySelect.addEventListener('change', () => {
-    const controlPanelVisibility = Array.from(
-      controlPanelVisibilitySelect.selectedOptions
-    ).map((option) => option.value);
-    chrome.storage.local.set({ controlPanelVisibility });
-
-    // Show a brief status message
-    showStatus('Control panel visibility setting saved!', 'success');
   });
 });
 

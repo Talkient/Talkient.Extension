@@ -168,7 +168,6 @@ describe('options.ts - using actual HTML', () => {
           'buttonPosition',
           'minimumWords',
           'maxNodesProcessed',
-          'controlPanelVisibility',
         ],
         expect.any(Function)
       );
