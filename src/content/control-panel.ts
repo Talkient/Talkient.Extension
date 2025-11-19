@@ -15,6 +15,15 @@ export function createControlPanel(): void {
     return;
   }
 
+  // Check if there's an article element in the DOM
+  const articleElement = document.querySelector('article');
+  if (!articleElement) {
+    console.log(
+      '[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.'
+    );
+    return;
+  }
+
   // Create the control panel container
   const panel = document.createElement('div');
   panel.id = 'talkient-control-panel';

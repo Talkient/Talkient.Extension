@@ -105,8 +105,8 @@ global.chrome = mockChrome;
 
 describe('Script Control Integration Tests', () => {
   beforeEach(() => {
-    // Set up DOM
-    document.body.innerHTML = '';
+    // Set up DOM with an article element (required for control panel to be created)
+    document.body.innerHTML = '<article><p>Test content</p></article>';
     jest.clearAllMocks();
 
     // Use processTextElements to generate the play buttons
@@ -127,8 +127,8 @@ describe('Script Control Integration Tests', () => {
   });
 
   it('should trigger full reload flow when toggle is turned on', (done) => {
-    // Verify initial state
-    expect(document.querySelectorAll('.talkient-processed').length).toBe(2);
+    // Verify initial state (2 from processTextElements + 1 from article)
+    expect(document.querySelectorAll('.talkient-processed').length).toBe(3);
 
     // Get the panel and toggle
     const panel = document.getElementById('talkient-control-panel');

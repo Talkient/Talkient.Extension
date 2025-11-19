@@ -56,8 +56,8 @@ global.requestAnimationFrame = jest.fn((callback) => {
 
 describe('Control Panel Module', () => {
   beforeEach(() => {
-    // Set up DOM
-    document.body.innerHTML = '';
+    // Set up DOM with an article element (required for control panel to be created)
+    document.body.innerHTML = '<article><p>Test content</p></article>';
     jest.clearAllMocks();
   });
 
@@ -67,6 +67,26 @@ describe('Control Panel Module', () => {
   });
 
   describe('createControlPanel', () => {
+    it('should not create control panel when no article element exists', () => {
+      // Clear the DOM to remove the article element
+      document.body.innerHTML = '';
+
+      // Spy on console.log to verify the message
+      const consoleLogSpy = jest.spyOn(console, 'log');
+
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel');
+      expect(panel).toBeFalsy();
+
+      // Verify the console log message
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        '[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.'
+      );
+
+      consoleLogSpy.mockRestore();
+    });
+
     it('should create and append control panel to document body', () => {
       createControlPanel();
 
@@ -245,6 +265,34 @@ describe('Control Panel Module', () => {
       // Toggle to create again
       toggleControlPanel();
       expect(isControlPanelVisible()).toBe(true);
+    });
+
+    it('should not create panel when toggling on page without article element', () => {
+      // Clear DOM to remove article element
+      document.body.innerHTML = '';
+
+      expect(isControlPanelVisible()).toBe(false);
+
+      // Try to toggle to create
+      toggleControlPanel();
+
+      // Should still be false because there's no article element
+      expect(isControlPanelVisible()).toBe(false);
+    });
+
+    it('should handle multiple toggle attempts on page without article element', () => {
+      // Clear DOM to remove article element
+      document.body.innerHTML = '';
+
+      // Multiple toggle attempts should all fail gracefully
+      toggleControlPanel();
+      expect(isControlPanelVisible()).toBe(false);
+
+      toggleControlPanel();
+      expect(isControlPanelVisible()).toBe(false);
+
+      toggleControlPanel();
+      expect(isControlPanelVisible()).toBe(false);
     });
   });
 

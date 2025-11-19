@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>No Article Test Page</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 2px solid #ddd;
+        background-color: #f9f9f9;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test Page Without Article Element</h1>
+
+    <section>
+      <h2>Section One with Sufficient Words</h2>
+      <p>
+        This paragraph has enough words to normally qualify for a play button
+        but it is NOT inside an article tag so it should not be processed by
+        Talkient.
+      </p>
+      <p>
+        Another paragraph with plenty of words that should also not get a play
+        button because there is no article element on this page at all.
+      </p>
+    </section>
+
+    <section>
+      <h2>Section Two Also With Many Words</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. This text has
+        many words and would normally be processed, but without an article tag
+        wrapping it, it should be ignored.
+      </p>
+    </section>
+
+    <div>
+      <p>
+        This is a regular div with a paragraph containing enough words to be
+        processed but again no article tag so no play buttons should appear.
+      </p>
+    </div>
+  </body>
+</html>

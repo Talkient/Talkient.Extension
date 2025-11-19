@@ -89,8 +89,8 @@ global.chrome = mockChrome;
 // Instead of trying to mock the internal function, we'll check if the DOM is modified correctly
 describe('Script Control Buttons', () => {
   beforeEach(() => {
-    // Set up DOM
-    document.body.innerHTML = '';
+    // Set up DOM with an article element (required for control panel to be created)
+    document.body.innerHTML = '<article><p>Test content</p></article>';
     jest.clearAllMocks();
 
     // Create text nodes and process them using processTextElements

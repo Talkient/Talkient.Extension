@@ -101,8 +101,8 @@ global.chrome = mockChrome;
 
 describe('removeAllPlayButtons Function', () => {
   beforeEach(() => {
-    // Set up DOM
-    document.body.innerHTML = '';
+    // Set up DOM with an article element (required for control panel to be created)
+    document.body.innerHTML = '<article><p>Test content</p></article>';
     jest.clearAllMocks();
 
     // Use processTextElements to generate the play buttons
@@ -117,9 +117,9 @@ describe('removeAllPlayButtons Function', () => {
   });
 
   it('should remove all processed elements and play buttons', () => {
-    // Verify initial state
-    expect(document.querySelectorAll('.talkient-processed').length).toBe(3);
-    expect(document.querySelectorAll('.talkient-play-button').length).toBe(4); // 3 in processed elements + 1 standalone
+    // Verify initial state (3 from processTextElements + 1 from article)
+    expect(document.querySelectorAll('.talkient-processed').length).toBe(4);
+    expect(document.querySelectorAll('.talkient-play-button').length).toBe(5); // 4 in processed elements + 1 standalone
 
     // Get the panel and toggle
     const panel = document.getElementById('talkient-control-panel');
