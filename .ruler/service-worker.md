@@ -1,7 +1,3 @@
----
-applyTo: 'src/background/**/*.ts'
----
-
 # Service Worker in Chrome Extensions
 
 Service workers are persistent background scripts that handle extension events when the extension isn't actively being used. They:

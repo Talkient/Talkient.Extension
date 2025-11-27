@@ -4,3 +4,11 @@
 /playwright-report/
 /test-results/
 /playwright/.cache/
+
+# START Ruler Generated Files
+/.github/copilot-instructions.md
+/.github/copilot-instructions.md.bak
+/AGENTS.md
+/AGENTS.md.bak
+# END Ruler Generated Files
+.gemini/settings.json.orig

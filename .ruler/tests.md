@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 # Test Instructions for Talkient Extension
 
 ## Constraints
@@ -11,5 +7,5 @@ applyTo: '**'
 
 ## Running Tests
 
-1. Unit tests (jest): Run using `pnpm test`
-2. E2E tests (Playwright): Run using `pnpm test:e2e`
+1. Raw HTML and css are testes by jest. Run using `pnpm test`
+2. Playwright for E2E (end-to-end) tests.Rung using `pnpm test:e2e`

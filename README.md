@@ -1,5 +1,7 @@
 # Talkient.Extenion
 
+- Create a System Design or similar (maybe as a isolated github repository)
+
 ## Features
 
 - Text-to-speech conversion for web page content
