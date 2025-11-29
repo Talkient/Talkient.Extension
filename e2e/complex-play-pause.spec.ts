@@ -229,11 +229,6 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
       });
     }
 
-    console.log(
-      'Phase 8 final button states after rapid interruptions:',
-      await debugButtonStates()
-    );
-
     // PHASE 9: Test control panel integration if available
     console.log('PHASE 9: Testing control panel integration');
 
@@ -296,9 +291,6 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
 
     // PHASE 10: Final verification
     console.log('PHASE 10: Final verification');
-
-    console.log('Final button states:', await debugButtonStates());
-
     // Take final screenshot
     await page.screenshot({
       path: 'e2e-results/complex-final-state-screenshot.png',

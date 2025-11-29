@@ -28,4 +28,29 @@
 // Mock cancelAnimationFrame
 (global as any).cancelAnimationFrame = jest.fn((id: number) => {
   clearTimeout(id);
+});
+
+// Mock window.scrollTo (not implemented in jsdom)
+Object.defineProperty(window, 'scrollTo', {
+  value: jest.fn((options?: ScrollToOptions | number, y?: number) => {
+    // Handle both object form: scrollTo({ top, left, behavior })
+    // and legacy form: scrollTo(x, y)
+    if (typeof options === 'object' && options !== null) {
+      // Object form - update scroll position if needed for tests
+      if (options.top !== undefined) {
+        window.scrollY = options.top;
+      }
+      if (options.left !== undefined) {
+        window.scrollX = options.left;
+      }
+    } else if (typeof options === 'number') {
+      // Legacy form
+      window.scrollX = options;
+      if (typeof y === 'number') {
+        window.scrollY = y;
+      }
+    }
+  }),
+  writable: true,
+  configurable: true,
 }); 
