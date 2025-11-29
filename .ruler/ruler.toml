@@ -1,7 +1,7 @@
 # Ruler Configuration File
 # See https://ai.intellectronica.net/ruler for documentation.
 
-default_agents = ["copilot", "cursor", "gemini-cli"]
+default_agents = ["copilot", "cursor", "gemini-cli", "antigravity"]
 
 # Enable nested rule loading from nested .ruler directories
 # When enabled, ruler will search for and process .ruler directories throughout the project hierarchy
