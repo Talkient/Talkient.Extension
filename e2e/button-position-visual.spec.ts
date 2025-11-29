@@ -12,6 +12,7 @@ test.describe('Button Position Visual Tests', () => {
   }) => {
     // First, set the button position to left in options
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
     await page.waitForSelector('#button-position-select');
     await page.selectOption('#button-position-select', 'left');
     await page.waitForTimeout(500);
@@ -75,6 +76,7 @@ test.describe('Button Position Visual Tests', () => {
   }) => {
     // First, set the button position to right in options
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
     await page.waitForSelector('#button-position-select');
     await page.selectOption('#button-position-select', 'right');
     await page.waitForTimeout(500);
@@ -148,6 +150,7 @@ test.describe('Button Position Visual Tests', () => {
 
     // Start with buttons on the right
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
     await page.waitForSelector('#button-position-select');
     await page.selectOption('#button-position-select', 'right');
     await page.waitForTimeout(500);
@@ -178,6 +181,7 @@ test.describe('Button Position Visual Tests', () => {
 
     // Change to left in options
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
     await page.waitForSelector('#button-position-select');
     await page.selectOption('#button-position-select', 'left');
     await page.waitForTimeout(1000); // Wait for storage change to propagate

@@ -61,7 +61,12 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
-    // Get the current state of the toggle
+    // Wait for page to be fully loaded - the h1 is always visible
+    await page.waitForSelector('h1:has-text("Talkient Settings")');
+    // Give time for storage to load and populate the checkbox
+    await page.waitForTimeout(500);
+
+    // Get the current state of the toggle (checkbox is hidden but exists in DOM)
     const initialState = await page
       .locator('#follow-highlight-toggle')
       .isChecked();
@@ -74,6 +79,9 @@ test.describe('Talkient Extension Options Page', () => {
       toggle.checked = !toggle.checked;
       toggle.dispatchEvent(new Event('change', { bubbles: true }));
     });
+
+    // Wait for the status message to appear, confirming the change was processed
+    await page.waitForSelector('#status.visible.success');
 
     // Verify the toggle state changed
     await expect(page.locator('#follow-highlight-toggle')).toBeChecked({

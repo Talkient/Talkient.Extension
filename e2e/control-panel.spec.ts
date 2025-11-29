@@ -171,8 +171,6 @@ test.describe('Talkient Control Panel', () => {
         await page.screenshot({
           path: 'e2e-results/control-panel-settings-failed-screenshot.png',
         });
-        // Skip the test instead of failing
-        test.skip();
       }
     });
   });
