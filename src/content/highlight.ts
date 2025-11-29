@@ -113,9 +113,9 @@ export function scrollToHighlightedElement(element: HTMLElement): void {
     return;
   }
 
-  // Check if followHighlight setting is enabled
+  // Check if followHighlight setting is enabled (defaults to true if not set)
   chrome.storage.local.get(['followHighlight'], (result) => {
-    const followHighlight = result.followHighlight === true;
+    const followHighlight = result.followHighlight !== false;
 
     if (followHighlight && element) {
       const rect = element.getBoundingClientRect();

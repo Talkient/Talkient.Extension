@@ -132,10 +132,10 @@ loadMaxNodesFromStorage();
 
 // Load button position setting from storage and then process elements
 loadButtonPositionFromStorage().then(() => {
-  // Load follow highlight setting (defaults to false if not set)
+  // Load follow highlight setting (defaults to true if not set)
   chrome.storage.local.get(['followHighlight'], (result) => {
     console.log(
-      `[Talkient] Follow highlight setting loaded: ${result.followHighlight === true}`
+      `[Talkient] Follow highlight setting loaded: ${result.followHighlight !== false}`
     );
   });
 
@@ -236,7 +236,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
 
     if (changes.followHighlight) {
-      const followHighlight = changes.followHighlight.newValue === true;
+      const followHighlight = changes.followHighlight.newValue !== false;
       console.log(
         `[Talkient] Follow highlight setting updated to: ${followHighlight}`
       );
