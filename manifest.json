@@ -7,7 +7,10 @@
     "128": "assets/png/text-to-speech.png"
   },
   "version": "0.0.13",
-  "permissions": ["tts", "storage", "contextMenus"],
+  "permissions": ["tts", "storage", "contextMenus", "sidePanel"],
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
   "action": {
     "default_popup": "./popup/popup.html"
   },

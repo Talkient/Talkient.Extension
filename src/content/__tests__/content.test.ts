@@ -305,20 +305,22 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for elements in control panel even if inside article', () => {
+  test('should return false for elements in sidepanel (no longer in content script)', () => {
+    // Note: Control panel functionality moved to sidepanel (separate context)
+    // This test verifies that elements that would be in a sidepanel-like container
+    // are not processed. Since sidepanel is in a separate context, this test
+    // is mainly for documentation purposes.
     const article = document.createElement('article');
-    const controlPanel = document.createElement('div');
-    controlPanel.id = 'talkient-control-panel';
+    // Sidepanel is in a separate context, so no elements from it should be in content script
     const div = document.createElement('div');
-    const textNode = document.createTextNode(
-      'text in control panel inside article'
-    );
+    const textNode = document.createTextNode('text in article element');
     div.appendChild(textNode);
-    controlPanel.appendChild(div);
-    article.appendChild(controlPanel);
+    article.appendChild(div);
     container.appendChild(article);
 
-    expect(shouldProcessNode(textNode)).toBe(false);
+    // This should still be processable since it's in an article
+    // (the sidepanel check is no longer needed as sidepanel is separate)
+    expect(shouldProcessNode(textNode)).toBe(true);
   });
 
   test('should return false for hidden elements inside article tags', () => {

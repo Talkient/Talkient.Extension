@@ -1,5 +1,11 @@
 console.log('Service Worker for Talkient Extension');
 
+// Open side panel when extension icon is clicked
+chrome.action.onClicked.addListener((tab) => {
+  console.log('[Talkient.SW] Extension icon clicked, opening side panel...');
+  chrome.sidePanel.open({ windowId: tab.windowId });
+});
+
 // State management for TTS
 let isPaused = false;
 let currentText = '';

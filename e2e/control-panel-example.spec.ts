@@ -1,9 +1,20 @@
 import { test, expect } from './extension-test';
 import * as path from 'path';
 
-test.describe('Talkient Control Panel on Example.html', () => {
-  test('should render control panel correctly on example.html', async ({
+// Helper function to open and get the side panel
+async function openSidePanel(context: any, extensionId: string) {
+  const sidePanelUrl = `chrome-extension://${extensionId}/sidepanel/sidepanel.html`;
+  const sidePanelPage = await context.newPage();
+  await sidePanelPage.goto(sidePanelUrl);
+  await sidePanelPage.waitForLoadState('networkidle');
+  return sidePanelPage;
+}
+
+test.describe('Talkient Side Panel on Example.html', () => {
+  test('should render side panel correctly on example.html', async ({
     page,
+    context,
+    extensionId,
   }) => {
     // Calculate the path to the local example test page
     const testPagePath = path.join(__dirname, 'test-pages', 'example.html');
@@ -13,84 +24,51 @@ test.describe('Talkient Control Panel on Example.html', () => {
     await page.goto(fileUrl);
     await page.waitForLoadState('networkidle');
 
-    // Wait for the control panel to be created
-    await page.waitForTimeout(2000);
+    // Wait for content script to load
+    await page.waitForTimeout(1000);
 
-    // Check if control panel exists
-    const controlPanelExists = await page.evaluate(() => {
+    // Open the side panel
+    const sidePanelPage = await openSidePanel(context, extensionId);
+    
+    // Wait for side panel to be ready
+    await sidePanelPage.waitForSelector('#talkient-control-panel', { timeout: 5000 });
+
+    // Check if side panel exists
+    const sidePanelExists = await sidePanelPage.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelExists).toBeTruthy();
+    expect(sidePanelExists).toBeTruthy();
 
-    // Check if the control panel has the correct width (should be 120px, not 600px from page styles)
-    const panelWidth = await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      return panel ? window.getComputedStyle(panel).width : null;
-    });
-
-    console.log('Control panel width:', panelWidth);
-    expect(panelWidth).toBe('120px');
-
-    // Expand the panel to check internal elements
-    await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      const toggleButton = panel?.querySelector(
-        '.talkient-panel-toggle'
-      ) as HTMLButtonElement;
-      if (toggleButton) {
-        toggleButton.click();
-      }
-    });
-
-    // Wait for expansion
-    await page.waitForTimeout(500);
-
-    // Check if internal divs are not affected by the page's div { width: 600px } rule
-    const panelHeaderWidth = await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      const header = panel?.querySelector('.talkient-panel-header');
-      return header ? window.getComputedStyle(header as Element).width : null;
-    });
-
-    console.log('Panel header width:', panelHeaderWidth);
-    // Header should not be 600px
-    expect(panelHeaderWidth).not.toBe('600px');
-
-    // Check control sections
-    const controlSectionWidth = await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      const section = panel?.querySelector('.talkient-control-section');
-      return section ? window.getComputedStyle(section as Element).width : null;
-    });
-
-    console.log('Control section width:', controlSectionWidth);
-    // Section should not be 600px
-    expect(controlSectionWidth).not.toBe('600px');
-
-    // Take a screenshot for verification
-    await page.screenshot({
-      path: 'e2e-results/control-panel-example-screenshot.png',
-    });
-
-    // Check if settings button is clickable
-    const settingsButtonExists = await page.evaluate(() => {
+    // Check if settings button exists in side panel
+    const settingsButtonExists = await sidePanelPage.evaluate(() => {
       const btn = document.querySelector('.talkient-control-btn.settings');
       return btn !== null;
     });
 
     expect(settingsButtonExists).toBeTruthy();
 
-    // Check if speech rate slider exists and is visible
-    const sliderExists = await page.evaluate(() => {
+    // Check if speech rate slider exists and is visible in side panel
+    const sliderExists = await sidePanelPage.evaluate(() => {
       const slider = document.querySelector('.talkient-rate-slider');
       return slider !== null;
     });
 
     expect(sliderExists).toBeTruthy();
+
+    // Take a screenshot for verification
+    await sidePanelPage.screenshot({
+      path: 'e2e-results/sidepanel-example-screenshot.png',
+    });
+
+    await sidePanelPage.close();
   });
 
-  test('should allow toggling scripts on example.html', async ({ page }) => {
+  test('should allow toggling scripts on example.html', async ({
+    page,
+    context,
+    extensionId,
+  }) => {
     // Calculate the path to the local example test page
     const testPagePath = path.join(__dirname, 'test-pages', 'example.html');
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
@@ -99,72 +77,36 @@ test.describe('Talkient Control Panel on Example.html', () => {
     await page.goto(fileUrl);
     await page.waitForLoadState('networkidle');
 
-    // Wait for the control panel to be created
-    await page.waitForTimeout(2000);
+    // Wait for content script to load
+    await page.waitForTimeout(1000);
 
-    // Expand the panel
-    await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      const toggleButton = panel?.querySelector(
-        '.talkient-panel-toggle'
-      ) as HTMLButtonElement;
-      if (toggleButton) {
-        toggleButton.click();
-      }
-    });
-
-    // Wait for expansion
-    await page.waitForTimeout(500);
+    // Open the side panel
+    const sidePanelPage = await openSidePanel(context, extensionId);
+    await sidePanelPage.waitForSelector('#talkient-control-panel', { timeout: 5000 });
 
     // Check if toggle input exists and is checked
-    const toggleState = await page.evaluate(() => {
-      const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
-      ) as HTMLInputElement;
-      return toggleInput ? toggleInput.checked : null;
-    });
+    const toggleState = await sidePanelPage
+      .locator('.talkient-toggle-input')
+      .isChecked();
 
     expect(toggleState).toBe(true);
 
     // Toggle it off
-    await page.click('.talkient-toggle-slider');
-    await page.waitForTimeout(500);
+    await sidePanelPage.click('.talkient-toggle-slider');
+    await sidePanelPage.waitForTimeout(500);
 
     // Verify it's off
-    const toggleStateAfter = await page.evaluate(() => {
-      const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
-      ) as HTMLInputElement;
-      return toggleInput ? toggleInput.checked : null;
-    });
+    const toggleStateAfter = await sidePanelPage
+      .locator('.talkient-toggle-input')
+      .isChecked();
 
     expect(toggleStateAfter).toBe(false);
 
     // Take a screenshot
-    await page.screenshot({
-      path: 'e2e-results/control-panel-example-toggle-screenshot.png',
-    });
-  });
-
-  test('should have proper z-index on example.html', async ({ page }) => {
-    // Calculate the path to the local example test page
-    const testPagePath = path.join(__dirname, 'test-pages', 'example.html');
-    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
-
-    // Navigate to example.html
-    await page.goto(fileUrl);
-    await page.waitForLoadState('networkidle');
-
-    // Wait for the control panel to be created
-    await page.waitForTimeout(2000);
-
-    // Check if control panel has high z-index
-    const zIndex = await page.evaluate(() => {
-      const panel = document.getElementById('talkient-control-panel');
-      return panel ? window.getComputedStyle(panel).zIndex : null;
+    await sidePanelPage.screenshot({
+      path: 'e2e-results/sidepanel-example-toggle-screenshot.png',
     });
 
-    console.log('Control panel z-index:', zIndex);
-    expect(zIndex).toBe('999999');
+    await sidePanelPage.close();
   });
 });

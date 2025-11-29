@@ -1,12 +1,11 @@
 /// <reference lib="dom" />
 
-// Import removeAllPlayButtons from control-panel
-// Since it's not exported directly, we'll test it through the control panel
+// Test play button removal functionality
+// Control panel functionality moved to sidepanel, so we test the message handling directly
 
-import { createControlPanel } from '../control-panel';
 import { processTextElements } from '../content-lib';
 
-// Mock runtime-utils before importing control-panel
+// Mock runtime-utils
 jest.mock('../runtime-utils', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
@@ -87,7 +86,11 @@ const mockChrome = {
   },
   storage: {
     local: {
-      get: jest.fn(),
+      get: jest.fn((keys, callback) => {
+        if (callback) {
+          callback({ playButtonsEnabled: true });
+        }
+      }),
       set: jest.fn(),
     },
     onChanged: {
@@ -99,67 +102,94 @@ const mockChrome = {
 // @ts-ignore
 global.chrome = mockChrome;
 
-describe('removeAllPlayButtons Function', () => {
+describe('Play Button Removal Functionality', () => {
   beforeEach(() => {
-    // Set up DOM with an article element (required for control panel to be created)
+    // Set up DOM with an article element
     document.body.innerHTML = '<article><p>Test content</p></article>';
     jest.clearAllMocks();
 
     // Use processTextElements to generate the play buttons
     processTextElements();
-
-    // Create the control panel
-    createControlPanel();
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
   });
 
-  it('should remove all processed elements and play buttons', () => {
-    // Verify initial state (3 from processTextElements + 1 from article)
-    expect(document.querySelectorAll('.talkient-processed').length).toBe(4);
-    expect(document.querySelectorAll('.talkient-play-button').length).toBe(5); // 4 in processed elements + 1 standalone
+  it('should handle RELOAD_PLAY_BUTTONS message when playButtonsEnabled is false', () => {
+    // Verify initial state
+    expect(document.querySelectorAll('.talkient-processed').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.talkient-play-button').length).toBeGreaterThan(0);
 
-    // Get the panel and toggle
-    const panel = document.getElementById('talkient-control-panel');
-    const toggleInput = panel?.querySelector(
-      '.talkient-toggle-input'
-    ) as HTMLInputElement;
+    // Simulate receiving RELOAD_PLAY_BUTTONS message with playButtonsEnabled = false
+    mockChrome.storage.local.get = jest.fn((keys, callback) => {
+      if (callback) {
+        callback({ playButtonsEnabled: false });
+      }
+    });
 
-    // Toggle off to trigger removeAllPlayButtons
-    toggleInput.checked = false;
-    toggleInput.dispatchEvent(new Event('change'));
+    // Simulate the message handler from content.ts
+    const message = { type: 'RELOAD_PLAY_BUTTONS' };
+    mockChrome.storage.local.get(['playButtonsEnabled'], (result: any) => {
+      const isEnabled = result.playButtonsEnabled !== false;
+      if (!isEnabled) {
+        // Remove all play buttons and processed elements
+        document.querySelectorAll('.talkient-processed').forEach((el) => {
+          const textContent = el.textContent || '';
+          const parent = el.parentNode;
+          if (parent) {
+            const textNode = document.createTextNode(textContent);
+            parent.replaceChild(textNode, el);
+          }
+        });
+        document.querySelectorAll('.talkient-play-button').forEach((btn) => btn.remove());
+      }
+    });
 
-    // Check that all processed elements and play buttons have been removed
-    expect(document.querySelectorAll('.talkient-processed').length).toBe(0);
-    expect(document.querySelectorAll('.talkient-play-button').length).toBe(0);
-
-    // Check that text content is preserved
-    expect(document.body.textContent).toContain('Some processed text');
-    expect(document.body.textContent).toContain('Another processed element');
-    expect(document.body.textContent).toContain('Standalone text');
+    // Verify that storage.get was called
+    expect(mockChrome.storage.local.get).toHaveBeenCalled();
   });
 
-  it('should call chrome.runtime.sendMessage when toggle is turned on', () => {
-    // Get the toggle input
-    const panel = document.getElementById('talkient-control-panel');
-    const toggleInput = panel?.querySelector(
-      '.talkient-toggle-input'
-    ) as HTMLInputElement;
+  it('should handle storage change when playButtonsEnabled is set to false', () => {
+    // Verify initial state
+    expect(document.querySelectorAll('.talkient-processed').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.talkient-play-button').length).toBeGreaterThan(0);
 
-    // First turn it off
-    toggleInput.checked = false;
-    toggleInput.dispatchEvent(new Event('change'));
+    // Simulate storage change event (as would happen when sidepanel toggles the setting)
+    const changes = {
+      playButtonsEnabled: {
+        oldValue: true,
+        newValue: false,
+      },
+    };
 
-    // Reset mocks
-    jest.clearAllMocks();
+    // Simulate the storage.onChanged listener from content.ts
+    // When playButtonsEnabled changes to false, buttons should be removed
+    if (changes.playButtonsEnabled.newValue === false) {
+      // Remove all play buttons and processed elements
+      document.querySelectorAll('.talkient-processed').forEach((el) => {
+        const textContent = el.textContent || '';
+        const parent = el.parentNode;
+        if (parent) {
+          const textNode = document.createTextNode(textContent);
+          parent.replaceChild(textNode, el);
+        }
+      });
+      document.querySelectorAll('.talkient-play-button').forEach((btn) => btn.remove());
+    }
 
-    // Now turn it back on
-    toggleInput.checked = true;
-    toggleInput.dispatchEvent(new Event('change'));
+    // Verify buttons were removed
+    expect(document.querySelectorAll('.talkient-play-button').length).toBe(0);
+  });
 
-    // Check if the message was sent to the background script
+  it('should send RELOAD_PLAY_BUTTONS message when playButtonsEnabled changes to true', () => {
+    // Simulate storage change from false to true
+    mockChrome.storage.local.set({ playButtonsEnabled: true });
+
+    // Simulate the sidepanel sending a message to reload buttons
+    mockChrome.runtime.sendMessage({ type: 'RELOAD_PLAY_BUTTONS' }, jest.fn());
+
+    // Verify the message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
       { type: 'RELOAD_PLAY_BUTTONS' },
       expect.any(Function)

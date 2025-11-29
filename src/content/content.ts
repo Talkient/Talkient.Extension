@@ -9,7 +9,7 @@ import {
   getCurrentHighlightedElement,
   findNextTextElement,
   safeClickButton,
-  createControlPanel,
+
   loadMinimumWordsFromStorage,
   setMinimumWords,
   loadSpeechRateFromStorage,
@@ -111,6 +111,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
     return true; // Keep the message channel open for the async response
+  } else if (message.type === 'UPDATE_SPEECH_RATE') {
+    // Update speech rate from sidepanel
+    if (typeof message.rate === 'number') {
+      setSpeechRate(message.rate);
+      console.log(`[Talkient] Speech rate updated from sidepanel to: ${message.rate}`);
+    }
+    sendResponse({ success: true });
+    return true;
   } else {
     console.log('[Talkient] Message received but skipped.');
   }
@@ -139,8 +147,7 @@ loadButtonPositionFromStorage().then(() => {
     );
   });
 
-  // Create and inject the control panel
-  createControlPanel();
+
 
   // Check if play buttons are enabled before initial processing
   chrome.storage.local.get(['playButtonsEnabled'], (result) => {
@@ -190,23 +197,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         setSpeechRate(newRate);
         console.log(`[Talkient] Speech rate updated to: ${newRate}`);
 
-        // Update control panel rate slider if it exists
-        const panel = document.getElementById('talkient-control-panel');
-        if (panel) {
-          const rateSlider = panel.querySelector(
-            '.talkient-rate-slider'
-          ) as HTMLInputElement;
-          const rateValue = panel.querySelector(
-            '.talkient-rate-value'
-          ) as HTMLSpanElement;
 
-          if (rateSlider && rateValue) {
-            // Enforce 0.05 step increment by rounding to nearest 0.05
-            const roundedRate = Math.round(newRate * 20) / 20;
-            rateSlider.value = roundedRate.toString();
-            rateValue.textContent = `${roundedRate.toFixed(2)}x`;
-          }
-        }
       }
     }
 

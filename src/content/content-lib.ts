@@ -13,12 +13,7 @@ import {
 } from './highlight';
 
 import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from './icons';
-import {
-  createControlPanel,
-  removeControlPanel,
-  isControlPanelVisible,
-  toggleControlPanel,
-} from './control-panel';
+
 import { safeSendMessage } from './runtime-utils';
 
 // Re-export highlighting functions for backward compatibility
@@ -34,12 +29,7 @@ export {
 };
 
 // Re-export control panel functions
-export {
-  createControlPanel,
-  removeControlPanel,
-  isControlPanelVisible,
-  toggleControlPanel,
-};
+
 
 // Utility function to safely click on elements without triggering parent events (like link navigation)
 export function safeClickButton(button: HTMLElement): void {
@@ -251,9 +241,7 @@ export function shouldProcessNode(node: Node): boolean {
 
   if (isDirectlyNextToButton) return false;
 
-  // Skip if node is inside the control panel
-  const controlPanel = parent.closest('#talkient-control-panel');
-  if (controlPanel) return false;
+
 
   // Only process nodes that are within an <article> tag
   const article = parent.closest('article');

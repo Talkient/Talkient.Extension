@@ -1,8 +1,8 @@
 import { test, expect } from './extension-test';
 import * as path from 'path';
 
-test.describe('Control Panel - Article Requirement', () => {
-  test('should not create control panel on pages without article element', async ({
+test.describe('Side Panel - Article Requirement for Play Buttons', () => {
+  test('should not create play buttons on pages without article element', async ({
     page,
     context,
     extensionId,
@@ -23,13 +23,8 @@ test.describe('Control Panel - Article Requirement', () => {
     console.log('Testing page without article element');
     console.log('Using extension ID from service worker:', extensionId);
 
-    // Test 1: Verify no control panel is created
-    const controlPanelExists = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
-    });
-
-    console.log('Control panel exists:', controlPanelExists);
-    expect(controlPanelExists).toBe(false);
+    // Note: Side panel is always available (not conditional on article)
+    // But play buttons should only be created when article exists
 
     // Test 2: Verify no play buttons are created (since there's no article)
     const playButtonCount = await page.evaluate(() => {
@@ -47,36 +42,18 @@ test.describe('Control Panel - Article Requirement', () => {
     console.log('Processed elements found:', processedElementsCount);
     expect(processedElementsCount).toBe(0);
 
-    // Test 4: Try to force reload play buttons and verify control panel is still not created
-    await page.evaluate(() => {
-      const reloadEvent = new CustomEvent('talkient:reload-play-buttons');
-      document.dispatchEvent(reloadEvent);
-    });
-
-    await page.waitForTimeout(1000);
-
-    const controlPanelExistsAfterReload = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
-    });
-
-    console.log(
-      'Control panel exists after reload attempt:',
-      controlPanelExistsAfterReload
-    );
-    expect(controlPanelExistsAfterReload).toBe(false);
-
     // Take a screenshot for verification
     await page.screenshot({
-      path: 'e2e-results/no-article-control-panel-test.png',
+      path: 'e2e-results/no-article-play-buttons-test.png',
       fullPage: true,
     });
 
     console.log(
-      'Control panel article requirement test completed successfully!'
+      'Article requirement test completed successfully!'
     );
   });
 
-  test('should create control panel when article is added to page with article', async ({
+  test('should create play buttons when article is present', async ({
     page,
     context,
     extensionId,
@@ -92,15 +69,7 @@ test.describe('Control Panel - Article Requirement', () => {
     await page.goto(fileUrl);
     await page.waitForTimeout(3000);
 
-    console.log('Testing control panel creation with article present');
-
-    // Verify control panel IS created when article exists
-    const controlPanelExists = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
-    });
-
-    console.log('Control panel exists with article:', controlPanelExists);
-    expect(controlPanelExists).toBe(true);
+    console.log('Testing play button creation with article present');
 
     // Verify play buttons are created
     const playButtonCount = await page.evaluate(() => {
@@ -112,14 +81,14 @@ test.describe('Control Panel - Article Requirement', () => {
 
     // Take a screenshot
     await page.screenshot({
-      path: 'e2e-results/with-article-control-panel-test.png',
+      path: 'e2e-results/with-article-play-buttons-test.png',
       fullPage: true,
     });
 
-    console.log('Control panel created successfully with article present!');
+    console.log('Play buttons created successfully with article present!');
   });
 
-  test('should verify control panel visibility across different pages', async ({
+  test('should verify play button visibility across different pages', async ({
     page,
     context,
     extensionId,
@@ -136,15 +105,15 @@ test.describe('Control Panel - Article Requirement', () => {
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
-    const controlPanelOnNoArticlePage = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
+    const playButtonsOnNoArticlePage = await page.evaluate(() => {
+      return document.querySelectorAll('.talkient-play-button').length;
     });
 
     console.log(
-      'Control panel on no-article page:',
-      controlPanelOnNoArticlePage
+      'Play buttons on no-article page:',
+      playButtonsOnNoArticlePage
     );
-    expect(controlPanelOnNoArticlePage).toBe(false);
+    expect(playButtonsOnNoArticlePage).toBe(0);
 
     // Test 2: Navigate to page WITH article
     console.log('Step 2: Testing page with article');
@@ -158,27 +127,27 @@ test.describe('Control Panel - Article Requirement', () => {
     await page.goto(withArticleUrl);
     await page.waitForTimeout(3000);
 
-    const controlPanelOnArticlePage = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
+    const playButtonsOnArticlePage = await page.evaluate(() => {
+      return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    console.log('Control panel on article page:', controlPanelOnArticlePage);
-    expect(controlPanelOnArticlePage).toBe(true);
+    console.log('Play buttons on article page:', playButtonsOnArticlePage);
+    expect(playButtonsOnArticlePage).toBeGreaterThan(0);
 
     // Test 3: Go back to page WITHOUT article
     console.log('Step 3: Going back to page without article');
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
-    const controlPanelAfterNavigation = await page.evaluate(() => {
-      return document.getElementById('talkient-control-panel') !== null;
+    const playButtonsAfterNavigation = await page.evaluate(() => {
+      return document.querySelectorAll('.talkient-play-button').length;
     });
 
     console.log(
-      'Control panel after returning to no-article page:',
-      controlPanelAfterNavigation
+      'Play buttons after returning to no-article page:',
+      playButtonsAfterNavigation
     );
-    expect(controlPanelAfterNavigation).toBe(false);
+    expect(playButtonsAfterNavigation).toBe(0);
 
     console.log('Cross-page navigation test completed successfully!');
   });

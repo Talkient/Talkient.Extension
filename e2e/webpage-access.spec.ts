@@ -46,7 +46,9 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelExists).toBeTruthy();
+    // Note: Control panel moved to side panel (always available, not in page)
+    // Verify play buttons are created instead
+    expect(playButtonsCount).toBeGreaterThan(0);
 
     // Take a screenshot for verification
     await page.screenshot({
@@ -217,7 +219,9 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelExists).toBeTruthy();
+    // Note: Control panel moved to side panel (always available, not in page)
+    // Verify play buttons are created instead
+    expect(playButtonsCount).toBeGreaterThan(0);
 
     // Take a screenshot for verification
     await page.screenshot({
@@ -225,41 +229,24 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
       fullPage: false,
     });
 
-    // Test a specific functionality: change speech rate in control panel
-    await page.evaluate(() => {
-      // Ensure control panel is expanded
-      const panel = document.getElementById('talkient-control-panel');
-      if (panel && panel.classList.contains('talkient-collapsed')) {
-        const toggleButton = panel.querySelector('.talkient-panel-toggle');
-        if (toggleButton) {
-          (toggleButton as HTMLButtonElement).click();
+    // Note: Speech rate control is now in side panel, not in page
+    // Test play button functionality instead
+    if (playButtonsCount > 0) {
+      // Click a play button to test functionality
+      await page.evaluate(() => {
+        const firstButton = document.querySelector('.talkient-play-button') as HTMLElement;
+        if (firstButton) {
+          firstButton.click();
         }
-      }
+      });
 
-      // Find and adjust the speech rate slider
-      const slider = document.querySelector(
-        '.talkient-rate-slider'
-      ) as HTMLInputElement;
-      if (slider) {
-        slider.value = '1.5';
-        slider.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    });
+      // Wait a bit for speech to start
+      await page.waitForTimeout(1000);
+    }
 
-    // Wait for the rate value to update
-    await page.waitForTimeout(1000);
-
-    // Verify the speech rate has been updated
-    const newRate = await page.evaluate(() => {
-      const rateValue = document.querySelector('.talkient-rate-value');
-      return rateValue ? rateValue.textContent : null;
-    });
-
-    expect(newRate).toBe('1.50x');
-
-    // Take a screenshot of the control panel with updated rate
+    // Take a screenshot
     await page.screenshot({
-      path: 'e2e-results/aws-blog-control-panel-screenshot.png',
+      path: 'e2e-results/aws-blog-play-button-screenshot.png',
     });
 
     // Test the control panel toggle functionality

@@ -1,0 +1,255 @@
+/* Side Panel Styles for Talkient Extension */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: #1a202c; /* Dark background by default */
+  color: white;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+#talkient-control-panel {
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header */
+.talkient-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.talkient-panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #f7fafc;
+}
+
+/* Sections */
+.talkient-control-section {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.talkient-section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a0aec0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Main Controls */
+.talkient-main-controls {
+  display: flex;
+  flex-direction: row; /* Side by side in side panel */
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.talkient-control-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.talkient-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.talkient-control-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.talkient-control-btn:active {
+  transform: translateY(0);
+}
+
+.talkient-control-btn.primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+}
+
+.talkient-control-btn.settings {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2d3748;
+  box-shadow: 0 4px 12px rgba(168, 237, 234, 0.3);
+}
+
+.talkient-control-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Speech Rate */
+.talkient-speech-rate {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.talkient-rate-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.talkient-rate-label {
+  font-size: 14px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.talkient-rate-value {
+  font-size: 14px;
+  color: #4facfe;
+  font-weight: 600;
+  background: rgba(79, 172, 254, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.talkient-rate-slider {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.talkient-rate-slider:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.talkient-rate-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+  cursor: pointer;
+}
+
+/* Script Controls */
+.talkient-script-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Toggle Switch Styles */
+.talkient-toggle-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.talkient-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.talkient-toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.talkient-toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 1px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.talkient-toggle-input:checked + .talkient-toggle-slider {
+  background-color: #4facfe;
+}
+
+.talkient-toggle-input:checked + .talkient-toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #f7fafc;
+    color: #2d3748;
+  }
+
+  .talkient-panel-title {
+    color: #2d3748;
+  }
+
+  .talkient-section-title {
+    color: #718096;
+  }
+
+  .talkient-speech-rate {
+    background: white;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .talkient-rate-label {
+    color: #4a5568;
+  }
+
+  .talkient-rate-slider {
+    background: #e2e8f0;
+  }
+
+  .talkient-toggle-slider {
+    background-color: #e2e8f0;
+    border: 1px solid #cbd5e0;
+  }
+
+  .talkient-toggle-slider:before {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+}

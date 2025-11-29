@@ -227,88 +227,34 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
       path: 'e2e-results/play-pause-rapid-switching-screenshot.png',
     });
 
-    // Check for control panel
-    const controlPanelExists = await page
-      .waitForSelector('#talkient-control-panel', {
-        state: 'attached',
-        timeout: 5000,
-      })
-      .then(() => true)
-      .catch(() => false);
+    // Note: Control panel moved to side panel (always available, not in page)
+    // Check that play buttons are working instead
+    console.log(`Play buttons found: ${playButtonsCount}`);
+    expect(playButtonsCount).toBeGreaterThan(0);
 
-    console.log(`Control panel exists: ${controlPanelExists}`);
-    expect(controlPanelExists).toBeTruthy();
-
-    // If control panel exists, try using it
-    if (controlPanelExists) {
-      // Expand control panel if collapsed
-      await page.evaluate(async () => {
-        try {
-          const panel = document.getElementById('talkient-control-panel');
-          if (panel && panel.classList.contains('talkient-collapsed')) {
-            const toggleButton = panel.querySelector('.talkient-panel-toggle');
-            if (toggleButton) {
-              // Add a short delay to ensure the DOM is settled
-              await new Promise((resolve) => setTimeout(resolve, 200));
-              (toggleButton as HTMLButtonElement).click();
-            }
-          }
-        } catch (err) {
-          console.error('Error toggling control panel:', err);
-        }
-      });
-
-      // Wait for panel to expand
-      await page.waitForTimeout(1500);
-
-      // Take a screenshot of expanded control panel
-      await page.screenshot({
-        path: 'e2e-results/play-pause-control-panel-screenshot.png',
-      });
-
-      // Try clicking a play button and then using the stop button in control panel
+    // Play buttons functionality test
+    if (playButtonsCount > 0) {
+      // Test play button functionality
       await page.evaluate(async () => {
         try {
           // Click the first play button
-          const firstButton = document.querySelector('.talkient-play-button');
+          const firstButton = document.querySelector('.talkient-play-button') as HTMLElement;
           if (firstButton) {
             // Add a short delay to ensure the DOM is settled
             await new Promise((resolve) => setTimeout(resolve, 200));
-            (firstButton as HTMLButtonElement).click();
+            firstButton.click();
           }
         } catch (err) {
-          console.error('Error clicking first play button:', err);
+          console.error('Error clicking play button:', err);
         }
       });
 
       // Wait for speech to start
-      await page.waitForTimeout(2500);
+      await page.waitForTimeout(1500);
 
-      // Click stop button
-      const stopButtonExists = await page
-        .waitForSelector('.talkient-stop-button', {
-          state: 'attached',
-          timeout: 3000,
-        })
-        .then(async (stopButton) => {
-          if (stopButton) {
-            await stopButton.click();
-            return true;
-          }
-          return false;
-        })
-        .catch(() => {
-          console.error('Stop button not found');
-          return false;
-        });
-
-      if (stopButtonExists) {
-        console.log('Successfully used stop button in control panel');
-      }
-
-      // Take a final screenshot
+      // Take a screenshot
       await page.screenshot({
-        path: 'e2e-results/play-pause-final-screenshot.png',
+        path: 'e2e-results/play-pause-screenshot.png',
       });
     }
 

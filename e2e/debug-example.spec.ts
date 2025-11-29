@@ -1,8 +1,8 @@
 import { test, expect } from './extension-test';
 import * as path from 'path';
 
-test.describe('Debug Control Panel on Example.html', () => {
-  test('should debug control panel rendering', async ({ page }) => {
+test.describe('Debug Side Panel on Example.html', () => {
+  test('should debug side panel rendering', async ({ page, context, extensionId }) => {
     // Calculate the path to the local example test page
     const testPagePath = path.join(__dirname, 'test-pages', 'example.html');
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
@@ -11,11 +11,18 @@ test.describe('Debug Control Panel on Example.html', () => {
     await page.goto(fileUrl);
     await page.waitForLoadState('networkidle');
 
-    // Wait for the control panel to be created
-    await page.waitForTimeout(2000);
+    // Wait for content script to load
+    await page.waitForTimeout(1000);
 
-    // Get detailed information about the control panel
-    const debugInfo = await page.evaluate(() => {
+    // Open the side panel
+    const sidePanelUrl = `chrome-extension://${extensionId}/sidepanel/sidepanel.html`;
+    const sidePanelPage = await context.newPage();
+    await sidePanelPage.goto(sidePanelUrl);
+    await sidePanelPage.waitForLoadState('networkidle');
+    await sidePanelPage.waitForSelector('#talkient-control-panel', { timeout: 5000 });
+
+    // Get detailed information about the side panel
+    const debugInfo = await sidePanelPage.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       if (!panel) return { exists: false };
 
@@ -77,46 +84,18 @@ test.describe('Debug Control Panel on Example.html', () => {
     });
 
     console.log(
-      'Control Panel Debug Info:',
+      'Side Panel Debug Info:',
       JSON.stringify(debugInfo, null, 2)
     );
 
     // Take a screenshot
-    await page.screenshot({
-      path: 'e2e-results/debug-example-screenshot.png',
+    await sidePanelPage.screenshot({
+      path: 'e2e-results/debug-sidepanel-screenshot.png',
       fullPage: true,
     });
 
-    // Try to expand the panel if it's collapsed
-    if (debugInfo.isCollapsed) {
-      console.log('Panel is collapsed, attempting to expand...');
-      await page.click('.talkient-panel-toggle');
-      await page.waitForTimeout(500);
-
-      // Get info again after expansion
-      const expandedInfo = await page.evaluate(() => {
-        const panel = document.getElementById('talkient-control-panel');
-        const content = panel?.querySelector('.talkient-panel-content');
-        const contentStyles = content
-          ? window.getComputedStyle(content as Element)
-          : null;
-
-        return {
-          isCollapsed: panel?.classList.contains('talkient-collapsed'),
-          contentDisplay: contentStyles?.display,
-          contentHeight: contentStyles?.height,
-        };
-      });
-
-      console.log('After expansion:', JSON.stringify(expandedInfo, null, 2));
-
-      // Take another screenshot
-      await page.screenshot({
-        path: 'e2e-results/debug-example-expanded-screenshot.png',
-        fullPage: true,
-      });
-    }
-
     expect(debugInfo.exists).toBe(true);
+    
+    await sidePanelPage.close();
   });
 });
