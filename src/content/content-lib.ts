@@ -269,7 +269,7 @@ export function findNextTextElement(
   // Get all processed elements in document order
   const allProcessedElements = Array.from(
     document.querySelectorAll('.talkient-processed')
-  ) as HTMLElement[];
+  );
 
   // Find current element index
   const currentIndex = allProcessedElements.indexOf(currentElement);
@@ -279,7 +279,7 @@ export function findNextTextElement(
   }
 
   // Return the next element
-  return allProcessedElements[currentIndex + 1];
+  return allProcessedElements[currentIndex + 1] as HTMLElement;
 }
 
 // Function to auto-play the next text element

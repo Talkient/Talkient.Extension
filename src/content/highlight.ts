@@ -9,7 +9,7 @@ let currentHighlightingStyle: string = 'default';
 export function loadHighlightStyleFromStorage(): void {
   chrome.storage.local.get(['highlightStyle'], (result) => {
     if (result.highlightStyle && typeof result.highlightStyle === 'string') {
-      const style = result.highlightStyle as string;
+      const style = result.highlightStyle;
       // Validate that the style is one of the allowed values
       if (['default', 'minimal', 'bold', 'elegant'].includes(style)) {
         setHighlightingStyle(
