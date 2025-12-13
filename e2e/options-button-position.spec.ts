@@ -8,8 +8,15 @@ test.describe('Button Position Configuration', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
-    // Wait for the button position select to be ready
-    await page.waitForSelector('#button-position-select');
+    // Wait for the page to be loaded
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait for the button position select to be ready and visible
+    await page
+      .locator('#button-position-select')
+      .waitFor({ state: 'visible', timeout: 5000 });
+    // Give time for storage to load and populate the select
+    await page.waitForTimeout(500);
 
     // Get the current value (should default to 'left')
     const initialValue = await page

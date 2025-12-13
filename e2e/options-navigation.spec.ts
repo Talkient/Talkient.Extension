@@ -8,22 +8,33 @@ test.describe('Talkient Extension - Options Navigation', () => {
   }) => {
     // Navigate to the popup page
     await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for popup container to be visible
+    await page
+      .locator('.popup-container')
+      .waitFor({ state: 'visible', timeout: 5000 });
 
     // Take a screenshot of the popup
     await page.screenshot({
       path: 'e2e-results/popup-before-options-navigation-screenshot.png',
     });
 
-    // Set up listener for new page
-    const optionsPagePromise = context.waitForEvent('page');
+    // Wait for options link to be ready
+    await page.locator('#options-link').waitFor({ state: 'visible' });
+
+    // Set up listener for new page with timeout
+    const optionsPagePromise = context.waitForEvent('page', { timeout: 10000 });
 
     // Click the options link
     await page.locator('#options-link').click();
 
     // Wait for the options page to open
     const optionsPage = await optionsPagePromise;
-    await optionsPage.waitForLoadState('networkidle');
+    await optionsPage.waitForLoadState('domcontentloaded');
+    // Wait for page content to be ready
+    await optionsPage
+      .locator('h1')
+      .waitFor({ state: 'visible', timeout: 5000 });
 
     // Verify we're on the options page
     await expect(optionsPage).toHaveTitle('Talkient Options');

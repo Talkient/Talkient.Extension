@@ -5,7 +5,13 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
   // Helper function to navigate to options page
   async function navigateToOptionsPage(page: Page, extensionId: string) {
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for the settings header to be visible
+    await page
+      .locator('h1:has-text("Talkient Settings")')
+      .waitFor({ state: 'visible', timeout: 5000 });
+    // Give time for storage to load and populate all fields
+    await page.waitForTimeout(800);
   }
 
   test('should save and persist all settings when changed together', async ({
