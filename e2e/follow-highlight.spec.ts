@@ -33,14 +33,10 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Follow Highlight Test Page');
 
-    console.log(`Test page loaded: "${pageTitle}"`);
-
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
-      });
+      .catch(() => {});
 
     // Verify that play buttons are added to the text elements
     const playButtonsCount = await page.evaluate(() => {
@@ -48,7 +44,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     });
 
     // Log diagnostic information
-    console.log(`Found ${playButtonsCount} play buttons on test page`);
 
     // Force content script to process the page by triggering a custom event
     await page.evaluate(() => {
@@ -70,10 +65,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     const playButtonsCountAfter = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
-
-    console.log(
-      `After forcing reprocess: Found ${playButtonsCountAfter} play buttons on test page`
-    );
 
     // We should have multiple play buttons (one for each paragraph)
     expect(playButtonsCountAfter).toBeGreaterThan(2);
@@ -104,7 +95,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Wait for settings to save
     await optionsPage.waitForTimeout(1000);
-    console.log('Enabled followHighlight setting');
 
     // Take a screenshot of the options page with followHighlight enabled
     await optionsPage.screenshot({
@@ -129,11 +119,9 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     // ------------------- TESTING BOTTOM PARAGRAPH -----------------
     // Now test clicking the play button on the bottom paragraph (#para4)
     // This should trigger automatic scrolling due to followHighlight
-    console.log('Testing scrolling to bottom paragraph...');
 
     // Get initial scroll position
     const initialScrollY = await page.evaluate(() => window.scrollY);
-    console.log(`Initial scroll position: ${initialScrollY}`);
 
     // Verify that para4 is NOT visible in viewport before clicking
     const para4InitiallyVisible = await page.evaluate(() => {
@@ -143,7 +131,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       return rect.top >= 0 && rect.bottom <= window.innerHeight;
     });
     expect(para4InitiallyVisible).toBe(false);
-    console.log('Confirmed: para4 is not visible in initial viewport');
 
     // Use evaluate to click the button WITHOUT Playwright scrolling to it
     // This ensures we test the extension's scrolling behavior, not Playwright's
@@ -177,12 +164,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       };
     });
 
-    console.log('Click result:', clickResult);
-
-    console.log('Click result:', clickResult);
-
-    console.log('Clicked play button for paragraph 4');
-
     // Wait for the message to be sent to background and for potential speech start
     await page.waitForTimeout(1500);
 
@@ -197,10 +178,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     // If speech didn't start naturally (common in test environments due to autoplay policies),
     // we'll simulate the highlight and manually trigger the scroll function to test the feature
     if (!para4IsHighlighted) {
-      console.log(
-        'Speech did not start naturally, simulating highlight to test scroll behavior'
-      );
-
       await page.evaluate(() => {
         const para = document.getElementById('para4');
         if (!para) return;
@@ -249,20 +226,15 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     }
 
     expect(para4IsHighlighted).toBe(true);
-    console.log('Paragraph 4 is highlighted');
 
     // Wait for smooth scrolling to complete
     await page.waitForTimeout(1500);
 
     // Get the scroll position after clicking
     const afterClickScrollY = await page.evaluate(() => window.scrollY);
-    console.log(`Scroll position after clicking: ${afterClickScrollY}`);
 
     // Verify that the page scrolled down
     expect(afterClickScrollY).toBeGreaterThan(initialScrollY);
-    console.log(
-      `Page scrolled down by ${afterClickScrollY - initialScrollY} pixels`
-    );
 
     // Take a screenshot to verify that the page has scrolled
     await page.screenshot({
@@ -286,9 +258,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     });
 
     expect(bottomParagraphVisible).toBe(true);
-    console.log(
-      'Bottom paragraph is now visible in viewport after followHighlight scrolling'
-    );
 
     // ------------------- TESTING MIDDLE PARAGRAPH -----------------
     // Pause the current playback
@@ -315,8 +284,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     });
     await page.waitForTimeout(1000);
 
-    console.log('Testing scrolling to middle paragraph...');
-
     // Clear all highlights first to start fresh
     await page.evaluate(() => {
       document.querySelectorAll('.talkient-highlighted').forEach((el) => {
@@ -340,9 +307,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Get scroll position before clicking middle paragraph
     const beforeMiddleScrollY = await page.evaluate(() => window.scrollY);
-    console.log(
-      `Before clicking para2: scroll position = ${beforeMiddleScrollY}`
-    );
 
     // Verify para2 is not visible initially
     const para2InitiallyVisible = await page.evaluate(() => {
@@ -372,8 +336,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       playButton.click();
     });
 
-    console.log('Clicked play button for middle paragraph');
-
     // Wait for highlighting and scrolling
     await page.waitForTimeout(1500);
 
@@ -386,12 +348,8 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       return highlightedElement !== null;
     });
 
-    console.log(`Para2 is highlighted naturally: ${para2IsHighlighted}`);
-
     // If not highlighted naturally, simulate it
     if (!para2IsHighlighted) {
-      console.log('Simulating highlight for para2 to test scroll behavior');
-
       const scrollInfo = await page.evaluate(() => {
         // Clear any existing highlights first
         document.querySelectorAll('.talkient-highlighted').forEach((el) => {
@@ -446,8 +404,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
         return { ...info, reason: 'Already in center area, no scroll needed' };
       });
 
-      console.log('Para2 scroll info:', JSON.stringify(scrollInfo, null, 2));
-
       para2IsHighlighted = await page.evaluate(() => {
         const para = document.getElementById('para2');
         return para
@@ -463,9 +419,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Verify scrolling occurred
     const afterMiddleScrollY = await page.evaluate(() => window.scrollY);
-    console.log(
-      `After clicking para2: scroll position = ${afterMiddleScrollY}`
-    );
 
     // Since we started at the top (scrollY = 0) and para2 should be below the viewport,
     // we expect to have scrolled down. However, if para2 was within the initial viewport
@@ -486,13 +439,9 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
           'FOLLOW HIGHLIGHT BUG: Para2 is highlighted but NOT visible and NO scrolling occurred!'
         );
       } else {
-        console.log('Para2 was already in/near viewport, no scroll needed');
       }
     } else {
       expect(afterMiddleScrollY).toBeGreaterThan(beforeMiddleScrollY);
-      console.log(
-        `Middle paragraph: scrolled by ${afterMiddleScrollY - beforeMiddleScrollY} pixels`
-      );
     }
 
     // Take a screenshot
@@ -515,12 +464,8 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     });
 
     expect(middleParagraphVisible).toBe(true);
-    console.log(
-      'Middle paragraph is now visible after followHighlight scrolling'
-    );
 
     // ------------------- TESTING WITH FOLLOW HIGHLIGHT DISABLED -----------------
-    console.log('Testing with followHighlight disabled...');
 
     // Pause current playback
     await page.evaluate(() => {
@@ -555,7 +500,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     });
 
     await optionsPage2.waitForTimeout(1000);
-    console.log('Disabled followHighlight setting');
     await optionsPage2.close();
 
     // Scroll to make para3 visible in viewport
@@ -575,9 +519,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Get scroll position before clicking
     const scrollBeforeDisabledTest = await page.evaluate(() => window.scrollY);
-    console.log(
-      `Scroll position before clicking with disabled followHighlight: ${scrollBeforeDisabledTest}`
-    );
 
     // Click para3's play button while it's already visible
     await page.evaluate(() => {
@@ -602,9 +543,6 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Get scroll position after clicking
     const scrollAfterDisabledTest = await page.evaluate(() => window.scrollY);
-    console.log(
-      `Scroll position after clicking with disabled followHighlight: ${scrollAfterDisabledTest}`
-    );
 
     // Take a screenshot
     await page.screenshot({
@@ -617,10 +555,5 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       scrollAfterDisabledTest - scrollBeforeDisabledTest
     );
     expect(scrollDifference).toBeLessThan(10);
-    console.log(
-      `With followHighlight disabled: scroll difference was only ${scrollDifference} pixels (expected < 10)`
-    );
-
-    console.log('Follow highlight feature testing completed successfully!');
   });
 });

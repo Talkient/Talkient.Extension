@@ -66,7 +66,6 @@ test.describe('Button Position Visual Tests', () => {
       fullPage: true,
     });
 
-    console.log('Buttons are positioned on the left');
   });
 
   test('should display buttons on the right when configured', async ({
@@ -130,7 +129,6 @@ test.describe('Button Position Visual Tests', () => {
       fullPage: true,
     });
 
-    console.log('Buttons are positioned on the right');
   });
 
   test('should change button position dynamically', async ({
@@ -163,7 +161,6 @@ test.describe('Button Position Visual Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Initial buttons not found, forcing reprocess');
       });
 
     // Force reprocess if needed
@@ -216,6 +213,5 @@ test.describe('Button Position Visual Tests', () => {
       path: 'e2e-results/button-position-dynamic-left-screenshot.png',
     });
 
-    console.log('Button position changed dynamically from right to left');
   });
 });

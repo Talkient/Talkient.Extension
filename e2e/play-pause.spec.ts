@@ -33,13 +33,11 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-    console.log(`Test page loaded: "${pageTitle}"`);
 
     // Wait for content script to process the page and add play buttons - use waitForSelector instead of fixed timeout
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Verify that play buttons are added to the text elements
@@ -48,14 +46,12 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     });
 
     // Log diagnostic information
-    console.log(`Found ${playButtonsCount} play buttons on test page`);
 
     // Check if any elements are processed
     const processedElements = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-processed').length;
     });
 
-    console.log(`Found ${processedElements} processed elements on test page`);
 
     // Force content script to process the page by triggering a custom event
     await page.evaluate(() => {
@@ -78,9 +74,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    console.log(
-      `After forcing reprocess: Found ${playButtonsCountAfter} play buttons on test page`
-    );
 
     // We should have multiple play buttons (one for each paragraph)
     expect(playButtonsCountAfter).toBeGreaterThan(5);
@@ -145,9 +138,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     // Execute each test sequence step
     for (let i = 0; i < testSequence.length; i++) {
       const step = testSequence[i];
-      console.log(
-        `Step ${i + 1}: ${step.action} paragraph ${step.id} - ${step.description}`
-      );
 
       // Find and interact with the play button
       const interactionResult = await page.evaluate(
@@ -200,7 +190,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     }
 
     // Test rapid switching between paragraphs
-    console.log('Testing rapid switching between paragraphs...');
 
     // Click 5 different play buttons in rapid succession, with waits to avoid race conditions
     for (let i = 0; i < 5; i++) {
@@ -236,7 +225,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
       .then(() => true)
       .catch(() => false);
 
-    console.log(`Control panel exists: ${controlPanelExists}`);
     expect(controlPanelExists).toBeTruthy();
 
     // If control panel exists, try using it
@@ -303,7 +291,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
         });
 
       if (stopButtonExists) {
-        console.log('Successfully used stop button in control panel');
       }
 
       // Take a final screenshot
@@ -312,6 +299,5 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
       });
     }
 
-    console.log('Play-pause extensive testing completed successfully!');
   });
 });

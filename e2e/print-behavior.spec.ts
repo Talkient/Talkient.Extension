@@ -33,27 +33,23 @@ test.describe('Talkient Print Behavior Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-    console.log(`Test page loaded: "${pageTitle}"`);
 
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Verify initial state - play buttons exist
     const initialPlayButtonsCount = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
-    console.log(`Initial play buttons count: ${initialPlayButtonsCount}`);
     expect(initialPlayButtonsCount).toBeGreaterThan(0);
 
     // Verify initial state - control panel exists
     const initialControlPanelExists = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
-    console.log(`Initial control panel exists: ${initialControlPanelExists}`);
     expect(initialControlPanelExists).toBe(true);
 
     // Take screenshot of initial state
@@ -62,7 +58,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     });
 
     // Trigger beforeprint event to simulate print dialog opening
-    console.log('Triggering beforeprint event...');
     await page.evaluate(() => {
       window.dispatchEvent(new Event('beforeprint'));
     });
@@ -74,26 +69,17 @@ test.describe('Talkient Print Behavior Tests', () => {
     const playButtonsAfterBeforeprint = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
-    console.log(
-      `Play buttons after beforeprint: ${playButtonsAfterBeforeprint}`
-    );
     expect(playButtonsAfterBeforeprint).toBe(0);
 
     const controlPanelAfterBeforeprint = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
-    console.log(
-      `Control panel exists after beforeprint: ${controlPanelAfterBeforeprint}`
-    );
     expect(controlPanelAfterBeforeprint).toBe(false);
 
     // Verify processed markers are also removed
     const processedMarkersAfterBeforeprint = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-processed').length;
     });
-    console.log(
-      `Processed markers after beforeprint: ${processedMarkersAfterBeforeprint}`
-    );
     expect(processedMarkersAfterBeforeprint).toBe(0);
 
     // Take screenshot of state after beforeprint
@@ -102,7 +88,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     });
 
     // Trigger afterprint event to simulate print dialog closing
-    console.log('Triggering afterprint event...');
     await page.evaluate(() => {
       window.dispatchEvent(new Event('afterprint'));
     });
@@ -114,15 +99,11 @@ test.describe('Talkient Print Behavior Tests', () => {
     const playButtonsAfterAfterprint = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
-    console.log(`Play buttons after afterprint: ${playButtonsAfterAfterprint}`);
     expect(playButtonsAfterAfterprint).toBeGreaterThan(0);
 
     const controlPanelAfterAfterprint = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
-    console.log(
-      `Control panel exists after afterprint: ${controlPanelAfterAfterprint}`
-    );
     expect(controlPanelAfterAfterprint).toBe(true);
 
     // Take screenshot of restored state
@@ -130,7 +111,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       path: 'e2e-results/print-behavior-after-afterprint.png',
     });
 
-    console.log('Print behavior test completed successfully!');
   });
 
   test('should clear highlights when print dialog opens', async ({
@@ -157,7 +137,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Click a play button to create a highlight
@@ -175,7 +154,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     const highlightBeforePrint = await page.evaluate(() => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
-    console.log(`Highlight exists before print: ${highlightBeforePrint}`);
 
     // Trigger beforeprint event
     await page.evaluate(() => {
@@ -189,10 +167,8 @@ test.describe('Talkient Print Behavior Tests', () => {
     const highlightAfterPrint = await page.evaluate(() => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
-    console.log(`Highlight exists after beforeprint: ${highlightAfterPrint}`);
     expect(highlightAfterPrint).toBe(false);
 
-    console.log('Highlight clearing test completed successfully!');
   });
 
   test('should handle multiple print dialog cycles', async ({
@@ -219,7 +195,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Verify initial state
@@ -230,7 +205,6 @@ test.describe('Talkient Print Behavior Tests', () => {
 
     // Run multiple print cycles
     for (let cycle = 1; cycle <= 3; cycle++) {
-      console.log(`Print cycle ${cycle} - triggering beforeprint...`);
 
       // Trigger beforeprint
       await page.evaluate(() => {
@@ -249,7 +223,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       });
       expect(panelAfterBeforeprint).toBe(false);
 
-      console.log(`Print cycle ${cycle} - triggering afterprint...`);
 
       // Trigger afterprint
       await page.evaluate(() => {
@@ -261,21 +234,14 @@ test.describe('Talkient Print Behavior Tests', () => {
       const buttonsAfterAfterprint = await page.evaluate(() => {
         return document.querySelectorAll('.talkient-play-button').length;
       });
-      console.log(
-        `Cycle ${cycle} - buttons after afterprint: ${buttonsAfterAfterprint}`
-      );
       expect(buttonsAfterAfterprint).toBeGreaterThan(0);
 
       const panelAfterAfterprint = await page.evaluate(() => {
         return document.getElementById('talkient-control-panel') !== null;
       });
-      console.log(
-        `Cycle ${cycle} - panel after afterprint: ${panelAfterAfterprint}`
-      );
       expect(panelAfterAfterprint).toBe(true);
     }
 
-    console.log('Multiple print cycles test completed successfully!');
   });
 
   test('should preserve article content during print workflow', async ({
@@ -302,7 +268,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Get text content of a paragraph before print workflow
@@ -311,7 +276,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       // Get text without the play button
       return para?.textContent?.trim() || '';
     });
-    console.log(`Original text content length: ${originalTextContent.length}`);
 
     // Run print workflow
     await page.evaluate(() => {
@@ -329,9 +293,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       const para = document.getElementById('para1');
       return para?.textContent?.trim() || '';
     });
-    console.log(
-      `Text content after print length: ${textContentAfterPrint.length}`
-    );
 
     // Text should still contain the original words (may have button text appended)
     expect(textContentAfterPrint.length).toBeGreaterThan(0);
@@ -342,7 +303,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     });
     expect(articleExists).toBe(true);
 
-    console.log('Article content preservation test completed successfully!');
   });
 
   test('should not show UI elements in print preview (CSS media query)', async ({
@@ -369,7 +329,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Emulate print media to check CSS @media print rules
@@ -385,7 +344,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       const style = window.getComputedStyle(panel);
       return style.display !== 'none' && style.visibility !== 'hidden';
     });
-    console.log(`Control panel visible in print media: ${controlPanelVisible}`);
     expect(controlPanelVisible).toBe(false);
 
     // Check if play buttons are hidden via CSS
@@ -396,7 +354,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       const style = window.getComputedStyle(firstButton);
       return style.display !== 'none' && style.visibility !== 'hidden';
     });
-    console.log(`Play buttons visible in print media: ${playButtonsVisible}`);
     expect(playButtonsVisible).toBe(false);
 
     // Reset to screen media
@@ -407,7 +364,6 @@ test.describe('Talkient Print Behavior Tests', () => {
       path: 'e2e-results/print-behavior-css-media-test.png',
     });
 
-    console.log('CSS print media query test completed successfully!');
   });
 
   test('should handle print on page without article element', async ({
@@ -437,7 +393,6 @@ test.describe('Talkient Print Behavior Tests', () => {
     const controlPanelExists = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
-    console.log(`Control panel on no-article page: ${controlPanelExists}`);
     expect(controlPanelExists).toBe(false);
 
     // Trigger print events - should not cause errors
@@ -457,6 +412,5 @@ test.describe('Talkient Print Behavior Tests', () => {
     });
     expect(bodyExists).toBe(true);
 
-    console.log('No-article page print behavior test completed successfully!');
   });
 });

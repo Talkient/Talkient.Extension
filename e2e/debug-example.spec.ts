@@ -76,10 +76,6 @@ test.describe('Debug Control Panel on Example.html', () => {
       };
     });
 
-    console.log(
-      'Control Panel Debug Info:',
-      JSON.stringify(debugInfo, null, 2)
-    );
 
     // Take a screenshot
     await page.screenshot({
@@ -89,7 +85,6 @@ test.describe('Debug Control Panel on Example.html', () => {
 
     // Try to expand the panel if it's collapsed
     if (debugInfo.isCollapsed) {
-      console.log('Panel is collapsed, attempting to expand...');
       await page.click('.talkient-panel-toggle');
       await page.waitForTimeout(500);
 
@@ -108,7 +103,6 @@ test.describe('Debug Control Panel on Example.html', () => {
         };
       });
 
-      console.log('After expansion:', JSON.stringify(expandedInfo, null, 2));
 
       // Take another screenshot
       await page.screenshot({

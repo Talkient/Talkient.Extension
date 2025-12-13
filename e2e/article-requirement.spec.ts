@@ -21,7 +21,6 @@ test.describe('Article Requirement Tests', () => {
     // Wait for the page to load and content script to initialize
     await page.waitForTimeout(3000);
 
-    console.log('Using extension ID from service worker:', extensionId);
 
     // Force reprocessing to ensure everything is processed
     await page.evaluate(() => {
@@ -39,7 +38,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper !== null;
     });
 
-    console.log('Header paragraph has play button:', headerHasButton);
     expect(headerHasButton).toBe(false);
 
     // Test 2: Check that nav paragraph does NOT have a play button
@@ -50,7 +48,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper !== null;
     });
 
-    console.log('Nav paragraph has play button:', navHasButton);
     expect(navHasButton).toBe(false);
 
     // Test 3: Check that aside paragraph does NOT have a play button
@@ -61,7 +58,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper !== null;
     });
 
-    console.log('Aside paragraph has play button:', asideHasButton);
     expect(asideHasButton).toBe(false);
 
     // Test 4: Check that footer paragraph does NOT have a play button
@@ -72,7 +68,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper !== null;
     });
 
-    console.log('Footer paragraph has play button:', footerHasButton);
     expect(footerHasButton).toBe(false);
 
     // Test 5: Check that article paragraph DOES have a play button
@@ -84,7 +79,6 @@ test.describe('Article Requirement Tests', () => {
       return button !== null;
     });
 
-    console.log('Article paragraph 1 has play button:', articlePara1HasButton);
     expect(articlePara1HasButton).toBe(true);
 
     // Test 6: Check that second article paragraph DOES have a play button
@@ -96,7 +90,6 @@ test.describe('Article Requirement Tests', () => {
       return button !== null;
     });
 
-    console.log('Article paragraph 2 has play button:', articlePara2HasButton);
     expect(articlePara2HasButton).toBe(true);
 
     // Test 7: Check that deeply nested paragraph in article DOES have a play button
@@ -108,7 +101,6 @@ test.describe('Article Requirement Tests', () => {
       return button !== null;
     });
 
-    console.log('Nested paragraph has play button:', nestedParaHasButton);
     expect(nestedParaHasButton).toBe(true);
 
     // Test 8: Check that second article paragraph DOES have a play button
@@ -120,10 +112,6 @@ test.describe('Article Requirement Tests', () => {
       return button !== null;
     });
 
-    console.log(
-      'Second article paragraph has play button:',
-      secondArticleParaHasButton
-    );
     expect(secondArticleParaHasButton).toBe(true);
 
     // Test 9: Count total play buttons on page - should only be in article tags
@@ -131,7 +119,6 @@ test.describe('Article Requirement Tests', () => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    console.log('Total play buttons found:', totalPlayButtons);
     // We should have buttons only for elements in article tags
     // Exact count may vary based on how text is split, but it should be > 0 and < total paragraphs
     expect(totalPlayButtons).toBeGreaterThan(0);
@@ -144,10 +131,6 @@ test.describe('Article Requirement Tests', () => {
       });
     });
 
-    console.log(
-      'All play buttons are within article tags:',
-      allButtonsInArticles
-    );
     expect(allButtonsInArticles).toBe(true);
 
     // Take a screenshot for manual verification
@@ -156,7 +139,6 @@ test.describe('Article Requirement Tests', () => {
       fullPage: true,
     });
 
-    console.log('Article requirement test completed successfully!');
   });
 
   test('should not process excluded elements even when inside article tags', async ({
@@ -176,7 +158,6 @@ test.describe('Article Requirement Tests', () => {
     await page.goto(fileUrl);
     await page.waitForTimeout(3000);
 
-    console.log('Testing excluded elements inside article tags');
 
     // Detailed debugging
     const debugInfo = await page.evaluate(() => {
@@ -204,7 +185,6 @@ test.describe('Article Requirement Tests', () => {
       };
     });
 
-    console.log('Debug info:', JSON.stringify(debugInfo, null, 2));
 
     // Force reprocessing
     await page.evaluate(() => {
@@ -221,7 +201,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper?.querySelector('.talkient-play-button') !== null;
     });
 
-    console.log('Normal paragraph has button:', normalParaHasButton);
     expect(normalParaHasButton).toBe(true);
 
     // Test: Code element should NOT have button
@@ -248,7 +227,6 @@ test.describe('Article Requirement Tests', () => {
       });
     });
 
-    console.log('Code element has button:', codeHasButton);
     expect(codeHasButton).toBe(false);
 
     // Test: Button element should NOT have button
@@ -291,7 +269,6 @@ test.describe('Article Requirement Tests', () => {
       return hasProcessedText || hasPlayButtonChild || hasPlayButtonSibling;
     });
 
-    console.log('Button element has button:', buttonHasButton);
     expect(buttonHasButton).toBe(false);
 
     // Test: Another normal paragraph should have button
@@ -301,7 +278,6 @@ test.describe('Article Requirement Tests', () => {
       return wrapper?.querySelector('.talkient-play-button') !== null;
     });
 
-    console.log('Another normal paragraph has button:', anotherParaHasButton);
     expect(anotherParaHasButton).toBe(true);
 
     await page.screenshot({
@@ -309,6 +285,5 @@ test.describe('Article Requirement Tests', () => {
       fullPage: true,
     });
 
-    console.log('Excluded elements in article test completed successfully!');
   });
 });

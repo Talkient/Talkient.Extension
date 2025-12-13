@@ -48,11 +48,6 @@ test.describe('Context Menu', () => {
     const serviceWorker = await context.serviceWorkers()[0];
     expect(serviceWorker).toBeDefined();
 
-    console.log('Context menu feature is ready. Manual testing recommended:');
-    console.log('1. Select text on the page');
-    console.log('2. Right-click on the selected text');
-    console.log('3. Look for "Play text" option in the context menu');
-    console.log('4. Click it to hear the selected text');
   });
 
   test('should handle context menu with multiple selections', async ({

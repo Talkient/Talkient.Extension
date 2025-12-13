@@ -56,7 +56,6 @@ test.describe('Talkient Control Panel', () => {
 
     if (!panelVisibleNow) {
       // If still not visible, try alternative approach
-      console.log('Control panel not found, trying alternative approach');
       await page.evaluate(() => {
         // Create a minimal control panel for testing if needed
         if (!document.getElementById('talkient-control-panel')) {
@@ -103,9 +102,6 @@ test.describe('Talkient Control Panel', () => {
       );
     } catch (error) {
       // Log the DOM state for debugging
-      console.log('Failed to find expanded control panel, current DOM state:');
-      const html = await page.evaluate(() => document.body.innerHTML);
-      console.log(html.substring(0, 1000)); // First 1000 chars to avoid flooding logs
       throw error;
     }
   });
@@ -166,7 +162,6 @@ test.describe('Talkient Control Panel', () => {
         // Verify some content on the options page
         await expect(optionsPage).toHaveTitle(/Talkient Options/);
       } catch (e) {
-        console.log('Failed to open options page from control panel:', e);
         // Take a screenshot of the current state for debugging
         await page.screenshot({
           path: 'e2e-results/control-panel-settings-failed-screenshot.png',
@@ -294,9 +289,6 @@ test.describe('Talkient Control Panel', () => {
       } catch (error) {
         // If there's an error evaluating, we'll assume buttons aren't there
         // which is what we want anyway
-        console.log(
-          'Could not evaluate play buttons existence, assuming none exist'
-        );
       }
     });
 
@@ -339,9 +331,6 @@ test.describe('Talkient Control Panel', () => {
         });
 
         if (!buttonsExistAgain) {
-          console.log(
-            `Attempt ${attempts + 1}: Play buttons not found yet, waiting...`
-          );
           // Try to force button creation again using a custom event
           await page.evaluate(() => {
             // Dispatch a custom event that our test can listen for

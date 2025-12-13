@@ -33,13 +33,11 @@ test.describe('Talkient Page Refresh Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-    console.log(`Test page loaded: "${pageTitle}"`);
 
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Verify that play buttons are added to the text elements
@@ -48,7 +46,6 @@ test.describe('Talkient Page Refresh Tests', () => {
     });
 
     // Log diagnostic information
-    console.log(`Found ${playButtonsCount} play buttons on test page`);
     expect(playButtonsCount).toBeGreaterThan(0);
 
     // Take a screenshot of initial state
@@ -62,7 +59,6 @@ test.describe('Talkient Page Refresh Tests', () => {
       const text = msg.text();
       if (text.includes('[Talkient]')) {
         consoleMessages.push(text);
-        console.log(`Page console: ${text}`);
       }
     });
 
@@ -87,7 +83,6 @@ test.describe('Talkient Page Refresh Tests', () => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
 
-    console.log(`Text highlighted before refresh: ${hasHighlightedText}`);
 
     // Note: In the test environment, TTS might not be available
     // so we'll just check for the beforeunload event handling
@@ -100,7 +95,6 @@ test.describe('Talkient Page Refresh Tests', () => {
     });
 
     // Now refresh the page - this should trigger the beforeunload event
-    console.log('Refreshing page...');
     await page.reload({ waitUntil: 'networkidle' });
 
     // Wait for the page to reload and content script to initialize
@@ -111,9 +105,6 @@ test.describe('Talkient Page Refresh Tests', () => {
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log(
-          'Timed out waiting for play buttons to appear after refresh'
-        );
       });
 
     // Take a screenshot after page refresh
@@ -127,7 +118,6 @@ test.describe('Talkient Page Refresh Tests', () => {
     });
 
     expect(hasHighlightedTextAfterRefresh).toBe(false);
-    console.log('No text is highlighted after page refresh');
 
     // Verify we have play buttons after refresh
     const playButtonsAfterRefresh = await page.evaluate(() => {
@@ -135,7 +125,6 @@ test.describe('Talkient Page Refresh Tests', () => {
     });
 
     expect(playButtonsAfterRefresh).toBeGreaterThan(0);
-    console.log(`Found ${playButtonsAfterRefresh} play buttons after refresh`);
 
     // Check that play buttons are in play state (not pause state)
     const allButtonsInPlayState = await page.evaluate(() => {
@@ -154,10 +143,8 @@ test.describe('Talkient Page Refresh Tests', () => {
     });
 
     expect(allButtonsInPlayState).toBe(true);
-    console.log('All buttons are in play state after refresh');
 
     // Test that we can mock the beforeunload event directly
-    console.log('Testing direct beforeunload event...');
 
     // First click a play button again
     await page.evaluate(async () => {
@@ -223,13 +210,11 @@ test.describe('Talkient Page Refresh Tests', () => {
     // Since we just want to verify an event listener exists, we can consider this test passed
     // The actual message sending was already verified by the console log output
     expect(hasBeforeUnloadListener).toBe(true);
-    console.log('Verified beforeunload event listener is active');
 
     // Take a final screenshot
     await page.screenshot({
       path: 'e2e-results/page-refresh-final-screenshot.png',
     });
 
-    console.log('Page refresh test completed successfully!');
   });
 });

@@ -25,7 +25,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toContain('Contextual Function Selection');
 
-    console.log(`Microsoft Learn page title: "${pageTitle}"`);
 
     // Wait a moment to ensure content script is loaded and has time to process text
     await page.waitForTimeout(3000);
@@ -37,9 +36,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
     // There should be multiple play buttons on the page
     expect(playButtonsCount).toBeGreaterThan(0);
-    console.log(
-      `Found ${playButtonsCount} play buttons on Microsoft Learn page`
-    );
 
     // Check if control panel is created
     const controlPanelExists = await page.evaluate(() => {
@@ -151,9 +147,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     });
 
     // Visual verification is often more reliable than DOM checks for highlighting in E2E tests
-    console.log(
-      'Play button clicked - check screenshot for visual verification of highlighting'
-    );
 
     // Clean up - stop any speech
     await page.evaluate(() => {
@@ -198,7 +191,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
       'Prevent factual errors from LLM hallucinations'
     );
 
-    console.log(`AWS blog page title: "${pageTitle}"`);
 
     // Wait a moment to ensure content script is loaded and has time to process text
     await page.waitForTimeout(3000);
@@ -210,7 +202,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
     // There should be multiple play buttons on the page
     expect(playButtonsCount).toBeGreaterThan(0);
-    console.log(`Found ${playButtonsCount} play buttons on AWS blog page`);
 
     // Check if control panel is created
     const controlPanelExists = await page.evaluate(() => {
@@ -370,6 +361,5 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     });
 
     // Test completed
-    console.log('Highlight style tests completed successfully');
   });
 });

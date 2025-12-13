@@ -20,15 +20,12 @@ test.describe('Control Panel - Article Requirement', () => {
     // Wait for the page to load and content script to initialize
     await page.waitForTimeout(3000);
 
-    console.log('Testing page without article element');
-    console.log('Using extension ID from service worker:', extensionId);
 
     // Test 1: Verify no control panel is created
     const controlPanelExists = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log('Control panel exists:', controlPanelExists);
     expect(controlPanelExists).toBe(false);
 
     // Test 2: Verify no play buttons are created (since there's no article)
@@ -36,7 +33,6 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    console.log('Play buttons found:', playButtonCount);
     expect(playButtonCount).toBe(0);
 
     // Test 3: Verify no processed elements
@@ -44,7 +40,6 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.querySelectorAll('.talkient-processed').length;
     });
 
-    console.log('Processed elements found:', processedElementsCount);
     expect(processedElementsCount).toBe(0);
 
     // Test 4: Try to force reload play buttons and verify control panel is still not created
@@ -59,10 +54,6 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log(
-      'Control panel exists after reload attempt:',
-      controlPanelExistsAfterReload
-    );
     expect(controlPanelExistsAfterReload).toBe(false);
 
     // Take a screenshot for verification
@@ -71,9 +62,6 @@ test.describe('Control Panel - Article Requirement', () => {
       fullPage: true,
     });
 
-    console.log(
-      'Control panel article requirement test completed successfully!'
-    );
   });
 
   test('should create control panel when article is added to page with article', async ({
@@ -92,14 +80,12 @@ test.describe('Control Panel - Article Requirement', () => {
     await page.goto(fileUrl);
     await page.waitForTimeout(3000);
 
-    console.log('Testing control panel creation with article present');
 
     // Verify control panel IS created when article exists
     const controlPanelExists = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log('Control panel exists with article:', controlPanelExists);
     expect(controlPanelExists).toBe(true);
 
     // Verify play buttons are created
@@ -107,7 +93,6 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    console.log('Play buttons found:', playButtonCount);
     expect(playButtonCount).toBeGreaterThan(0);
 
     // Take a screenshot
@@ -116,7 +101,6 @@ test.describe('Control Panel - Article Requirement', () => {
       fullPage: true,
     });
 
-    console.log('Control panel created successfully with article present!');
   });
 
   test('should verify control panel visibility across different pages', async ({
@@ -125,7 +109,6 @@ test.describe('Control Panel - Article Requirement', () => {
     extensionId,
   }) => {
     // Test 1: Navigate to page WITHOUT article
-    console.log('Step 1: Testing page without article');
     const noArticlePagePath = path.join(
       __dirname,
       'test-pages',
@@ -140,14 +123,9 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log(
-      'Control panel on no-article page:',
-      controlPanelOnNoArticlePage
-    );
     expect(controlPanelOnNoArticlePage).toBe(false);
 
     // Test 2: Navigate to page WITH article
-    console.log('Step 2: Testing page with article');
     const withArticlePagePath = path.join(
       __dirname,
       'test-pages',
@@ -162,11 +140,9 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log('Control panel on article page:', controlPanelOnArticlePage);
     expect(controlPanelOnArticlePage).toBe(true);
 
     // Test 3: Go back to page WITHOUT article
-    console.log('Step 3: Going back to page without article');
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
@@ -174,12 +150,7 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    console.log(
-      'Control panel after returning to no-article page:',
-      controlPanelAfterNavigation
-    );
     expect(controlPanelAfterNavigation).toBe(false);
 
-    console.log('Cross-page navigation test completed successfully!');
   });
 });

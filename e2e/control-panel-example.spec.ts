@@ -29,7 +29,6 @@ test.describe('Talkient Control Panel on Example.html', () => {
       return panel ? window.getComputedStyle(panel).width : null;
     });
 
-    console.log('Control panel width:', panelWidth);
     expect(panelWidth).toBe('120px');
 
     // Expand the panel to check internal elements
@@ -53,7 +52,6 @@ test.describe('Talkient Control Panel on Example.html', () => {
       return header ? window.getComputedStyle(header as Element).width : null;
     });
 
-    console.log('Panel header width:', panelHeaderWidth);
     // Header should not be 600px
     expect(panelHeaderWidth).not.toBe('600px');
 
@@ -64,7 +62,6 @@ test.describe('Talkient Control Panel on Example.html', () => {
       return section ? window.getComputedStyle(section as Element).width : null;
     });
 
-    console.log('Control section width:', controlSectionWidth);
     // Section should not be 600px
     expect(controlSectionWidth).not.toBe('600px');
 
@@ -164,7 +161,6 @@ test.describe('Talkient Control Panel on Example.html', () => {
       return panel ? window.getComputedStyle(panel).zIndex : null;
     });
 
-    console.log('Control panel z-index:', zIndex);
     expect(zIndex).toBe('999999');
   });
 });

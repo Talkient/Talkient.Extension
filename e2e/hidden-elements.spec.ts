@@ -33,13 +33,11 @@ test.describe('Talkient Hidden Elements Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Hidden Elements Test Page');
 
-    console.log(`Test page loaded: "${pageTitle}"`);
 
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {
-        console.log('Timed out waiting for play buttons to appear');
       });
 
     // Take a screenshot of initial state
@@ -57,7 +55,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return parent ? !!parent.querySelector('.talkient-play-button') : false;
     });
 
-    console.log(`Control paragraph has play button: ${controlButtonExists}`);
     expect(controlButtonExists).toBeTruthy();
 
     // Test 2: Verify hidden paragraphs don't have play buttons
@@ -97,7 +94,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return results;
     });
 
-    console.log('Hidden elements check results:', hiddenElementsCheck);
 
     // None of these hidden elements should have play buttons
     expect(hiddenElementsCheck.displayNone).toBeFalsy();
@@ -106,7 +102,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
     expect(hiddenElementsCheck.nestedElements).toBeFalsy();
 
     // Test 3: Toggle display:none and verify play button appears when element becomes visible
-    console.log('Testing display:none toggle...');
 
     // Click the toggle button
     await page.click('#section1 button');
@@ -153,7 +148,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return { isVisible, hasButton };
     });
 
-    console.log('Display:none after toggle:', displayNoneButtonAfterToggle);
 
     // If the element is now visible, it should have a play button
     if (
@@ -164,7 +158,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
     }
 
     // Test 4: Toggle visibility:hidden and verify play button appears when element becomes visible
-    console.log('Testing visibility:hidden toggle...');
 
     // Click the toggle button
     await page.click('#section2 button');
@@ -207,10 +200,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return { isVisible, hasButton };
     });
 
-    console.log(
-      'Visibility:hidden after toggle:',
-      visibilityHiddenButtonAfterToggle
-    );
 
     // If the element is now visible, it should have a play button
     if (
@@ -221,7 +210,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
     }
 
     // Test 5: Test dynamic visibility changes
-    console.log('Testing dynamic visibility changes...');
 
     // Verify dynamic paragraph has a play button initially
     const dynamicButtonInitial = await page.evaluate(() => {
@@ -231,9 +219,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
         : false;
     });
 
-    console.log(
-      `Dynamic paragraph has initial play button: ${dynamicButtonInitial}`
-    );
     expect(dynamicButtonInitial).toBeTruthy();
 
     // Instead of using the button, let's directly modify the style to ensure it works
@@ -264,7 +249,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       };
     });
 
-    console.log('Dynamic paragraph after hiding:', dynamicButtonAfterHiding);
 
     // Container should be hidden with display:none
     expect(dynamicButtonAfterHiding.display).toBe('none');
@@ -305,15 +289,10 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return { isVisible, hasButton };
     });
 
-    console.log(
-      'Dynamic paragraph after showing again:',
-      dynamicButtonAfterShowing
-    );
 
     // Container should be visible again and have a play button
     expect(dynamicButtonAfterShowing.isVisible).toBeTruthy();
     expect(dynamicButtonAfterShowing.hasButton).toBeTruthy();
 
-    console.log('Hidden elements testing completed successfully!');
   });
 });
