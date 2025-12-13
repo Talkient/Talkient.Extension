@@ -4,4 +4,7 @@
   runtime: {
     openOptionsPage: jest.fn(),
   },
+  tabs: {
+    create: jest.fn(),
+  },
 };
