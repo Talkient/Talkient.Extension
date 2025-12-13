@@ -275,6 +275,49 @@ window.addEventListener('beforeunload', () => {
   safeSendMessage({ type: 'PAUSE_SPEECH', isPageUnload: true });
 });
 
+// Remove Talkient UI elements when user opens print dialog
+window.addEventListener('beforeprint', () => {
+  console.log('[Talkient] Print dialog opened, removing UI elements...');
+
+  // Stop any ongoing speech
+  safeSendMessage({ type: 'PAUSE_SPEECH' });
+
+  // Remove control panel
+  const controlPanel = document.getElementById('talkient-control-panel');
+  if (controlPanel) {
+    controlPanel.remove();
+  }
+
+  // Remove all play buttons
+  document.querySelectorAll('.talkient-play-button').forEach((button) => {
+    button.remove();
+  });
+
+  // Remove processed markers so elements can be re-processed after print
+  document.querySelectorAll('.talkient-processed').forEach((el) => {
+    el.classList.remove('talkient-processed');
+  });
+
+  // Clear any highlights
+  clearHighlight();
+});
+
+// Re-add Talkient UI elements after print dialog is closed
+window.addEventListener('afterprint', () => {
+  console.log('[Talkient] Print dialog closed, restoring UI elements...');
+
+  // Re-create control panel
+  createControlPanel();
+
+  // Check if play buttons are enabled before re-processing
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+    const isEnabled = result.playButtonsEnabled !== false;
+    if (isEnabled) {
+      processTextElements();
+    }
+  });
+});
+
 // Watch for DOM changes to process new text elements
 // const observer = new MutationObserver((mutations: MutationRecord[]) => {
 //     for (const mutation of mutations) {

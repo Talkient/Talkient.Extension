@@ -655,4 +655,15 @@
   }
 }
 
+/* Print styles - hide Talkient UI elements when printing */
+@media print {
+  #talkient-control-panel,
+  #talkient-container,
+  .talkient-play-button,
+  .talkient-highlight {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
 /* Add more specific styles for your content script UI elements here */
