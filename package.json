@@ -4,6 +4,8 @@
   "description": "Talkient Extension",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js && rm -f dist/tsconfig.tsbuildinfo",
     "build": "tsc --build && pnpm build:content",
     "update-manifest": "cp manifest.json dist/",
@@ -25,6 +27,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.40.0",
     "@types/chrome": "^0.0.326",
     "@types/jest": "^30.0.0",
@@ -39,6 +42,7 @@
     "jest-environment-jsdom": "^30.0.5",
     "prettier": "^3.5.3",
     "ts-jest": "^29.4.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.49.0"
   }
 }

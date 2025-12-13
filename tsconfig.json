@@ -118,6 +118,11 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "exclude": ["src/**/*.test.ts", "src/**/__tests__/**/*.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/__tests__/**/*.ts",
+    "e2e/**/*.ts",
+    "playwright.config.ts"
+  ],
   "include": ["src/**/*.ts"]
 }
