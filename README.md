@@ -27,8 +27,11 @@
 ## TO DO
 
 - [ ] Try to Integrate with DevTools MCP
+- [ ] Refactor for maintanability
+- [ ] Authentication
+- [ ] Verify/Simplify the release
+- [ ] Summary by AI
 - [ ] Add a docs folder (or similar), one .md file for each feature like: highlight, followHighlight, control panel
-- [ ] Move controlpanel to "side_panel" (manifest.json)
 - [ ] Verify if is a text page before loading the script and the control panel
 - [ ] Bug: Follow highlight seems to not work
 - [ ] Bug: text elements within text elements should consider the father element
@@ -45,6 +48,7 @@
 - [ ] Ignore domains or urls list (user)
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
+- [ ] Create side_panel (manifest.json)
 - [ ] Options page
   - [ ] Reset default settings
   - [ ] Skip tags
