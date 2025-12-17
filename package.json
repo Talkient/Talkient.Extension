@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js && rm -f dist/tsconfig.tsbuildinfo",
+    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js dist/content/control-panel.js dist/content/highlight.js dist/content/icons.js dist/content/runtime-utils.js && rm -f dist/tsconfig.tsbuildinfo",
     "build": "tsc --build && pnpm build:content",
     "update-manifest": "cp manifest.json dist/",
     "update-assets": "cp assets/ dist/ -r",
