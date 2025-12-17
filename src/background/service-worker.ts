@@ -99,7 +99,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           return;
         }
 
-        const selectedVoice = result.selectedVoice;
+        const selectedVoice = result.selectedVoice as string | undefined;
         const speechRate =
           typeof result.speechRate === 'number' ? result.speechRate : 1.0;
         const speechPitch =
@@ -227,7 +227,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return;
           }
 
-          const selectedVoice = result.selectedVoice;
+          const selectedVoice = result.selectedVoice as string | undefined;
           const speechRate =
             typeof result.speechRate === 'number' ? result.speechRate : 1.0;
           const speechPitch =

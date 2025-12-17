@@ -52,7 +52,7 @@
       addListener: jest.fn(),
     },
     openOptionsPage: jest.fn(),
-    lastError: undefined,
+    lastError: undefined as chrome.runtime.LastError | undefined,
   },
   contextMenus: {
     create: jest.fn(),

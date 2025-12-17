@@ -287,7 +287,11 @@ describe('service-worker.ts', () => {
       it('should handle error when opening options page fails', () => {
         const request = { type: 'OPEN_OPTIONS' };
         const mockError = { message: 'Failed to open options page' };
-        chrome.runtime.lastError = mockError;
+        Object.defineProperty(chrome.runtime, 'lastError', {
+          value: mockError,
+          writable: true,
+          configurable: true,
+        });
 
         const result = messageHandler(request, mockSender, mockSendResponse);
 
@@ -299,7 +303,11 @@ describe('service-worker.ts', () => {
         expect(result).toBe(true);
 
         // Clean up
-        chrome.runtime.lastError = undefined;
+        Object.defineProperty(chrome.runtime, 'lastError', {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
       });
     });
 
