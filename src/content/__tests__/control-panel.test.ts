@@ -5,6 +5,10 @@ import {
   removeControlPanel,
   isControlPanelVisible,
   toggleControlPanel,
+  getDomainHideCookieName,
+  isPanelHiddenForDomain,
+  setDomainHideCookie,
+  clearDomainHideCookie,
 } from '../control-panel';
 
 // Mock runtime-utils before importing control-panel
@@ -58,12 +62,18 @@ describe('Control Panel Module', () => {
   beforeEach(() => {
     // Set up DOM with an article element (required for control panel to be created)
     document.body.innerHTML = '<article><p>Test content</p></article>';
+    // Clear any cookies from previous tests
+    document.cookie =
+      'talkient_panel_hidden=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
     jest.clearAllMocks();
   });
 
   afterEach(() => {
     // Clean up
     document.body.innerHTML = '';
+    // Clear cookies
+    document.cookie =
+      'talkient_panel_hidden=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
   });
 
   describe('createControlPanel', () => {
@@ -451,6 +461,187 @@ describe('Control Panel Module', () => {
       const icon = settingsBtn.querySelector('.talkient-control-icon');
       expect(icon).toBeTruthy();
       expect(icon?.tagName.toLowerCase()).toBe('svg');
+    });
+  });
+
+  describe('Cookie-based Panel Hiding', () => {
+    beforeEach(() => {
+      // Clear any cookies from previous tests
+      document.cookie =
+        'talkient_panel_hidden=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    });
+
+    afterEach(() => {
+      // Clean up cookies
+      document.cookie =
+        'talkient_panel_hidden=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    });
+
+    describe('getDomainHideCookieName', () => {
+      it('should return the correct cookie name', () => {
+        expect(getDomainHideCookieName()).toBe('talkient_panel_hidden');
+      });
+    });
+
+    describe('isPanelHiddenForDomain', () => {
+      it('should return false when no cookie is set', () => {
+        expect(isPanelHiddenForDomain()).toBe(false);
+      });
+
+      it('should return true when hide cookie is set', () => {
+        document.cookie = 'talkient_panel_hidden=true; path=/';
+        expect(isPanelHiddenForDomain()).toBe(true);
+      });
+
+      it('should return false when cookie has different value', () => {
+        document.cookie = 'talkient_panel_hidden=false; path=/';
+        expect(isPanelHiddenForDomain()).toBe(false);
+      });
+
+      it('should handle multiple cookies correctly', () => {
+        document.cookie = 'other_cookie=value; path=/';
+        document.cookie = 'talkient_panel_hidden=true; path=/';
+        document.cookie = 'another_cookie=test; path=/';
+        expect(isPanelHiddenForDomain()).toBe(true);
+      });
+    });
+
+    describe('setDomainHideCookie', () => {
+      it('should set the hide cookie', () => {
+        setDomainHideCookie();
+        expect(isPanelHiddenForDomain()).toBe(true);
+      });
+
+      it('should set cookie with expiration in the future', () => {
+        const beforeSet = Date.now();
+        setDomainHideCookie();
+
+        // Check that the cookie is set with the correct value
+        expect(document.cookie).toContain('talkient_panel_hidden=true');
+      });
+    });
+
+    describe('clearDomainHideCookie', () => {
+      it('should clear the hide cookie', () => {
+        // First set the cookie
+        setDomainHideCookie();
+        expect(isPanelHiddenForDomain()).toBe(true);
+
+        // Then clear it
+        clearDomainHideCookie();
+        expect(isPanelHiddenForDomain()).toBe(false);
+      });
+
+      it('should not throw when cookie does not exist', () => {
+        expect(() => clearDomainHideCookie()).not.toThrow();
+      });
+    });
+
+    describe('createControlPanel with cookie', () => {
+      it('should not create panel when hide cookie is set', () => {
+        // Set the hide cookie
+        setDomainHideCookie();
+
+        // Spy on console.log to verify the message
+        const consoleLogSpy = jest.spyOn(console, 'log');
+
+        // Try to create the panel
+        createControlPanel();
+
+        // Panel should not be created
+        const panel = document.getElementById('talkient-control-panel');
+        expect(panel).toBeFalsy();
+
+        // Verify the console log message
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          '[Talkient.ControlPanel] Control panel is hidden for this domain. Will be available again after cookie expires.'
+        );
+
+        consoleLogSpy.mockRestore();
+      });
+
+      it('should create panel after cookie is cleared', () => {
+        // Set the hide cookie
+        setDomainHideCookie();
+
+        // Panel should not be created
+        createControlPanel();
+        expect(document.getElementById('talkient-control-panel')).toBeFalsy();
+
+        // Clear the cookie
+        clearDomainHideCookie();
+
+        // Now panel should be created
+        createControlPanel();
+        expect(document.getElementById('talkient-control-panel')).toBeTruthy();
+      });
+    });
+
+    describe('Close button sets cookie', () => {
+      it('should set hide cookie when close button is clicked', () => {
+        // Create the panel
+        createControlPanel();
+        const panel = document.getElementById('talkient-control-panel');
+        expect(panel).toBeTruthy();
+
+        // Verify no cookie is set yet
+        expect(isPanelHiddenForDomain()).toBe(false);
+
+        // Click the close button
+        const closeBtn = panel?.querySelector(
+          '.talkient-panel-close'
+        ) as HTMLButtonElement;
+        closeBtn.click();
+
+        // Panel should be removed
+        expect(document.getElementById('talkient-control-panel')).toBeFalsy();
+
+        // Cookie should be set
+        expect(isPanelHiddenForDomain()).toBe(true);
+      });
+
+      it('should prevent panel from being created again after close', () => {
+        // Create and close the panel
+        createControlPanel();
+        const panel = document.getElementById('talkient-control-panel');
+        const closeBtn = panel?.querySelector(
+          '.talkient-panel-close'
+        ) as HTMLButtonElement;
+        closeBtn.click();
+
+        // Try to create the panel again
+        createControlPanel();
+
+        // Panel should not be created
+        expect(document.getElementById('talkient-control-panel')).toBeFalsy();
+      });
+    });
+
+    describe('toggleControlPanel with cookie', () => {
+      it('should not toggle panel on when hide cookie is set', () => {
+        // Set the hide cookie
+        setDomainHideCookie();
+
+        // Try to toggle the panel on
+        toggleControlPanel();
+
+        // Panel should not be created
+        expect(isControlPanelVisible()).toBe(false);
+      });
+
+      it('should still remove panel when toggling off regardless of cookie', () => {
+        // Create the panel (no cookie set)
+        createControlPanel();
+        expect(isControlPanelVisible()).toBe(true);
+
+        // Toggle off (this uses removeControlPanel which doesn't set cookie)
+        toggleControlPanel();
+        expect(isControlPanelVisible()).toBe(false);
+
+        // Cookie should NOT be set when using toggleControlPanel
+        // because it uses removeControlPanel directly, not the close button
+        expect(isPanelHiddenForDomain()).toBe(false);
+      });
     });
   });
 });

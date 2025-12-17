@@ -8,10 +8,71 @@ import { safeSendMessage } from './runtime-utils';
  * Handles the creation and management of the Talkient control panel UI
  */
 
+// Cookie name for hiding the control panel
+const PANEL_HIDDEN_COOKIE_NAME = 'talkient_panel_hidden';
+
+// Duration to hide the panel in minutes
+const PANEL_HIDDEN_DURATION_MINUTES = 30;
+
+/**
+ * Gets the cookie name used to track if the panel is hidden for this domain
+ * @returns The cookie name
+ */
+export function getDomainHideCookieName(): string {
+  return PANEL_HIDDEN_COOKIE_NAME;
+}
+
+/**
+ * Checks if the control panel should be hidden for the current domain
+ * @returns true if the panel should be hidden (cookie exists and is not expired)
+ */
+export function isPanelHiddenForDomain(): boolean {
+  const cookieName = getDomainHideCookieName();
+  const cookies = document.cookie.split(';');
+
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === cookieName && value === 'true') {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Sets a cookie to hide the control panel for the configured duration
+ * The cookie will automatically expire after the duration
+ */
+export function setDomainHideCookie(): void {
+  const cookieName = getDomainHideCookieName();
+  const expires = new Date(
+    Date.now() + PANEL_HIDDEN_DURATION_MINUTES * 60 * 1000
+  );
+  document.cookie = `${cookieName}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+/**
+ * Clears the cookie that hides the control panel
+ * This allows the panel to be shown again before the expiration time
+ */
+export function clearDomainHideCookie(): void {
+  const cookieName = getDomainHideCookieName();
+  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+}
+
 // Function to create and inject the control panel
 export function createControlPanel(): void {
   // Check if control panel already exists
   if (document.getElementById('talkient-control-panel')) {
+    return;
+  }
+
+  // Check if the panel is hidden for this domain (via cookie)
+  if (isPanelHiddenForDomain()) {
+    console.log(
+      '[Talkient.ControlPanel] Control panel is hidden for this domain. Will be available again after cookie expires.'
+    );
     return;
   }
 
@@ -114,6 +175,7 @@ function setupControlPanelEventListeners(panel: HTMLElement): void {
 
 /**
  * Sets up the close button functionality
+ * When the close button is clicked, sets a cookie to hide the panel for 30 minutes
  */
 function setupCloseButton(panel: HTMLElement): void {
   const closeButton = panel.querySelector(
@@ -121,6 +183,11 @@ function setupCloseButton(panel: HTMLElement): void {
   ) as HTMLButtonElement;
 
   closeButton?.addEventListener('click', () => {
+    // Set cookie to hide panel for 30 minutes on this domain
+    setDomainHideCookie();
+    console.log(
+      '[Talkient.ControlPanel] Panel closed. Will be hidden for 30 minutes on this domain.'
+    );
     panel.remove();
   });
 }

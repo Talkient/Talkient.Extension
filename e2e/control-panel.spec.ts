@@ -347,6 +347,199 @@ test.describe('Talkient Control Panel', () => {
       expect(buttonsExistAgain).toBe(true);
     });
   });
+
+  test('should hide panel for 30 minutes after close button is clicked', async ({
+    page,
+  }) => {
+    // Note: Cookies cannot be set on file:// URLs due to browser security restrictions
+    // This test verifies the close button functionality and logs a warning if cookies can't be set
+    const isFileProtocol = await page.evaluate(
+      () => window.location.protocol === 'file:'
+    );
+
+    await test.step('Verify panel is created by extension content script', async () => {
+      // Wait for the extension content script to create the panel
+      // The panel should have the close button with proper event listeners
+      const closeButtonExists = await page.evaluate(() => {
+        const panel = document.getElementById('talkient-control-panel');
+        return panel?.querySelector('.talkient-panel-close') !== null;
+      });
+      expect(closeButtonExists).toBe(true);
+    });
+
+    await test.step('Click close button and verify panel is removed', async () => {
+      // Click the close button using the extension's panel (with event listeners)
+      await page.evaluate(() => {
+        const panel = document.getElementById('talkient-control-panel');
+        const closeBtn = panel?.querySelector(
+          '.talkient-panel-close'
+        ) as HTMLButtonElement;
+        if (closeBtn) {
+          closeBtn.click();
+        }
+      });
+
+      // Wait for panel to be removed
+      await page.waitForTimeout(500);
+
+      // Verify panel is removed
+      const panelExists = await page.evaluate(() => {
+        return document.getElementById('talkient-control-panel') !== null;
+      });
+      expect(panelExists).toBe(false);
+    });
+
+    await test.step('Verify cookie behavior (skipped on file:// protocol)', async () => {
+      if (isFileProtocol) {
+        console.log(
+          '[E2E Test] Skipping cookie verification - cookies cannot be set on file:// URLs'
+        );
+        // Verify that attempting to set cookie on file:// protocol doesn't break anything
+        const hasHideCookie = await page.evaluate(() => {
+          return document.cookie.includes('talkient_panel_hidden=true');
+        });
+        // Cookie won't be set on file:// URLs, this is expected
+        expect(hasHideCookie).toBe(false);
+      } else {
+        // On http/https URLs, cookie should be set
+        const hasHideCookie = await page.evaluate(() => {
+          return document.cookie.includes('talkient_panel_hidden=true');
+        });
+        expect(hasHideCookie).toBe(true);
+      }
+    });
+  });
+
+  test('should not recreate panel on page reload when cookie is set', async ({
+    page,
+    context,
+  }) => {
+    // Note: This test verifies the cookie-based hiding behavior
+    // It will be skipped on file:// URLs where cookies cannot be set
+    const isFileProtocol = await page.evaluate(
+      () => window.location.protocol === 'file:'
+    );
+
+    if (isFileProtocol) {
+      console.log(
+        '[E2E Test] Skipping cookie persistence test - cookies cannot be set on file:// URLs'
+      );
+      // On file:// URLs, just verify the panel exists and can be closed
+      const panelExists = await page.evaluate(() => {
+        return document.getElementById('talkient-control-panel') !== null;
+      });
+      expect(panelExists).toBe(true);
+      return;
+    }
+
+    await test.step('Set hide cookie directly for testing', async () => {
+      // Set the cookie directly to simulate having closed the panel
+      const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+      await page.evaluate((expiresStr) => {
+        document.cookie = `talkient_panel_hidden=true; expires=${expiresStr}; path=/; SameSite=Lax`;
+      }, expires.toUTCString());
+
+      // Verify cookie is set
+      const hasHideCookie = await page.evaluate(() => {
+        return document.cookie.includes('talkient_panel_hidden=true');
+      });
+      expect(hasHideCookie).toBe(true);
+
+      // Remove the current panel if it exists
+      await page.evaluate(() => {
+        const panel = document.getElementById('talkient-control-panel');
+        if (panel) panel.remove();
+      });
+    });
+
+    await test.step('Reload page and verify panel does not appear', async () => {
+      // Reload the page
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+
+      // Wait for content script to potentially create panel
+      await page.waitForTimeout(2000);
+
+      // Verify panel was NOT created because cookie is set
+      const panelExists = await page.evaluate(() => {
+        return document.getElementById('talkient-control-panel') !== null;
+      });
+      expect(panelExists).toBe(false);
+
+      // Verify cookie is still set
+      const hasHideCookie = await page.evaluate(() => {
+        return document.cookie.includes('talkient_panel_hidden=true');
+      });
+      expect(hasHideCookie).toBe(true);
+    });
+  });
+
+  test('should show panel again after cookie is cleared', async ({ page }) => {
+    // Note: This test verifies the cookie clearing behavior
+    // It will be skipped on file:// URLs where cookies cannot be set
+    const isFileProtocol = await page.evaluate(
+      () => window.location.protocol === 'file:'
+    );
+
+    if (isFileProtocol) {
+      console.log(
+        '[E2E Test] Skipping cookie clearing test - cookies cannot be set on file:// URLs'
+      );
+      // On file:// URLs, just verify the panel exists
+      const panelExists = await page.evaluate(() => {
+        return document.getElementById('talkient-control-panel') !== null;
+      });
+      expect(panelExists).toBe(true);
+      return;
+    }
+
+    await test.step('Set hide cookie to simulate closed panel', async () => {
+      // First, set the hide cookie
+      const expires = new Date(Date.now() + 30 * 60 * 1000);
+      await page.evaluate((expiresStr) => {
+        document.cookie = `talkient_panel_hidden=true; expires=${expiresStr}; path=/; SameSite=Lax`;
+      }, expires.toUTCString());
+
+      // Remove any existing panel
+      await page.evaluate(() => {
+        const panel = document.getElementById('talkient-control-panel');
+        if (panel) panel.remove();
+      });
+
+      // Verify cookie is set
+      const hasHideCookie = await page.evaluate(() => {
+        return document.cookie.includes('talkient_panel_hidden=true');
+      });
+      expect(hasHideCookie).toBe(true);
+    });
+
+    await test.step('Clear the cookie manually', async () => {
+      await page.evaluate(() => {
+        document.cookie =
+          'talkient_panel_hidden=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+      });
+
+      // Verify cookie is cleared
+      const hasHideCookie = await page.evaluate(() => {
+        return document.cookie.includes('talkient_panel_hidden=true');
+      });
+      expect(hasHideCookie).toBe(false);
+    });
+
+    await test.step('Trigger panel creation and verify it appears', async () => {
+      // Reload the page to allow the extension to create the panel
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      // Check if panel was created by the extension
+      const panelCreated = await page.evaluate(() => {
+        return document.getElementById('talkient-control-panel') !== null;
+      });
+
+      expect(panelCreated).toBe(true);
+    });
+  });
 });
 
 // Declare the global window interface for TypeScript
