@@ -19,6 +19,7 @@ import {
   loadButtonPositionFromStorage,
   setButtonPosition,
   scrollToHighlightedElement,
+  initPanelHideDuration,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
@@ -129,6 +130,9 @@ loadSpeechRateFromStorage();
 
 // Load maximum nodes setting from storage
 loadMaxNodesFromStorage();
+
+// Initialize panel hide duration from storage
+initPanelHideDuration();
 
 // Load button position setting from storage and then process elements
 loadButtonPositionFromStorage().then(() => {

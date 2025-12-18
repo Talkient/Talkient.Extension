@@ -25,6 +25,7 @@ describe('options.ts', () => {
   let followHighlightToggle: HTMLInputElement;
   let buttonPositionSelect: HTMLSelectElement;
   let minimumWordsInput: HTMLInputElement;
+  let panelHideDurationInput: HTMLInputElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -62,6 +63,9 @@ describe('options.ts', () => {
     minimumWordsInput = document.getElementById(
       'minimum-words-input'
     ) as HTMLInputElement;
+    panelHideDurationInput = document.getElementById(
+      'panel-hide-duration-input'
+    ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -76,6 +80,7 @@ describe('options.ts', () => {
           buttonPosition: 'left',
           minimumWords: 3,
           maxNodesProcessed: 1000,
+          panelHideDuration: 30,
         });
       }
     );
@@ -128,6 +133,7 @@ describe('options.ts', () => {
       expect(rateValue).toBeTruthy();
       expect(pitchValue).toBeTruthy();
       expect(minimumWordsInput).toBeTruthy();
+      expect(panelHideDurationInput).toBeTruthy();
     });
 
     it('should have correct slider attributes from HTML', () => {
@@ -185,6 +191,7 @@ describe('options.ts', () => {
           'buttonPosition',
           'minimumWords',
           'maxNodesProcessed',
+          'panelHideDuration',
         ],
         expect.any(Function)
       );
@@ -994,6 +1001,142 @@ describe('options.ts', () => {
         // Check that the UI was NOT updated
         expect(rateSlider.value).toBe(originalValue);
       }
+    });
+  });
+
+  describe('panel hide duration functionality', () => {
+    beforeEach(() => {
+      // Load the options script
+      require('../options');
+
+      // Trigger DOMContentLoaded event
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should have correct input attributes from HTML', () => {
+      expect(panelHideDurationInput.type).toBe('number');
+      expect(panelHideDurationInput.min).toBe('0');
+      expect(panelHideDurationInput.max).toBe('9999');
+    });
+
+    it('should restore panel hide duration from storage', async () => {
+      // Mock storage with specific duration
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            selectedVoice: 'default',
+            speechRate: 1.0,
+            speechPitch: 1.0,
+            highlightStyle: 'default',
+            panelHideDuration: 60,
+          });
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(panelHideDurationInput.value).toBe('60');
+    });
+
+    it('should save panel hide duration to storage when input changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      panelHideDurationInput.value = '45';
+      const inputEvent = new Event('input');
+      panelHideDurationInput.dispatchEvent(inputEvent);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        panelHideDuration: 45,
+      });
+    });
+
+    it('should clamp value to 0 when negative is entered', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      panelHideDurationInput.value = '-10';
+      const inputEvent = new Event('input');
+      panelHideDurationInput.dispatchEvent(inputEvent);
+
+      expect(panelHideDurationInput.value).toBe('0');
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        panelHideDuration: 0,
+      });
+    });
+
+    it('should clamp value to 9999 when exceeding maximum', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      panelHideDurationInput.value = '10000';
+      const inputEvent = new Event('input');
+      panelHideDurationInput.dispatchEvent(inputEvent);
+
+      expect(panelHideDurationInput.value).toBe('9999');
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        panelHideDuration: 9999,
+      });
+    });
+
+    it('should handle NaN by defaulting to 0', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      panelHideDurationInput.value = 'abc';
+      const inputEvent = new Event('input');
+      panelHideDurationInput.dispatchEvent(inputEvent);
+
+      expect(panelHideDurationInput.value).toBe('0');
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        panelHideDuration: 0,
+      });
+    });
+
+    it('should update input when storage changes externally', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Get the storage change listener that was registered
+      const storageChangeListener = (
+        chrome.storage.onChanged.addListener as jest.Mock
+      ).mock.calls[0][0];
+
+      // Simulate a storage change
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            panelHideDuration: {
+              newValue: 120,
+              oldValue: 30,
+            },
+          },
+          'local'
+        );
+
+        expect(panelHideDurationInput.value).toBe('120');
+      }
+    });
+
+    it('should use default value of 30 when not set in storage', async () => {
+      // Mock storage with no panelHideDuration
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({});
+        }
+      );
+
+      // Reload the module and trigger DOMContentLoaded
+      jest.resetModules();
+      require('../options');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(panelHideDurationInput.value).toBe('30');
     });
   });
 });

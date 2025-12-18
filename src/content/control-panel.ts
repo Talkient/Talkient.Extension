@@ -11,8 +11,43 @@ import { safeSendMessage } from './runtime-utils';
 // Cookie name for hiding the control panel
 const PANEL_HIDDEN_COOKIE_NAME = 'talkient_panel_hidden';
 
-// Duration to hide the panel in minutes
-const PANEL_HIDDEN_DURATION_MINUTES = 30;
+// Default duration to hide the panel in minutes
+const DEFAULT_PANEL_HIDDEN_DURATION_MINUTES = 30;
+
+// Cached duration value (updated from storage)
+let cachedPanelHideDuration = DEFAULT_PANEL_HIDDEN_DURATION_MINUTES;
+
+/**
+ * Initializes the cached panel hide duration from storage
+ * Should be called when the content script loads
+ */
+export function initPanelHideDuration(): void {
+  chrome.storage.local.get(['panelHideDuration'], (result) => {
+    if (typeof result.panelHideDuration === 'number') {
+      cachedPanelHideDuration = result.panelHideDuration;
+    }
+  });
+
+  // Listen for storage changes to keep cache in sync
+  if (chrome.storage?.onChanged?.addListener) {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes.panelHideDuration) {
+        const newDuration = changes.panelHideDuration.newValue;
+        if (typeof newDuration === 'number') {
+          cachedPanelHideDuration = newDuration;
+        }
+      }
+    });
+  }
+}
+
+/**
+ * Gets the current panel hide duration in minutes
+ * @returns The duration in minutes (0-9999, default 30)
+ */
+export function getPanelHideDuration(): number {
+  return cachedPanelHideDuration;
+}
 
 /**
  * Gets the cookie name used to track if the panel is hidden for this domain
@@ -43,12 +78,18 @@ export function isPanelHiddenForDomain(): boolean {
 /**
  * Sets a cookie to hide the control panel for the configured duration
  * The cookie will automatically expire after the duration
+ * If duration is 0, no cookie is set (panel can always be closed but won't stay hidden)
  */
 export function setDomainHideCookie(): void {
+  const duration = getPanelHideDuration();
+
+  // If duration is 0, don't set a cookie (panel won't stay hidden)
+  if (duration === 0) {
+    return;
+  }
+
   const cookieName = getDomainHideCookieName();
-  const expires = new Date(
-    Date.now() + PANEL_HIDDEN_DURATION_MINUTES * 60 * 1000
-  );
+  const expires = new Date(Date.now() + duration * 60 * 1000);
   document.cookie = `${cookieName}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
 }
 
@@ -175,7 +216,7 @@ function setupControlPanelEventListeners(panel: HTMLElement): void {
 
 /**
  * Sets up the close button functionality
- * When the close button is clicked, sets a cookie to hide the panel for 30 minutes
+ * When the close button is clicked, sets a cookie to hide the panel for the configured duration
  */
 function setupCloseButton(panel: HTMLElement): void {
   const closeButton = panel.querySelector(
@@ -183,11 +224,18 @@ function setupCloseButton(panel: HTMLElement): void {
   ) as HTMLButtonElement;
 
   closeButton?.addEventListener('click', () => {
-    // Set cookie to hide panel for 30 minutes on this domain
+    const duration = getPanelHideDuration();
+    // Set cookie to hide panel on this domain
     setDomainHideCookie();
-    console.log(
-      '[Talkient.ControlPanel] Panel closed. Will be hidden for 30 minutes on this domain.'
-    );
+    if (duration > 0) {
+      console.log(
+        `[Talkient.ControlPanel] Panel closed. Will be hidden for ${duration} minutes on this domain.`
+      );
+    } else {
+      console.log(
+        '[Talkient.ControlPanel] Panel closed. Duration is 0, panel will reappear on next page load.'
+      );
+    }
     panel.remove();
   });
 }

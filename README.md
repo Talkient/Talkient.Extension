@@ -49,6 +49,8 @@
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
 - [ ] Create side_panel (manifest.json)
+- [ ] Popup
+  - [ ] Select voice
 - [ ] Options page
   - [ ] Reset default settings
   - [ ] Skip tags

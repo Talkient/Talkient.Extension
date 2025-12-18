@@ -9,6 +9,8 @@ import {
   isPanelHiddenForDomain,
   setDomainHideCookie,
   clearDomainHideCookie,
+  initPanelHideDuration,
+  getPanelHideDuration,
 } from '../control-panel';
 
 // Mock runtime-utils before importing control-panel
@@ -641,6 +643,239 @@ describe('Control Panel Module', () => {
         // Cookie should NOT be set when using toggleControlPanel
         // because it uses removeControlPanel directly, not the close button
         expect(isPanelHiddenForDomain()).toBe(false);
+      });
+    });
+
+    describe('Configurable panel hide duration', () => {
+      it('should return default duration of 30 minutes', () => {
+        // By default, duration should be 30 minutes
+        expect(getPanelHideDuration()).toBe(30);
+      });
+
+      it('should update duration from storage when initPanelHideDuration is called', () => {
+        // Mock storage to return a custom duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 60 });
+          }
+        );
+
+        // Initialize the duration
+        initPanelHideDuration();
+
+        // Duration should be updated
+        expect(getPanelHideDuration()).toBe(60);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
+      });
+
+      it('should not set cookie when duration is 0', () => {
+        // Mock storage to return 0 duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 0 });
+          }
+        );
+
+        // Initialize the duration
+        initPanelHideDuration();
+
+        // Verify duration is 0
+        expect(getPanelHideDuration()).toBe(0);
+
+        // Clear any existing cookie first
+        clearDomainHideCookie();
+
+        // Try to set the cookie
+        setDomainHideCookie();
+
+        // Cookie should NOT be set because duration is 0
+        expect(isPanelHiddenForDomain()).toBe(false);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
+      });
+
+      it('should set cookie when duration is greater than 0', () => {
+        // Mock storage to return custom duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 15 });
+          }
+        );
+
+        // Initialize the duration
+        initPanelHideDuration();
+
+        // Verify duration is 15
+        expect(getPanelHideDuration()).toBe(15);
+
+        // Clear any existing cookie first
+        clearDomainHideCookie();
+
+        // Set the cookie
+        setDomainHideCookie();
+
+        // Cookie should be set
+        expect(isPanelHiddenForDomain()).toBe(true);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
+      });
+
+      it('should handle maximum boundary value of 9999 minutes', () => {
+        // Mock storage to return maximum duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 9999 });
+          }
+        );
+
+        // Initialize the duration
+        initPanelHideDuration();
+
+        // Verify duration is 9999
+        expect(getPanelHideDuration()).toBe(9999);
+
+        // Clear any existing cookie first
+        clearDomainHideCookie();
+
+        // Set the cookie
+        setDomainHideCookie();
+
+        // Cookie should be set
+        expect(isPanelHiddenForDomain()).toBe(true);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
+      });
+
+      it('should update cached duration when storage changes via onChanged listener', () => {
+        // First, initialize with default duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 30 });
+          }
+        );
+        initPanelHideDuration();
+        expect(getPanelHideDuration()).toBe(30);
+
+        // Verify the storage change listener was registered
+        expect(mockChrome.storage.onChanged.addListener).toHaveBeenCalled();
+
+        // Get the registered listener
+        const changeListener =
+          mockChrome.storage.onChanged.addListener.mock.calls[0][0];
+
+        // Simulate a storage change
+        changeListener(
+          {
+            panelHideDuration: {
+              oldValue: 30,
+              newValue: 120,
+            },
+          },
+          'local'
+        );
+
+        // Verify the cached duration was updated
+        expect(getPanelHideDuration()).toBe(120);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
+      });
+
+      it('should not update duration when storage change is from sync namespace', () => {
+        // Initialize with default duration
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({ panelHideDuration: 30 });
+          }
+        );
+        initPanelHideDuration();
+        expect(getPanelHideDuration()).toBe(30);
+
+        // Get the registered listener
+        const changeListener =
+          mockChrome.storage.onChanged.addListener.mock.calls[0][0];
+
+        // Simulate a storage change from 'sync' namespace (should be ignored)
+        changeListener(
+          {
+            panelHideDuration: {
+              oldValue: 30,
+              newValue: 999,
+            },
+          },
+          'sync'
+        );
+
+        // Duration should still be 30 (not changed)
+        expect(getPanelHideDuration()).toBe(30);
+
+        // Reset mock
+        mockChrome.storage.local.get.mockImplementation(
+          (
+            keys: string[],
+            callback: (result: Record<string, unknown>) => void
+          ) => {
+            callback({});
+          }
+        );
       });
     });
   });

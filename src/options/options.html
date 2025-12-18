@@ -60,6 +60,25 @@
           </div>
         </div>
         <div class="setting-row">
+          <span
+            class="setting-label"
+            title="Set to 0 to make the control panel reappear immediately on page refresh"
+            >Panel hide duration (minutes)</span
+          >
+          <div class="input-container">
+            <input
+              type="number"
+              id="panel-hide-duration-input"
+              min="0"
+              max="9999"
+              step="1"
+              value="30"
+              title="Set to 0 to make the control panel reappear immediately on page refresh"
+            />
+            <span class="input-hint">0 - 9999</span>
+          </div>
+        </div>
+        <div class="setting-row">
           <span class="setting-label">Voice</span>
           <select id="voice-select" class="select-input">
             <option value="default">Default Voice</option>

@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const maxNodesInput = document.getElementById(
     'max-nodes-input'
   ) as HTMLInputElement;
+  const panelHideDurationInput = document.getElementById(
+    'panel-hide-duration-input'
+  ) as HTMLInputElement;
 
   if (
     !voiceSelect ||
@@ -38,7 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     !followHighlightToggle ||
     !buttonPositionSelect ||
     !minimumWordsInput ||
-    !maxNodesInput
+    !maxNodesInput ||
+    !panelHideDurationInput
   )
     return;
 
@@ -54,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'buttonPosition',
       'minimumWords',
       'maxNodesProcessed',
+      'panelHideDuration',
     ],
     (result) => {
       const selectedVoice =
@@ -84,6 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.maxNodesProcessed === 'number'
           ? result.maxNodesProcessed
           : 1000;
+      const panelHideDuration =
+        typeof result.panelHideDuration === 'number'
+          ? result.panelHideDuration
+          : 30;
 
       populateVoices(selectedVoice);
 
@@ -113,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set maximum nodes input
       maxNodesInput.value = maxNodesProcessed.toString();
+
+      // Set panel hide duration input
+      panelHideDurationInput.value = panelHideDuration.toString();
     }
   );
 
@@ -185,6 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const newMaxNodes = changes.maxNodesProcessed.newValue;
           if (typeof newMaxNodes === 'number') {
             maxNodesInput.value = newMaxNodes.toString();
+          }
+        }
+
+        // Update panel hide duration if changed
+        if (changes.panelHideDuration) {
+          const newDuration = changes.panelHideDuration.newValue;
+          if (typeof newDuration === 'number') {
+            panelHideDurationInput.value = newDuration.toString();
           }
         }
 
@@ -295,6 +315,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Maximum nodes setting saved!', 'success');
+  });
+
+  // Save panel hide duration setting to storage
+  panelHideDurationInput.addEventListener('input', () => {
+    let panelHideDuration = parseInt(panelHideDurationInput.value);
+    // Ensure panelHideDuration is between 0 and 9999
+    if (isNaN(panelHideDuration) || panelHideDuration < 0) {
+      panelHideDuration = 0;
+      panelHideDurationInput.value = panelHideDuration.toString();
+    } else if (panelHideDuration > 9999) {
+      panelHideDuration = 9999;
+      panelHideDurationInput.value = panelHideDuration.toString();
+    }
+    chrome.storage.local.set({ panelHideDuration });
+
+    // Show a brief status message
+    showStatus('Panel hide duration setting saved!', 'success');
   });
 });
 
