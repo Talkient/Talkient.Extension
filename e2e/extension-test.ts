@@ -18,10 +18,11 @@ export const test = base.extend<{
 
     // Launch browser with the extension loaded
     const context = await chromium.launchPersistentContext('', {
-      headless: process.env.CI ? true : false, // Use headless in CI, headed locally
+      headless: false, // We use --headless=new in args instead
       args: [
         `--disable-extensions-except=${distPath}`,
         `--load-extension=${distPath}`,
+        '--headless=new', // Use new headless mode
       ],
     });
 
@@ -31,6 +32,19 @@ export const test = base.extend<{
 
   // Extract the extension ID for use in tests
   extensionId: async ({ context }, use) => {
+    // Ensure we have at least one page open to trigger extension initialization
+    let page = context.pages()[0];
+    if (!page) {
+      page = await context.newPage();
+    }
+    
+    // Navigate to a simple page to trigger the extension
+    try {
+        await page.goto('data:text/html,<html><body><h1>Trigger Extension</h1></body></html>');
+    } catch (e) {
+        console.log('Navigation to trigger page failed', e);
+    }
+
     // Wait for the extension background service worker to be available
     let [background] = context.serviceWorkers();
 
@@ -39,15 +53,15 @@ export const test = base.extend<{
       try {
         // First, try waiting for the service worker event
         background = await context.waitForEvent('serviceworker', {
-          timeout: 5000, // Reduced timeout for faster failure
+          timeout: 10000, // Increased timeout
         });
       } catch (error) {
         console.log(
-          'Service worker event timeout, trying alternative methods...'
+          'Service worker event timeout, trying polling...'
         );
 
         // If that fails, try checking a few times with delay
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 20; attempt++) {
           console.log(`Attempt ${attempt + 1} to find service worker...`);
           const workers = context.serviceWorkers();
           if (workers.length > 0) {
@@ -59,26 +73,9 @@ export const test = base.extend<{
           // Wait a bit before next attempt
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-
-        // If we still don't have a service worker, try to navigate to the extension page
-        // which might trigger the service worker to load
+        
         if (!background) {
-          console.log(
-            'Trying to trigger service worker by navigating to extension page...'
-          );
-          // Get the extension ID by other means (e.g., from the extensions page)
-          const extensionsPage = await context.newPage();
-          await extensionsPage.goto('chrome://extensions/');
-
-          // Extract extension ID using another method or use a hardcoded ID for testing
-          // For now, we'll just use a fallback approach
-          const extensionId = 'fallbackextensionid';
-          await extensionsPage.close();
-
-          // Log the fallback and continue
-          console.warn('Using fallback extension ID for testing:', extensionId);
-          await use(extensionId);
-          return;
+             throw new Error('Could not find extension service worker after multiple attempts.');
         }
       }
     }
@@ -88,10 +85,6 @@ export const test = base.extend<{
       const extensionId = background.url().split('/')[2];
       console.log('Using extension ID from service worker:', extensionId);
       await use(extensionId);
-    } else {
-      // This should not happen due to the fallback above, but just in case
-      console.error('No service worker found for extension');
-      throw new Error('Could not determine extension ID');
     }
   },
 });
