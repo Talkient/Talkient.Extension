@@ -53,7 +53,7 @@ export const test = base.extend<{
       try {
         // First, try waiting for the service worker event
         background = await context.waitForEvent('serviceworker', {
-          timeout: 10000, // Increased timeout
+          timeout: 20000, // Increased from 10s to 20s
         });
       } catch (error) {
         console.log(

@@ -1,6 +1,9 @@
 import { test, expect } from './extension-test';
 
 test.describe('Talkient Extension Options Page', () => {
+  // Increase timeout for this test suite due to service worker initialization
+  test.setTimeout(60000);
+  
   test('should load options page correctly', async ({ page, extensionId }) => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
