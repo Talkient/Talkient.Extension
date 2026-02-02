@@ -1,4 +1,5 @@
 // Jest mock for Chrome APIs used in service-worker.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 (global as any).chrome = {
   storage: {
@@ -28,7 +29,7 @@
           voiceName: 'Google UK English Male',
           lang: 'en-GB',
         },
-      ])
+      ]),
     ),
   },
   tabs: {

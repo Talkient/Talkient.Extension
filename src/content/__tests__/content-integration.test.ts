@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
-import { highlightText } from "../content-lib";
-import { getSvgIcon, isSvgPlayIcon } from "../icons";
+import { highlightText } from '../content-lib';
+import { getSvgIcon, isSvgPlayIcon } from '../icons';
 
 // Mock chrome runtime
 const mockChrome = {
@@ -17,17 +17,17 @@ const mockChrome = {
     local: {
       get: jest.fn((keys, callback) => {
         // Mock implementation with default values
-        if (Array.isArray(keys) && keys.includes("followHighlight")) {
+        if (Array.isArray(keys) && keys.includes('followHighlight')) {
           callback({ followHighlight: false });
-        } else if (Array.isArray(keys) && keys.includes("highlightStyle")) {
-          callback({ highlightStyle: "default" });
-        } else if (Array.isArray(keys) && keys.includes("minimumWords")) {
+        } else if (Array.isArray(keys) && keys.includes('highlightStyle')) {
+          callback({ highlightStyle: 'default' });
+        } else if (Array.isArray(keys) && keys.includes('minimumWords')) {
           callback({ minimumWords: 3 });
-        } else if (Array.isArray(keys) && keys.includes("maxNodesProcessed")) {
+        } else if (Array.isArray(keys) && keys.includes('maxNodesProcessed')) {
           callback({ maxNodesProcessed: 1000 });
         } else if (
-          keys === "playButtonsEnabled" ||
-          (Array.isArray(keys) && keys.includes("playButtonsEnabled"))
+          keys === 'playButtonsEnabled' ||
+          (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
         ) {
           callback({ playButtonsEnabled: true });
         } else {
@@ -43,15 +43,16 @@ const mockChrome = {
 };
 
 // Assign mock to global chrome
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
 
-describe("Content Script Element Processing Integration", () => {
+describe('Content Script Element Processing Integration', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
     // Set up DOM
-    document.body.innerHTML = "";
-    container = document.createElement("div");
+    document.body.innerHTML = '';
+    container = document.createElement('div');
     document.body.appendChild(container);
 
     // Reset mocks
@@ -62,35 +63,35 @@ describe("Content Script Element Processing Integration", () => {
     document.body.removeChild(container);
   });
 
-  test("should not add play buttons to code elements during processing", () => {
+  test('should not add play buttons to code elements during processing', () => {
     // Create an article tag to wrap the content
-    const article = document.createElement("article");
+    const article = document.createElement('article');
 
     // Create a mixed content scenario with regular text and code
-    const paragraph = document.createElement("p");
+    const paragraph = document.createElement('p');
     paragraph.textContent =
-      "Here is some regular text that should get a play button.";
+      'Here is some regular text that should get a play button.';
     article.appendChild(paragraph);
 
-    const codeBlock = document.createElement("code");
+    const codeBlock = document.createElement('code');
     codeBlock.textContent = 'console.log("this code should not get a button");';
     article.appendChild(codeBlock);
 
-    const preWithCode = document.createElement("pre");
-    const nestedCode = document.createElement("code");
+    const preWithCode = document.createElement('pre');
+    const nestedCode = document.createElement('code');
     nestedCode.textContent = 'function test() {\n  return "nested code";\n}';
     preWithCode.appendChild(nestedCode);
     article.appendChild(preWithCode);
 
-    const anotherParagraph = document.createElement("p");
+    const anotherParagraph = document.createElement('p');
     anotherParagraph.textContent =
-      "More regular text that should also get a play button.";
+      'More regular text that should also get a play button.';
     article.appendChild(anotherParagraph);
 
     container.appendChild(article);
 
     // Import the processTextElements function and test it
-    const { processTextElements } = require("../content-lib");
+    const { processTextElements } = require('../content-lib');
 
     // Mock requestAnimationFrame for synchronous processing
     const originalRAF = global.requestAnimationFrame;
@@ -107,19 +108,19 @@ describe("Content Script Element Processing Integration", () => {
 
     // Check that regular paragraphs have play buttons
     const processedParagraphs = container.querySelectorAll(
-      "p .talkient-play-button",
+      'p .talkient-play-button',
     );
     expect(processedParagraphs.length).toBe(2); // Two paragraphs should have buttons
 
     // Check that code elements do NOT have play buttons
     const codePlayButtons = container.querySelectorAll(
-      "code .talkient-play-button",
+      'code .talkient-play-button',
     );
     expect(codePlayButtons.length).toBe(0); // No code elements should have buttons
 
     // Check that pre elements do NOT have play buttons
     const prePlayButtons = container.querySelectorAll(
-      "pre .talkient-play-button",
+      'pre .talkient-play-button',
     );
     expect(prePlayButtons.length).toBe(0); // No pre elements should have buttons
 
@@ -133,13 +134,13 @@ describe("Content Script Element Processing Integration", () => {
   });
 });
 
-describe("Content Script Auto-Play Integration", () => {
+describe('Content Script Auto-Play Integration', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
     // Set up DOM
-    document.body.innerHTML = "";
-    container = document.createElement("div");
+    document.body.innerHTML = '';
+    container = document.createElement('div');
     document.body.appendChild(container);
 
     // Reset mocks
@@ -152,27 +153,27 @@ describe("Content Script Auto-Play Integration", () => {
     jest.resetModules();
   });
 
-  test("should auto-play next text when SPEECH_ENDED message includes autoPlayNext=true", async () => {
+  test('should auto-play next text when SPEECH_ENDED message includes autoPlayNext=true', async () => {
     // Create two text elements with play buttons
-    const element1 = document.createElement("span");
-    element1.classList.add("talkient-processed");
-    const textSpan1 = document.createElement("span");
-    textSpan1.textContent = "First text";
+    const element1 = document.createElement('span');
+    element1.classList.add('talkient-processed');
+    const textSpan1 = document.createElement('span');
+    textSpan1.textContent = 'First text';
     element1.appendChild(textSpan1);
-    const button1 = document.createElement("button");
-    button1.classList.add("talkient-play-button");
-    button1.innerHTML = getSvgIcon("pause"); // Pause icon (currently playing)
+    const button1 = document.createElement('button');
+    button1.classList.add('talkient-play-button');
+    button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
     element1.appendChild(button1);
     container.appendChild(element1);
 
-    const element2 = document.createElement("span");
-    element2.classList.add("talkient-processed");
-    const textSpan2 = document.createElement("span");
-    textSpan2.textContent = "Second text";
+    const element2 = document.createElement('span');
+    element2.classList.add('talkient-processed');
+    const textSpan2 = document.createElement('span');
+    textSpan2.textContent = 'Second text';
     element2.appendChild(textSpan2);
-    const button2 = document.createElement("button");
-    button2.classList.add("talkient-play-button");
-    button2.innerHTML = getSvgIcon("play"); // Play icon (not playing)
+    const button2 = document.createElement('button');
+    button2.classList.add('talkient-play-button');
+    button2.innerHTML = getSvgIcon('play'); // Play icon (not playing)
     element2.appendChild(button2);
     container.appendChild(element2);
 
@@ -180,7 +181,7 @@ describe("Content Script Auto-Play Integration", () => {
     highlightText(textSpan1);
 
     // Import content script to trigger message listener registration
-    require("../content");
+    require('../content');
 
     // Verify that the message listener was registered
     expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled();
@@ -190,10 +191,10 @@ describe("Content Script Auto-Play Integration", () => {
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Mock button click behavior
-    const clickSpy = jest.spyOn(button2, "click");
+    const clickSpy = jest.spyOn(button2, 'click');
 
     // Simulate SPEECH_ENDED message with autoPlayNext=true
-    const message = { type: "SPEECH_ENDED", autoPlayNext: true };
+    const message = { type: 'SPEECH_ENDED', autoPlayNext: true };
     const sender = {};
     const sendResponse = jest.fn();
 
@@ -206,32 +207,32 @@ describe("Content Script Auto-Play Integration", () => {
     expect(clickSpy).toHaveBeenCalled();
 
     // Check that all play buttons have the play icon
-    const svg = button1.querySelector("svg");
+    const svg = button1.querySelector('svg');
     expect(svg).not.toBeNull();
     expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
   });
 
-  test("should not auto-play next text when SPEECH_ENDED message includes autoPlayNext=false", async () => {
+  test('should not auto-play next text when SPEECH_ENDED message includes autoPlayNext=false', async () => {
     // Create two text elements with play buttons
-    const element1 = document.createElement("span");
-    element1.classList.add("talkient-processed");
-    const textSpan1 = document.createElement("span");
-    textSpan1.textContent = "First text";
+    const element1 = document.createElement('span');
+    element1.classList.add('talkient-processed');
+    const textSpan1 = document.createElement('span');
+    textSpan1.textContent = 'First text';
     element1.appendChild(textSpan1);
-    const button1 = document.createElement("button");
-    button1.classList.add("talkient-play-button");
-    button1.innerHTML = getSvgIcon("pause"); // Pause icon (currently playing)
+    const button1 = document.createElement('button');
+    button1.classList.add('talkient-play-button');
+    button1.innerHTML = getSvgIcon('pause'); // Pause icon (currently playing)
     element1.appendChild(button1);
     container.appendChild(element1);
 
-    const element2 = document.createElement("span");
-    element2.classList.add("talkient-processed");
-    const textSpan2 = document.createElement("span");
-    textSpan2.textContent = "Second text";
+    const element2 = document.createElement('span');
+    element2.classList.add('talkient-processed');
+    const textSpan2 = document.createElement('span');
+    textSpan2.textContent = 'Second text';
     element2.appendChild(textSpan2);
-    const button2 = document.createElement("button");
-    button2.classList.add("talkient-play-button");
-    button2.innerHTML = getSvgIcon("play"); // Play icon (not playing)
+    const button2 = document.createElement('button');
+    button2.classList.add('talkient-play-button');
+    button2.innerHTML = getSvgIcon('play'); // Play icon (not playing)
     element2.appendChild(button2);
     container.appendChild(element2);
 
@@ -239,17 +240,17 @@ describe("Content Script Auto-Play Integration", () => {
     highlightText(textSpan1);
 
     // Import content script to trigger message listener registration
-    require("../content");
+    require('../content');
 
     // Get the registered message listener
     const messageListener =
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Mock button click behavior
-    const clickSpy = jest.spyOn(button2, "click");
+    const clickSpy = jest.spyOn(button2, 'click');
 
     // Simulate SPEECH_ENDED message with autoPlayNext=false
-    const message = { type: "SPEECH_ENDED", autoPlayNext: false };
+    const message = { type: 'SPEECH_ENDED', autoPlayNext: false };
     const sender = {};
     const sendResponse = jest.fn();
 
@@ -262,11 +263,11 @@ describe("Content Script Auto-Play Integration", () => {
     expect(clickSpy).not.toHaveBeenCalled();
 
     // Check that all play buttons have the play icon
-    const svg1 = button1.querySelector("svg");
+    const svg1 = button1.querySelector('svg');
     expect(svg1).not.toBeNull();
     expect(isSvgPlayIcon(svg1 as SVGElement)).toBe(true);
 
-    const svg2 = button2.querySelector("svg");
+    const svg2 = button2.querySelector('svg');
     expect(svg2).not.toBeNull();
     expect(isSvgPlayIcon(svg2 as SVGElement)).toBe(true);
   });

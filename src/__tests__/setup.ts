@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Mock Chrome API for testing
 (global as any).chrome = {
   runtime: {
@@ -21,9 +22,11 @@
 };
 
 // Mock requestAnimationFrame
-(global as any).requestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
-  return setTimeout(callback, 0);
-});
+(global as any).requestAnimationFrame = jest.fn(
+  (callback: FrameRequestCallback) => {
+    return setTimeout(callback, 0);
+  },
+);
 
 // Mock cancelAnimationFrame
 (global as any).cancelAnimationFrame = jest.fn((id: number) => {
@@ -53,4 +56,4 @@ Object.defineProperty(window, 'scrollTo', {
   }),
   writable: true,
   configurable: true,
-}); 
+});

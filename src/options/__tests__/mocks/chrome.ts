@@ -1,4 +1,5 @@
 // Jest mock for Chrome APIs used in options.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 (global as any).chrome = {
   storage: {

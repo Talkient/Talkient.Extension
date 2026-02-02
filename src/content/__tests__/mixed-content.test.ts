@@ -21,6 +21,7 @@ const mockChrome = {
     },
   },
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
 
 describe('Process Mixed Content', () => {
@@ -33,6 +34,7 @@ describe('Process Mixed Content', () => {
     document.body.appendChild(container);
 
     // Mock requestAnimationFrame to execute immediately
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).requestAnimationFrame = jest.fn((callback) => {
       callback();
       return 1;
@@ -52,7 +54,7 @@ describe('Process Mixed Content', () => {
     spanElement.textContent = 'This is span text';
     pElement.appendChild(spanElement);
     pElement.appendChild(
-      document.createTextNode(' and more raw text at the end.')
+      document.createTextNode(' and more raw text at the end.'),
     ); // Another raw text node
 
     container.appendChild(pElement);
@@ -79,7 +81,7 @@ describe('Process Mixed Content', () => {
       expect(firstText.textContent).toContain('This is raw text');
       expect(firstText.nodeName).toBe('SPAN');
       expect(
-        (firstText as HTMLElement).classList.contains('talkient-processed')
+        (firstText as HTMLElement).classList.contains('talkient-processed'),
       ).toBe(true);
 
       // Check that the last raw text was processed
@@ -87,7 +89,7 @@ describe('Process Mixed Content', () => {
       expect(lastText.textContent).toContain('and more raw text');
       expect(lastText.nodeName).toBe('SPAN');
       expect(
-        (lastText as HTMLElement).classList.contains('talkient-processed')
+        (lastText as HTMLElement).classList.contains('talkient-processed'),
       ).toBe(true);
     }, 100);
   });

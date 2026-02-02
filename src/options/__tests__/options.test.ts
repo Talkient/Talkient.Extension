@@ -47,24 +47,24 @@ describe('options.ts', () => {
     rateSlider = document.getElementById('rate-slider') as HTMLInputElement;
     pitchSlider = document.getElementById('pitch-slider') as HTMLInputElement;
     highlightStyleSelect = document.getElementById(
-      'highlight-style-select'
+      'highlight-style-select',
     ) as HTMLSelectElement;
     rateValue = document.getElementById('rate-value') as HTMLSpanElement;
     pitchValue = document.getElementById('pitch-value') as HTMLSpanElement;
     autoPlayNextToggle = document.getElementById(
-      'auto-play-next-toggle'
+      'auto-play-next-toggle',
     ) as HTMLInputElement;
     followHighlightToggle = document.getElementById(
-      'follow-highlight-toggle'
+      'follow-highlight-toggle',
     ) as HTMLInputElement;
     buttonPositionSelect = document.getElementById(
-      'button-position-select'
+      'button-position-select',
     ) as HTMLSelectElement;
     minimumWordsInput = document.getElementById(
-      'minimum-words-input'
+      'minimum-words-input',
     ) as HTMLInputElement;
     panelHideDurationInput = document.getElementById(
-      'panel-hide-duration-input'
+      'panel-hide-duration-input',
     ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
@@ -82,13 +82,13 @@ describe('options.ts', () => {
           maxNodesProcessed: 1000,
           panelHideDuration: 30,
         });
-      }
+      },
     );
 
     (chrome.storage.local.set as jest.Mock).mockImplementation(
       (obj, callback) => {
         if (callback) callback();
-      }
+      },
     );
 
     // Mock chrome.tts.getVoices with sample voices
@@ -150,7 +150,7 @@ describe('options.ts', () => {
     it('should have default voice option in select', () => {
       // The HTML should have a default option
       const defaultOption = voiceSelect.querySelector(
-        'option[value="default"]'
+        'option[value="default"]',
       );
       expect(defaultOption).toBeTruthy();
       expect(defaultOption?.textContent).toBe('Default Voice');
@@ -193,7 +193,7 @@ describe('options.ts', () => {
           'maxNodesProcessed',
           'panelHideDuration',
         ],
-        expect.any(Function)
+        expect.any(Function),
       );
 
       expect(rateSlider.value).toBe('1.1');
@@ -208,7 +208,7 @@ describe('options.ts', () => {
       (chrome.storage.local.get as jest.Mock).mockImplementation(
         (keys, callback) => {
           callback({});
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -389,13 +389,13 @@ describe('options.ts', () => {
       expect(voiceSelect.children.length).toBe(4);
       expect(voiceSelect.children[0].textContent).toBe('Default Voice');
       expect(voiceSelect.children[1].textContent).toBe(
-        'Google UK English Male (en-GB)'
+        'Google UK English Male (en-GB)',
       );
       expect(voiceSelect.children[2].textContent).toBe(
-        'Google US English Female (en-US)'
+        'Google US English Female (en-US)',
       );
       expect(voiceSelect.children[3].textContent).toBe(
-        'Google Español (es-ES)'
+        'Google Español (es-ES)',
       );
     });
 
@@ -433,7 +433,7 @@ describe('options.ts', () => {
             speechPitch: 1.0,
             highlightStyle: 'bold',
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -486,7 +486,7 @@ describe('options.ts', () => {
             speechPitch: 1.0,
             // highlightStyle is missing
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -543,16 +543,16 @@ describe('options.ts', () => {
 
     it('should have setting labels', () => {
       const voiceLabel = document.querySelector(
-        '.setting-row:has(#voice-select) .setting-label'
+        '.setting-row:has(#voice-select) .setting-label',
       );
       const rateLabel = document.querySelector(
-        '.setting-row:has(#rate-slider) .setting-label'
+        '.setting-row:has(#rate-slider) .setting-label',
       );
       const pitchLabel = document.querySelector(
-        '.setting-row:has(#pitch-slider) .setting-label'
+        '.setting-row:has(#pitch-slider) .setting-label',
       );
       const highlightLabel = document.querySelector(
-        '.setting-row:has(#highlight-style-select) .setting-label'
+        '.setting-row:has(#highlight-style-select) .setting-label',
       );
 
       expect(voiceLabel?.textContent).toBe('Voice');
@@ -563,7 +563,7 @@ describe('options.ts', () => {
 
     it('should have keyboard shortcuts section', () => {
       const shortcutsSection = Array.from(document.querySelectorAll('h2')).find(
-        (h2) => h2.textContent === 'Keyboard Shortcuts'
+        (h2) => h2.textContent === 'Keyboard Shortcuts',
       );
       expect(shortcutsSection).toBeTruthy();
 
@@ -593,7 +593,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             autoPlayNext: true,
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -618,7 +618,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             // autoPlayNext is missing
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -680,7 +680,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             followHighlight: true,
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -705,7 +705,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             // followHighlight is missing
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -767,7 +767,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             buttonPosition: 'right',
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -792,7 +792,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             // buttonPosition is missing
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -834,16 +834,15 @@ describe('options.ts', () => {
   });
 
   describe('real-time synchronization', () => {
-    let storageChangeListener:
-      | ((changes: any, namespace: string) => void)
-      | null = null;
+    let storageChangeListener: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((changes: any, namespace: string) => void) | null = null;
 
     beforeEach(() => {
       // Mock the storage change listener
       (chrome.storage.onChanged.addListener as jest.Mock).mockImplementation(
         (listener) => {
           storageChangeListener = listener;
-        }
+        },
       );
 
       // Load the options script
@@ -869,7 +868,7 @@ describe('options.ts', () => {
               oldValue: 1.0,
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was updated
@@ -890,7 +889,7 @@ describe('options.ts', () => {
               oldValue: 1.0,
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was updated
@@ -911,7 +910,7 @@ describe('options.ts', () => {
               oldValue: 'default',
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was updated
@@ -931,7 +930,7 @@ describe('options.ts', () => {
               oldValue: false,
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was updated
@@ -951,7 +950,7 @@ describe('options.ts', () => {
               oldValue: 3,
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was updated
@@ -973,7 +972,7 @@ describe('options.ts', () => {
               oldValue: 1.0,
             },
           },
-          'sync'
+          'sync',
         );
 
         // Check that the UI was NOT updated
@@ -995,7 +994,7 @@ describe('options.ts', () => {
               oldValue: 1.0,
             },
           },
-          'local'
+          'local',
         );
 
         // Check that the UI was NOT updated
@@ -1031,7 +1030,7 @@ describe('options.ts', () => {
             highlightStyle: 'default',
             panelHideDuration: 60,
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
@@ -1113,7 +1112,7 @@ describe('options.ts', () => {
               oldValue: 30,
             },
           },
-          'local'
+          'local',
         );
 
         expect(panelHideDurationInput.value).toBe('120');
@@ -1125,7 +1124,7 @@ describe('options.ts', () => {
       (chrome.storage.local.get as jest.Mock).mockImplementation(
         (keys, callback) => {
           callback({});
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded

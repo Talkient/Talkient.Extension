@@ -39,6 +39,7 @@ const mockChrome = {
     sendMessage: jest.fn(),
   },
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
 
 // Mock DOM environment
@@ -289,14 +290,14 @@ describe('loadHighlightStyleFromStorage', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ highlightStyle: 'bold' });
-      }
+      },
     );
 
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['highlightStyle'],
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(getHighlightingStyle()).toBe('bold');
   });
@@ -306,14 +307,14 @@ describe('loadHighlightStyleFromStorage', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({});
-      }
+      },
     );
 
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['highlightStyle'],
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(getHighlightingStyle()).toBe('default'); // Should remain default
   });
@@ -323,14 +324,14 @@ describe('loadHighlightStyleFromStorage', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ highlightStyle: 'invalid-style' });
-      }
+      },
     );
 
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['highlightStyle'],
-      expect.any(Function)
+      expect.any(Function),
     );
     // Should not change from default since invalid style is passed
     expect(getHighlightingStyle()).toBe('default');
@@ -347,7 +348,7 @@ describe('loadHighlightStyleFromStorage', () => {
       (mockChrome.storage.local.get as jest.Mock).mockImplementation(
         (keys, callback) => {
           callback({ highlightStyle: style });
-        }
+        },
       );
 
       loadHighlightStyleFromStorage();
@@ -397,7 +398,7 @@ describe('scrollToHighlightedElement', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ followHighlight: false });
-      }
+      },
     );
 
     scrollToHighlightedElement(testElement);
@@ -405,7 +406,7 @@ describe('scrollToHighlightedElement', () => {
     // Verify storage was queried with the right key
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['followHighlight'],
-      expect.any(Function)
+      expect.any(Function),
     );
 
     // Verify scrollTo was not called
@@ -417,7 +418,7 @@ describe('scrollToHighlightedElement', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ followHighlight: true });
-      }
+      },
     );
 
     scrollToHighlightedElement(testElement);
@@ -425,7 +426,7 @@ describe('scrollToHighlightedElement', () => {
     // Verify storage was queried
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['followHighlight'],
-      expect.any(Function)
+      expect.any(Function),
     );
 
     // Verify scrollTo was called with correct parameters
@@ -453,7 +454,7 @@ describe('scrollToHighlightedElement', () => {
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ followHighlight: true });
-      }
+      },
     );
 
     scrollToHighlightedElement(testElement);
@@ -461,7 +462,7 @@ describe('scrollToHighlightedElement', () => {
     // Verify storage was queried
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
       ['followHighlight'],
-      expect.any(Function)
+      expect.any(Function),
     );
 
     // Verify scrollTo was not called since element is already centered

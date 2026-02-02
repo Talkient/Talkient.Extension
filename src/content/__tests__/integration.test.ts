@@ -5,13 +5,14 @@ import {
   processTextElements,
   clearHighlight,
   getCurrentHighlightedElement,
-} from "../content-lib";
-import { isSvgPlayIcon, isSvgPauseIcon } from "../icons";
+} from '../content-lib';
+import { isSvgPlayIcon, isSvgPauseIcon } from '../icons';
 
 // Mock runtime-utils before importing content-lib
-jest.mock("../runtime-utils", () => ({
+jest.mock('../runtime-utils', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockChrome = (global as any).chrome;
     if (mockChrome?.runtime?.sendMessage) {
       mockChrome.runtime.sendMessage(message, callback);
@@ -34,13 +35,13 @@ const mockChrome = {
     local: {
       get: jest.fn((keys, callback) => {
         // Mock implementation with default values
-        if (Array.isArray(keys) && keys.includes("followHighlight")) {
+        if (Array.isArray(keys) && keys.includes('followHighlight')) {
           callback({ followHighlight: false });
-        } else if (Array.isArray(keys) && keys.includes("highlightStyle")) {
-          callback({ highlightStyle: "default" });
+        } else if (Array.isArray(keys) && keys.includes('highlightStyle')) {
+          callback({ highlightStyle: 'default' });
         } else if (
-          keys === "playButtonsEnabled" ||
-          (Array.isArray(keys) && keys.includes("playButtonsEnabled"))
+          keys === 'playButtonsEnabled' ||
+          (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
         ) {
           callback({ playButtonsEnabled: true });
         } else {
@@ -54,19 +55,21 @@ const mockChrome = {
     },
   },
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
 
-describe("Text Highlighting Integration", () => {
+describe('Text Highlighting Integration', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
-    container = document.createElement("div");
+    container = document.createElement('div');
     document.body.appendChild(container);
 
     // Reset mocks
     mockChrome.runtime.sendMessage.mockClear();
 
     // Mock requestAnimationFrame
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).requestAnimationFrame = jest.fn((callback: () => void) => {
       setTimeout(callback, 0);
       return 1;
@@ -79,10 +82,10 @@ describe("Text Highlighting Integration", () => {
     jest.clearAllMocks();
   });
 
-  test("should highlight text when play button is clicked", async () => {
+  test('should highlight text when play button is clicked', async () => {
     // Create a paragraph with text
-    const paragraph = document.createElement("p");
-    const textContent = "This is a test paragraph for speech synthesis.";
+    const paragraph = document.createElement('p');
+    const textContent = 'This is a test paragraph for speech synthesis.';
     paragraph.textContent = textContent;
     container.appendChild(paragraph);
 
@@ -103,12 +106,12 @@ describe("Text Highlighting Integration", () => {
 
     // Find the play button that was added
     const playButton = container.querySelector(
-      ".talkient-play-button",
+      '.talkient-play-button',
     ) as HTMLButtonElement;
     expect(playButton).toBeTruthy();
 
     // Check for SVG play icon
-    const svg = playButton.querySelector("svg");
+    const svg = playButton.querySelector('svg');
     expect(svg).not.toBeNull();
     expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
@@ -123,29 +126,29 @@ describe("Text Highlighting Integration", () => {
     // Check that the text is highlighted
     const highlightedElement = getCurrentHighlightedElement();
     expect(highlightedElement).toBeTruthy();
-    expect(highlightedElement?.classList.contains("talkient-highlighted")).toBe(
+    expect(highlightedElement?.classList.contains('talkient-highlighted')).toBe(
       true,
     );
 
     // Check that the play button changed to pause
-    const svgAfterClick = playButton.querySelector("svg");
+    const svgAfterClick = playButton.querySelector('svg');
     expect(svgAfterClick).not.toBeNull();
     expect(isSvgPauseIcon(svgAfterClick as SVGElement)).toBe(true);
 
     // Check that the correct message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "SPEAK_TEXT",
+        type: 'SPEAK_TEXT',
         text: textContent,
       }),
       expect.any(Function),
     );
   });
 
-  test("should clear highlight when pause button is clicked", async () => {
+  test('should clear highlight when pause button is clicked', async () => {
     // Create a paragraph with text
-    const paragraph = document.createElement("p");
-    const textContent = "This is another test paragraph.";
+    const paragraph = document.createElement('p');
+    const textContent = 'This is another test paragraph.';
     paragraph.textContent = textContent;
     container.appendChild(paragraph);
 
@@ -163,7 +166,7 @@ describe("Text Highlighting Integration", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const playButton = container.querySelector(
-      ".talkient-play-button",
+      '.talkient-play-button',
     ) as HTMLButtonElement;
 
     // Mock successful sendMessage response
@@ -176,7 +179,7 @@ describe("Text Highlighting Integration", () => {
     expect(getCurrentHighlightedElement()).toBeTruthy();
 
     // Check for pause icon
-    const svgAfterPlay = playButton.querySelector("svg");
+    const svgAfterPlay = playButton.querySelector('svg');
     expect(svgAfterPlay).not.toBeNull();
     expect(isSvgPauseIcon(svgAfterPlay as SVGElement)).toBe(true);
 
@@ -185,23 +188,23 @@ describe("Text Highlighting Integration", () => {
     expect(getCurrentHighlightedElement()).toBeNull();
 
     // Check for play icon
-    const svgAfterPause = playButton.querySelector("svg");
+    const svgAfterPause = playButton.querySelector('svg');
     expect(svgAfterPause).not.toBeNull();
     expect(isSvgPlayIcon(svgAfterPause as SVGElement)).toBe(true);
 
     // Check that pause message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "PAUSE_SPEECH",
+        type: 'PAUSE_SPEECH',
       }),
       expect.any(Function),
     );
   });
 
-  test("should handle sendMessage errors gracefully", async () => {
+  test('should handle sendMessage errors gracefully', async () => {
     // Create a paragraph with text
-    const paragraph = document.createElement("p");
-    paragraph.textContent = "Test paragraph for error handling.";
+    const paragraph = document.createElement('p');
+    paragraph.textContent = 'Test paragraph for error handling.';
     container.appendChild(paragraph);
 
     // Mock the tree walker
@@ -214,11 +217,12 @@ describe("Text Highlighting Integration", () => {
     document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
 
     // Spy on console.error before processing
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
     // Mock chrome.runtime.lastError with a non-context-invalidation error BEFORE processing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (mockChrome.runtime as any).lastError = {
-      message: "Some other test error",
+      message: 'Some other test error',
     };
     mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
       // Simulate error by immediately calling callback with lastError set
@@ -232,7 +236,7 @@ describe("Text Highlighting Integration", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const playButton = container.querySelector(
-      ".talkient-play-button",
+      '.talkient-play-button',
     ) as HTMLButtonElement;
 
     // Click the play button
@@ -246,15 +250,16 @@ describe("Text Highlighting Integration", () => {
 
     // Cleanup
     consoleErrorSpy.mockRestore();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (mockChrome.runtime as any).lastError = null;
   });
 
-  test("should handle multiple text elements independently", async () => {
+  test('should handle multiple text elements independently', async () => {
     // Create multiple paragraphs
-    const paragraph1 = document.createElement("p");
-    const paragraph2 = document.createElement("p");
-    paragraph1.textContent = "First paragraph text.";
-    paragraph2.textContent = "Second paragraph text.";
+    const paragraph1 = document.createElement('p');
+    const paragraph2 = document.createElement('p');
+    paragraph1.textContent = 'First paragraph text.';
+    paragraph2.textContent = 'Second paragraph text.';
     container.appendChild(paragraph1);
     container.appendChild(paragraph2);
 
@@ -286,7 +291,7 @@ describe("Text Highlighting Integration", () => {
 
     // Find both play buttons
     const playButtons = container.querySelectorAll<HTMLButtonElement>(
-      ".talkient-play-button",
+      '.talkient-play-button',
     );
     expect(playButtons.length).toBe(2);
 
