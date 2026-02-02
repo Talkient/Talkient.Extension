@@ -1,18 +1,17 @@
 import { test, expect } from './extension-test';
-import * as path from 'path';
 
 test.describe('Article Requirement Tests', () => {
   test('should only process text within article tags and ignore text outside', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Navigate to the test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'article-requirement-test.html'
+      'article-requirement-test.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -20,7 +19,6 @@ test.describe('Article Requirement Tests', () => {
 
     // Wait for the page to load and content script to initialize
     await page.waitForTimeout(3000);
-
 
     // Force reprocessing to ensure everything is processed
     await page.evaluate(() => {
@@ -138,29 +136,27 @@ test.describe('Article Requirement Tests', () => {
       path: 'e2e-results/article-requirement-test.png',
       fullPage: true,
     });
-
   });
 
   test('should not process excluded elements even when inside article tags', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Navigate to the test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'excluded-elements-in-article-test.html'
+      'excluded-elements-in-article-test.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
     await page.goto(fileUrl);
     await page.waitForTimeout(3000);
 
-
-    // Detailed debugging
-    const debugInfo = await page.evaluate(() => {
+    // Detailed debugging (evaluated for side effects, result intentionally unused)
+    await page.evaluate(() => {
       const code = document.getElementById('code-elem');
       const normalPara = document.getElementById('normal-para');
 
@@ -184,7 +180,6 @@ test.describe('Article Requirement Tests', () => {
         allButtons: document.querySelectorAll('.talkient-play-button').length,
       };
     });
-
 
     // Force reprocessing
     await page.evaluate(() => {
@@ -213,7 +208,7 @@ test.describe('Article Requirement Tests', () => {
       const walker = document.createTreeWalker(
         code,
         NodeFilter.SHOW_TEXT,
-        null
+        null,
       );
       let node;
       while ((node = walker.nextNode())) {
@@ -239,7 +234,7 @@ test.describe('Article Requirement Tests', () => {
       const walker = document.createTreeWalker(
         button,
         NodeFilter.SHOW_TEXT,
-        null
+        null,
       );
       let node;
       while ((node = walker.nextNode())) {
@@ -284,6 +279,5 @@ test.describe('Article Requirement Tests', () => {
       path: 'e2e-results/excluded-elements-in-article-test.png',
       fullPage: true,
     });
-
   });
 });

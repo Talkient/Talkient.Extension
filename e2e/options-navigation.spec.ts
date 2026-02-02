@@ -3,7 +3,7 @@ import { test, expect } from './extension-test';
 test.describe('Talkient Extension - Options Navigation', () => {
   // Increase timeout for this test suite due to service worker initialization
   test.setTimeout(60000);
-  
+
   test('should navigate to options page from popup', async ({
     page,
     extensionId,
@@ -52,7 +52,7 @@ test.describe('Talkient Extension - Options Navigation', () => {
   test('should navigate to options page from control panel', async ({
     page,
     extensionId,
-    context,
+    context: _context,
   }) => {
     // Calculate the path to the local example test page
     const path = require('path');
@@ -81,7 +81,7 @@ test.describe('Talkient Extension - Options Navigation', () => {
 
       // Setup the settings button - directly add an event listener that uses chrome.runtime.openOptionsPage()
       const settingsButton = panel.querySelector(
-        '.talkient-control-btn.settings'
+        '.talkient-control-btn.settings',
       ) as HTMLElement;
       if (settingsButton) {
         settingsButton.addEventListener('click', () => {

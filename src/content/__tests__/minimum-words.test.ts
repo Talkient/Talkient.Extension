@@ -2,11 +2,7 @@
  * @jest-environment jsdom
  */
 
-import {
-  shouldProcessNode,
-  loadMinimumWordsFromStorage,
-  getMinimumWords,
-} from '../content-lib';
+import { shouldProcessNode, loadMinimumWordsFromStorage } from "../content-lib";
 
 // Mock for minimum words
 let testMinimumWords = 3;
@@ -34,11 +30,11 @@ const mockChrome = {
 };
 (global as any).chrome = mockChrome;
 
-describe('Minimum words functionality', () => {
+describe("Minimum words functionality", () => {
   let container: HTMLDivElement;
 
   beforeEach(async () => {
-    container = document.createElement('div');
+    container = document.createElement("div");
     document.body.appendChild(container);
 
     // Reset the mock implementation to default (3 words)
@@ -55,38 +51,38 @@ describe('Minimum words functionality', () => {
     document.body.removeChild(container);
   });
 
-  test('should return false for text with fewer words than minimum setting', () => {
-    const textNode = document.createTextNode('SingleWord');
+  test("should return false for text with fewer words than minimum setting", () => {
+    const textNode = document.createTextNode("SingleWord");
     container.appendChild(textNode);
 
     expect(shouldProcessNode(textNode)).toBe(false);
 
     // Two words is also below minimum
-    const twoWordsNode = document.createTextNode('Two Words');
+    const twoWordsNode = document.createTextNode("Two Words");
     container.appendChild(twoWordsNode);
 
     expect(shouldProcessNode(twoWordsNode)).toBe(false);
   });
 
-  test('should return true for text with exactly the minimum number of words', () => {
-    const article = document.createElement('article');
-    const textNode = document.createTextNode('Three Words Here');
+  test("should return true for text with exactly the minimum number of words", () => {
+    const article = document.createElement("article");
+    const textNode = document.createTextNode("Three Words Here");
     article.appendChild(textNode);
     container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should return true for text with more than minimum number of words', () => {
-    const article = document.createElement('article');
-    const textNode = document.createTextNode('This has four words');
+  test("should return true for text with more than minimum number of words", () => {
+    const article = document.createElement("article");
+    const textNode = document.createTextNode("This has four words");
     article.appendChild(textNode);
     container.appendChild(article);
 
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should handle custom minimum words setting', async () => {
+  test("should handle custom minimum words setting", async () => {
     // Change the mock to return a minimum of 4 words
     testMinimumWords = 4;
     mockChrome.storage.local.get.mockImplementation((keys, callback) => {
@@ -96,11 +92,11 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const threeWordsNode = document.createTextNode('Three Words Here');
+    const article = document.createElement("article");
+    const threeWordsNode = document.createTextNode("Three Words Here");
     article.appendChild(threeWordsNode);
 
-    const fourWordsNode = document.createTextNode('This Has Four Words');
+    const fourWordsNode = document.createTextNode("This Has Four Words");
     article.appendChild(fourWordsNode);
     container.appendChild(article);
 
@@ -111,7 +107,7 @@ describe('Minimum words functionality', () => {
     expect(shouldProcessNode(fourWordsNode)).toBe(true);
   });
 
-  test('should handle high minimum words value', async () => {
+  test("should handle high minimum words value", async () => {
     // Set a high minimum word count
     testMinimumWords = 5;
     mockChrome.storage.local.get.mockImplementation((keys, callback) => {
@@ -121,12 +117,12 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const fourWordsNode = document.createTextNode('This has four words');
+    const article = document.createElement("article");
+    const fourWordsNode = document.createTextNode("This has four words");
     article.appendChild(fourWordsNode);
 
     const fiveWordsNode = document.createTextNode(
-      'This has exactly five words'
+      "This has exactly five words",
     );
     article.appendChild(fiveWordsNode);
     container.appendChild(article);
@@ -137,7 +133,7 @@ describe('Minimum words functionality', () => {
     // Five words should be processed
     expect(shouldProcessNode(fiveWordsNode)).toBe(true);
   });
-  test('should default to 3 words if minimumWords setting is not available', async () => {
+  test("should default to 3 words if minimumWords setting is not available", async () => {
     // Mock the storage to return empty object (no minimumWords)
     mockChrome.storage.local.get.mockImplementation((keys, callback) => {
       callback({});
@@ -146,11 +142,11 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const twoWordsNode = document.createTextNode('Two Words');
+    const article = document.createElement("article");
+    const twoWordsNode = document.createTextNode("Two Words");
     article.appendChild(twoWordsNode);
 
-    const threeWordsNode = document.createTextNode('Three Words Here');
+    const threeWordsNode = document.createTextNode("Three Words Here");
     article.appendChild(threeWordsNode);
     container.appendChild(article);
 
@@ -161,10 +157,10 @@ describe('Minimum words functionality', () => {
     expect(shouldProcessNode(threeWordsNode)).toBe(true);
   });
 
-  test('should handle punctuation when counting words', () => {
-    const article = document.createElement('article');
+  test("should handle punctuation when counting words", () => {
+    const article = document.createElement("article");
     const textWithPunctuation = document.createTextNode(
-      'Hello, world! How are you?'
+      "Hello, world! How are you?",
     );
     article.appendChild(textWithPunctuation);
     container.appendChild(article);
@@ -173,10 +169,10 @@ describe('Minimum words functionality', () => {
     expect(shouldProcessNode(textWithPunctuation)).toBe(true);
   });
 
-  test('should handle multiple spaces between words', () => {
-    const article = document.createElement('article');
+  test("should handle multiple spaces between words", () => {
+    const article = document.createElement("article");
     const textWithExtraSpaces = document.createTextNode(
-      'Three    Words    Here'
+      "Three    Words    Here",
     );
     article.appendChild(textWithExtraSpaces);
     container.appendChild(article);

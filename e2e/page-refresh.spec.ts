@@ -8,13 +8,13 @@ test.describe('Talkient Page Refresh Tests', () => {
 
   test('should verify page refresh behavior with speech', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -33,12 +33,10 @@ test.describe('Talkient Page Refresh Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Verify that play buttons are added to the text elements
     const playButtonsCount = await page.evaluate(() => {
@@ -78,11 +76,10 @@ test.describe('Talkient Page Refresh Tests', () => {
     // Wait for potential speech to start or error
     await page.waitForTimeout(2000);
 
-    // Check if there is any highlighted text (regardless of TTS availability)
-    const hasHighlightedText = await page.evaluate(() => {
+    // Check if there is any highlighted text (evaluated for diagnostic purposes)
+    await page.evaluate(() => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
-
 
     // Note: In the test environment, TTS might not be available
     // so we'll just check for the beforeunload event handling
@@ -104,8 +101,7 @@ test.describe('Talkient Page Refresh Tests', () => {
     // Wait for play buttons to appear again
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Take a screenshot after page refresh
     await page.screenshot({
@@ -157,7 +153,7 @@ test.describe('Talkient Page Refresh Tests', () => {
       } catch (err) {
         console.error(
           '[Talkient] Test: Error clicking play button after refresh:',
-          err
+          err,
         );
       }
     });
@@ -198,7 +194,7 @@ test.describe('Talkient Page Refresh Tests', () => {
 
         console.log(
           '[Talkient] Test: beforeunload event caught:',
-          eventWasCaught
+          eventWasCaught,
         );
         return eventWasCaught;
       } catch (err) {
@@ -215,6 +211,5 @@ test.describe('Talkient Page Refresh Tests', () => {
     await page.screenshot({
       path: 'e2e-results/page-refresh-final-screenshot.png',
     });
-
   });
 });

@@ -1,10 +1,10 @@
-import { test, expect } from './extension-test';
+import { test } from './extension-test';
 
 test.describe('Talkient Content Script', () => {
   test('should inject content script into web pages', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Navigate to a test page
     await page.goto('https://example.com');

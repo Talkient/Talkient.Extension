@@ -14,7 +14,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/follow-highlight-test.html'
+      'test-pages/follow-highlight-test.html',
     );
 
     // Verify the file exists
@@ -38,8 +38,8 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
       .catch(() => {});
 
-    // Verify that play buttons are added to the text elements
-    const playButtonsCount = await page.evaluate(() => {
+    // Verify that play buttons are added to the text elements (evaluated for timing)
+    await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
@@ -85,7 +85,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     // Make sure followHighlight is enabled
     await optionsPage.evaluate(() => {
       const followHighlightToggle = document.getElementById(
-        'follow-highlight-toggle'
+        'follow-highlight-toggle',
       ) as HTMLInputElement;
       if (followHighlightToggle && !followHighlightToggle.checked) {
         followHighlightToggle.checked = true;
@@ -134,7 +134,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Use evaluate to click the button WITHOUT Playwright scrolling to it
     // This ensures we test the extension's scrolling behavior, not Playwright's
-    const clickResult = await page.evaluate(() => {
+    await page.evaluate(() => {
       const para = document.getElementById('para4');
       if (!para) throw new Error('Cannot find paragraph 4');
 
@@ -143,7 +143,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 4');
 
       const playButton = wrapper.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (!playButton)
         throw new Error('Cannot find play button for paragraph 4');
@@ -267,7 +267,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
         const wrapper = highlighted.closest('.talkient-processed');
         if (wrapper) {
           const playButton = wrapper.querySelector(
-            '.talkient-play-button'
+            '.talkient-play-button',
           ) as HTMLButtonElement;
           if (playButton) {
             playButton.click();
@@ -327,7 +327,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 2');
 
       const playButton = wrapper.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (!playButton)
         throw new Error('Cannot find play button for paragraph 2');
@@ -350,7 +350,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // If not highlighted naturally, simulate it
     if (!para2IsHighlighted) {
-      const scrollInfo = await page.evaluate(() => {
+      await page.evaluate(() => {
         // Clear any existing highlights first
         document.querySelectorAll('.talkient-highlighted').forEach((el) => {
           el.classList.remove('talkient-highlighted');
@@ -396,7 +396,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
             behavior: 'smooth',
           });
           console.log(
-            `Manually triggered scroll for para2 to position: ${scrollTo}`
+            `Manually triggered scroll for para2 to position: ${scrollTo}`,
           );
           return { ...info, targetScrollPosition: scrollTo };
         }
@@ -436,7 +436,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       expect(para2FinallyVisible).toBe(true);
       if (!para2FinallyVisible) {
         console.error(
-          'FOLLOW HIGHLIGHT BUG: Para2 is highlighted but NOT visible and NO scrolling occurred!'
+          'FOLLOW HIGHLIGHT BUG: Para2 is highlighted but NOT visible and NO scrolling occurred!',
         );
       } else {
       }
@@ -474,7 +474,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
         const wrapper = highlighted.closest('.talkient-processed');
         if (wrapper) {
           const playButton = wrapper.querySelector(
-            '.talkient-play-button'
+            '.talkient-play-button',
           ) as HTMLButtonElement;
           if (playButton) {
             playButton.click();
@@ -491,7 +491,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     await optionsPage2.evaluate(() => {
       const followHighlightToggle = document.getElementById(
-        'follow-highlight-toggle'
+        'follow-highlight-toggle',
       ) as HTMLInputElement;
       if (followHighlightToggle && followHighlightToggle.checked) {
         followHighlightToggle.checked = false;
@@ -530,7 +530,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 3');
 
       const playButton = wrapper.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (!playButton)
         throw new Error('Cannot find play button for paragraph 3');
@@ -552,7 +552,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
     // Verify that NO significant scrolling occurred (allowing for minor fluctuations)
     const scrollDifference = Math.abs(
-      scrollAfterDisabledTest - scrollBeforeDisabledTest
+      scrollAfterDisabledTest - scrollBeforeDisabledTest,
     );
     expect(scrollDifference).toBeLessThan(10);
   });

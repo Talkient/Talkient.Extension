@@ -119,17 +119,17 @@ test.describe('Talkient Extension Popup', () => {
 
     // Check the link has subtle/light styling (color should be light gray)
     const color = await reportLink.evaluate(
-      (el) => window.getComputedStyle(el).color
+      (el) => window.getComputedStyle(el).color,
     );
     // The color should be a light gray (#bdc3c7 = rgb(189, 195, 199))
     // Handle both rgb() and rgba() formats, with flexible spacing
     expect(color).toMatch(
-      /rgba?\(189,\s*195,\s*199(?:,\s*1)?\)|rgb\(189, 195, 199\)/
+      /rgba?\(189,\s*195,\s*199(?:,\s*1)?\)|rgb\(189, 195, 199\)/,
     );
 
     // Verify font size is small
     const fontSize = await reportLink.evaluate(
-      (el) => window.getComputedStyle(el).fontSize
+      (el) => window.getComputedStyle(el).fontSize,
     );
     expect(fontSize).toBe('11px');
   });
@@ -167,8 +167,6 @@ test.describe('Talkient Extension Popup', () => {
 
     // Verify it's related to Talkient (either in URL or we're being redirected from the correct repo)
     // GitHub might redirect to login, so we make this assertion optional by checking both conditions
-    const isTalkientUrl =
-      url.includes('talkient-public') || url.includes('Talkient');
     const isGitHubDomain = url.includes('github.com');
 
     // Either we're on the talkient page, or we've been redirected to GitHub (which is acceptable)
@@ -237,12 +235,12 @@ test.describe('Talkient Extension Popup', () => {
 
     // Header should be above settings link
     expect(headerBox!.y + headerBox!.height).toBeLessThanOrEqual(
-      settingsBox!.y
+      settingsBox!.y,
     );
 
     // Settings link should be above footer
     expect(settingsBox!.y + settingsBox!.height).toBeLessThanOrEqual(
-      footerBox!.y
+      footerBox!.y,
     );
   });
 
@@ -258,7 +256,7 @@ test.describe('Talkient Extension Popup', () => {
 
     // Get initial background color
     const initialBgColor = await settingsLink.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor
+      (el) => window.getComputedStyle(el).backgroundColor,
     );
 
     // Hover over the settings link
@@ -269,7 +267,7 @@ test.describe('Talkient Extension Popup', () => {
 
     // Get hover background color
     const hoverBgColor = await settingsLink.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor
+      (el) => window.getComputedStyle(el).backgroundColor,
     );
 
     // Colors should be different on hover

@@ -3,17 +3,17 @@
 
 // Global state for text highlighting
 let currentHighlightedElement: HTMLElement | null = null;
-let currentHighlightingStyle: string = 'default';
+let currentHighlightingStyle: string = "default";
 
 // Function to load highlight style from storage
 export function loadHighlightStyleFromStorage(): void {
-  chrome.storage.local.get(['highlightStyle'], (result) => {
-    if (result.highlightStyle && typeof result.highlightStyle === 'string') {
+  chrome.storage.local.get(["highlightStyle"], (result) => {
+    if (result.highlightStyle && typeof result.highlightStyle === "string") {
       const style = result.highlightStyle;
       // Validate that the style is one of the allowed values
-      if (['default', 'minimal', 'bold', 'elegant'].includes(style)) {
+      if (["default", "minimal", "bold", "elegant"].includes(style)) {
         setHighlightingStyle(
-          style as 'default' | 'minimal' | 'bold' | 'elegant'
+          style as "default" | "minimal" | "bold" | "elegant",
         );
       }
     }
@@ -22,7 +22,7 @@ export function loadHighlightStyleFromStorage(): void {
 
 // Function to set the highlighting style
 export function setHighlightingStyle(
-  style: 'default' | 'minimal' | 'bold' | 'elegant'
+  style: "default" | "minimal" | "bold" | "elegant",
 ): void {
   currentHighlightingStyle = style;
 }
@@ -41,10 +41,10 @@ export function highlightText(element: HTMLElement, style?: string): void {
   const activeStyle = style || currentHighlightingStyle;
 
   // Add highlight class to the element
-  element.classList.add('talkient-highlighted');
+  element.classList.add("talkient-highlighted");
 
   // Add style modifier if specified
-  if (activeStyle !== 'default') {
+  if (activeStyle !== "default") {
     element.classList.add(`style-${activeStyle}`);
   }
 
@@ -57,26 +57,26 @@ export function highlightText(element: HTMLElement, style?: string): void {
 // Function to clear text highlighting
 export function clearHighlight(): void {
   if (currentHighlightedElement) {
-    currentHighlightedElement.classList.remove('talkient-highlighted');
+    currentHighlightedElement.classList.remove("talkient-highlighted");
     // Remove style modifiers
     currentHighlightedElement.classList.remove(
-      'style-minimal',
-      'style-bold',
-      'style-elegant'
+      "style-minimal",
+      "style-bold",
+      "style-elegant",
     );
     // Clear any inline styles that might have been set
-    currentHighlightedElement.style.backgroundColor = '';
-    currentHighlightedElement.style.transition = '';
+    currentHighlightedElement.style.backgroundColor = "";
+    currentHighlightedElement.style.transition = "";
     currentHighlightedElement = null;
   }
 
   // Also clear any other highlighted elements (safety net)
-  document.querySelectorAll('.talkient-highlighted').forEach((element) => {
-    element.classList.remove('talkient-highlighted');
-    element.classList.remove('style-minimal', 'style-bold', 'style-elegant');
+  document.querySelectorAll(".talkient-highlighted").forEach((element) => {
+    element.classList.remove("talkient-highlighted");
+    element.classList.remove("style-minimal", "style-bold", "style-elegant");
     const htmlElement = element as HTMLElement;
-    htmlElement.style.backgroundColor = '';
-    htmlElement.style.transition = '';
+    htmlElement.style.backgroundColor = "";
+    htmlElement.style.transition = "";
   });
 }
 
@@ -87,17 +87,17 @@ export function getCurrentHighlightedElement(): HTMLElement | null {
 
 // Global function for testing/debugging highlighting styles
 export function testHighlightingStyle(
-  style: 'default' | 'minimal' | 'bold' | 'elegant'
+  style: "default" | "minimal" | "bold" | "elegant",
 ): void {
   // Find the first text element and highlight it with the specified style
   const firstTextElement = document.querySelector(
-    'p, span, div'
+    "p, span, div",
   ) as HTMLElement;
   if (firstTextElement) {
     highlightText(firstTextElement, style);
     console.log(
       `Applied ${style} highlighting style to:`,
-      firstTextElement.textContent?.substring(0, 50)
+      firstTextElement.textContent?.substring(0, 50),
     );
   }
 }
@@ -106,7 +106,7 @@ export function testHighlightingStyle(
 export function scrollToHighlightedElement(element: HTMLElement): void {
   // Check if chrome API is available
   if (
-    typeof chrome === 'undefined' ||
+    typeof chrome === "undefined" ||
     !chrome.storage ||
     !chrome.storage.local
   ) {
@@ -114,7 +114,7 @@ export function scrollToHighlightedElement(element: HTMLElement): void {
   }
 
   // Check if followHighlight setting is enabled (defaults to true if not set)
-  chrome.storage.local.get(['followHighlight'], (result) => {
+  chrome.storage.local.get(["followHighlight"], (result) => {
     const followHighlight = result.followHighlight !== false;
 
     if (followHighlight && element) {
@@ -137,16 +137,25 @@ export function scrollToHighlightedElement(element: HTMLElement): void {
         // Smoothly scroll to the position
         window.scrollTo({
           top: scrollTo,
-          behavior: 'smooth',
+          behavior: "smooth",
         });
       }
     }
   });
 }
 
+// Extend Window interface for Talkient testing functions
+declare global {
+  interface Window {
+    talkientSetStyle?: typeof setHighlightingStyle;
+    talkientTestStyle?: typeof testHighlightingStyle;
+    talkientGetStyle?: typeof getHighlightingStyle;
+  }
+}
+
 // Make functions available globally for console testing
-if (typeof window !== 'undefined') {
-  (window as any).talkientSetStyle = setHighlightingStyle;
-  (window as any).talkientTestStyle = testHighlightingStyle;
-  (window as any).talkientGetStyle = getHighlightingStyle;
+if (typeof window !== "undefined") {
+  window.talkientSetStyle = setHighlightingStyle;
+  window.talkientTestStyle = testHighlightingStyle;
+  window.talkientGetStyle = getHighlightingStyle;
 }

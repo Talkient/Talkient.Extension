@@ -3,15 +3,15 @@ import { test, expect } from './extension-test';
 test.describe('Talkient Extension Web Page Access Tests', () => {
   test('should inject content script and add play buttons on Microsoft Learn page', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Calculate the path to the local Microsoft Learn test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'semantic-kernel-agent-contextual-function-selection.html'
+      'semantic-kernel-agent-contextual-function-selection.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -24,7 +24,6 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     // Check that the page title is as expected - corrected the title check
     const pageTitle = await page.title();
     expect(pageTitle).toContain('Contextual Function Selection');
-
 
     // Wait a moment to ensure content script is loaded and has time to process text
     await page.waitForTimeout(3000);
@@ -124,7 +123,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
       // Find the play button in this wrapper
       const playButton = wrapper.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (!playButton) {
         console.log('Play button not found in wrapper');
@@ -155,7 +154,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
         const wrapper = testPara.closest('.talkient-processed');
         if (wrapper) {
           const playButton = wrapper.querySelector(
-            '.talkient-play-button'
+            '.talkient-play-button',
           ) as HTMLButtonElement;
           if (playButton) {
             playButton.click(); // Click again to stop
@@ -167,15 +166,15 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
   test('should inject content script and add play buttons on AWS blog page', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Calculate the path to the local AWS blog test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html'
+      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -188,9 +187,8 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     // Check that the page title contains expected text
     const pageTitle = await page.title();
     expect(pageTitle).toContain(
-      'Prevent factual errors from LLM hallucinations'
+      'Prevent factual errors from LLM hallucinations',
     );
-
 
     // Wait a moment to ensure content script is loaded and has time to process text
     await page.waitForTimeout(3000);
@@ -229,7 +227,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
       // Find and adjust the speech rate slider
       const slider = document.querySelector(
-        '.talkient-rate-slider'
+        '.talkient-rate-slider',
       ) as HTMLInputElement;
       if (slider) {
         slider.value = '1.5';
@@ -257,7 +255,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     await page.evaluate(() => {
       // Toggle the play buttons on/off
       const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
+        '.talkient-toggle-input',
       ) as HTMLInputElement;
       if (toggleInput) {
         toggleInput.checked = !toggleInput.checked;
@@ -276,7 +274,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     // Toggle back on
     await page.evaluate(() => {
       const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
+        '.talkient-toggle-input',
       ) as HTMLInputElement;
       if (toggleInput && !toggleInput.checked) {
         toggleInput.checked = true;
@@ -287,15 +285,15 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
 
   test('should test different highlighting styles', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Calculate the path to the local AWS blog test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html'
+      'aws-blogs-prevent-factual-errors-from-llm-hallucinations-with-mathematically-sound-automated-reasoning-checks-preview.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -308,7 +306,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     await page.evaluate(async () => {
       // Click the first play button with the default style
       const firstPlayButton = document.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (firstPlayButton) {
         firstPlayButton.click();
@@ -326,7 +324,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     // Reset by clicking the button again
     await page.evaluate(() => {
       const firstPlayButton = document.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (firstPlayButton) {
         firstPlayButton.click();
@@ -339,7 +337,7 @@ test.describe('Talkient Extension Web Page Access Tests', () => {
     await page.evaluate(async () => {
       // Simulate a Ctrl+Click on the first play button
       const firstPlayButton = document.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       ) as HTMLButtonElement;
       if (firstPlayButton) {
         // Create a click event with the Ctrl key pressed

@@ -8,13 +8,13 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
 
   test('should test complex play-pause-resume scenarios with interruption verification', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -32,7 +32,6 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
     // Check that the page title is as expected
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
-
 
     // Force content script to process the page by triggering reprocessing
     await page.evaluate(() => {
@@ -68,7 +67,7 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
         try {
           const para = document.getElementById(id);
           const button = para?.querySelector(
-            '.talkient-play-button'
+            '.talkient-play-button',
           ) as HTMLButtonElement;
           if (button) {
             // Add delay for stability
@@ -84,8 +83,9 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
       }, paragraphId);
     };
 
-    // Debug helper to see button states
-    const debugButtonStates = async () => {
+    // Debug helper to see button states (kept for potential debugging)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _debugButtonStates = async () => {
       return await page.evaluate(() => {
         const allButtons = document.querySelectorAll('.talkient-play-button');
         return Array.from(allButtons).map((btn, index) => {
@@ -99,7 +99,6 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
         });
       });
     };
-
 
     // PHASE 1: Play text1 (para1)
 
@@ -201,7 +200,6 @@ test.describe('Talkient Complex Play-Pause-Resume Functionality Tests', () => {
       .catch(() => false);
 
     if (controlPanelExists) {
-
       // Expand control panel if collapsed
       await page.evaluate(async () => {
         try {

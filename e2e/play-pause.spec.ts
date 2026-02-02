@@ -8,13 +8,13 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
 
   test('should extensively test play and pause functionality across multiple sections', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -33,25 +33,22 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-
     // Wait for content script to process the page and add play buttons - use waitForSelector instead of fixed timeout
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
-    // Verify that play buttons are added to the text elements
-    const playButtonsCount = await page.evaluate(() => {
+    // Verify that play buttons are added to the text elements (evaluated for timing)
+    await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
     // Log diagnostic information
 
-    // Check if any elements are processed
-    const processedElements = await page.evaluate(() => {
+    // Check if any elements are processed (evaluated for timing)
+    await page.evaluate(() => {
       return document.querySelectorAll('.talkient-processed').length;
     });
-
 
     // Force content script to process the page by triggering a custom event
     await page.evaluate(() => {
@@ -73,7 +70,6 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
     const playButtonsCountAfter = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
-
 
     // We should have multiple play buttons (one for each paragraph)
     expect(playButtonsCountAfter).toBeGreaterThan(5);
@@ -145,19 +141,19 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
           try {
             // Find the specific button for the given paragraph if possible
             let targetButton = document.querySelector(
-              `#${stepInfo.id} .talkient-play-button`
+              `#${stepInfo.id} .talkient-play-button`,
             ) as HTMLButtonElement;
 
             // If not found by ID, fall back to using all buttons
             if (!targetButton) {
               const allButtons = document.querySelectorAll(
-                '.talkient-play-button'
+                '.talkient-play-button',
               );
               if (allButtons.length > 0) {
                 // Use a different button for each step to test multiple buttons
                 const buttonIndex = stepInfo.index % allButtons.length;
                 console.log(
-                  `Clicking button ${buttonIndex + 1} of ${allButtons.length}`
+                  `Clicking button ${buttonIndex + 1} of ${allButtons.length}`,
                 );
                 targetButton = allButtons[buttonIndex] as HTMLButtonElement;
               } else {
@@ -175,7 +171,7 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
             return false;
           }
         },
-        { index: i, id: step.id, action: step.action }
+        { index: i, id: step.id, action: step.action },
       );
 
       expect(interactionResult).toBeTruthy();
@@ -298,6 +294,5 @@ test.describe('Talkient Play-Pause Functionality Tests', () => {
         path: 'e2e-results/play-pause-final-screenshot.png',
       });
     }
-
   });
 });

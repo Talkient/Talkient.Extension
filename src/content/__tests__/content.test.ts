@@ -10,12 +10,12 @@ import {
   loadButtonPositionFromStorage,
   getButtonPosition,
   setButtonPosition,
-} from '../content-lib';
+} from "../content-lib";
 
-import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
+import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from "../icons";
 
 // Mock runtime-utils before importing content-lib
-jest.mock('../runtime-utils', () => ({
+jest.mock("../runtime-utils", () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     const mockChrome = (global as any).chrome;
@@ -39,7 +39,7 @@ const mockChrome = {
   storage: {
     local: {
       get: jest.fn((keys, callback) => {
-        callback({ highlightStyle: 'default' });
+        callback({ highlightStyle: "default" });
       }),
       set: jest.fn(),
     },
@@ -50,59 +50,59 @@ const mockChrome = {
 };
 (global as any).chrome = mockChrome;
 
-describe('createPlayButton', () => {
+describe("createPlayButton", () => {
   let button: HTMLButtonElement;
 
   beforeEach(() => {
     button = createPlayButton();
   });
 
-  test('should create a button element', () => {
+  test("should create a button element", () => {
     expect(button).toBeInstanceOf(HTMLButtonElement);
   });
 
-  test('should have the correct play SVG as innerHTML', () => {
-    const playIconSvg = button.querySelector('svg');
+  test("should have the correct play SVG as innerHTML", () => {
+    const playIconSvg = button.querySelector("svg");
     expect(playIconSvg).not.toBeNull();
-    expect(playIconSvg?.getAttribute('width')).toBe('10');
-    expect(playIconSvg?.getAttribute('height')).toBe('10');
-    expect(playIconSvg?.getAttribute('viewBox')).toBe('0 0 24 24');
-    expect(playIconSvg?.getAttribute('fill')).toBe('currentColor');
+    expect(playIconSvg?.getAttribute("width")).toBe("10");
+    expect(playIconSvg?.getAttribute("height")).toBe("10");
+    expect(playIconSvg?.getAttribute("viewBox")).toBe("0 0 24 24");
+    expect(playIconSvg?.getAttribute("fill")).toBe("currentColor");
     expect(isSvgPlayIcon(playIconSvg as SVGElement)).toBe(true);
   });
 
-  test('should have the correct CSS styles', () => {
+  test("should have the correct CSS styles", () => {
     const cssText = button.style.cssText;
-    expect(cssText).toContain('display: flex');
-    expect(cssText).toContain('align-items: center');
-    expect(cssText).toContain('justify-content: center');
+    expect(cssText).toContain("display: flex");
+    expect(cssText).toContain("align-items: center");
+    expect(cssText).toContain("justify-content: center");
   });
 
-  test('should be clickable', () => {
+  test("should be clickable", () => {
     const clickHandler = jest.fn();
-    button.addEventListener('click', clickHandler);
+    button.addEventListener("click", clickHandler);
     button.click();
     expect(clickHandler).toHaveBeenCalledTimes(1);
   });
 
-  test('should be focusable', () => {
+  test("should be focusable", () => {
     document.body.appendChild(button);
     button.focus();
     expect(document.activeElement).toBe(button);
     document.body.removeChild(button);
   });
 
-  test('should have proper button semantics', () => {
-    expect(button.tagName).toBe('BUTTON');
-    expect(button.type).toBe('submit'); // Default button type
+  test("should have proper button semantics", () => {
+    expect(button.tagName).toBe("BUTTON");
+    expect(button.type).toBe("submit"); // Default button type
   });
 });
 
-describe('shouldProcessNode', () => {
+describe("shouldProcessNode", () => {
   let container: HTMLDivElement;
 
   beforeEach(async () => {
-    container = document.createElement('div');
+    container = document.createElement("div");
     document.body.appendChild(container);
 
     // Load minimum words setting
@@ -115,32 +115,32 @@ describe('shouldProcessNode', () => {
     document.body.removeChild(container);
   });
 
-  test('should return false for null node', () => {
+  test("should return false for null node", () => {
     expect(shouldProcessNode(null as any)).toBe(false);
   });
 
-  test('should return false for non-text nodes', () => {
-    const div = document.createElement('div');
+  test("should return false for non-text nodes", () => {
+    const div = document.createElement("div");
     expect(shouldProcessNode(div)).toBe(false);
   });
 
-  test('should return false for empty text nodes', () => {
-    const textNode = document.createTextNode('');
+  test("should return false for empty text nodes", () => {
+    const textNode = document.createTextNode("");
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for whitespace-only text nodes', () => {
-    const textNode = document.createTextNode('   \n\t  ');
+  test("should return false for whitespace-only text nodes", () => {
+    const textNode = document.createTextNode("   \n\t  ");
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for single character text nodes', () => {
-    const textNode = document.createTextNode('a');
+  test("should return false for single character text nodes", () => {
+    const textNode = document.createTextNode("a");
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in script tags', () => {
-    const script = document.createElement('script');
+  test("should return false for text nodes in script tags", () => {
+    const script = document.createElement("script");
     const textNode = document.createTextNode('console.log("test")');
     script.appendChild(textNode);
     container.appendChild(script);
@@ -148,35 +148,35 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in style tags', () => {
-    const style = document.createElement('style');
-    const textNode = document.createTextNode('body { color: red; }');
+  test("should return false for text nodes in style tags", () => {
+    const style = document.createElement("style");
+    const textNode = document.createTextNode("body { color: red; }");
     style.appendChild(textNode);
     container.appendChild(style);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in button tags', () => {
-    const button = document.createElement('button');
-    const textNode = document.createTextNode('Click me');
+  test("should return false for text nodes in button tags", () => {
+    const button = document.createElement("button");
+    const textNode = document.createTextNode("Click me");
     button.appendChild(textNode);
     container.appendChild(button);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in input tags', () => {
-    const input = document.createElement('input');
-    const textNode = document.createTextNode('input text');
+  test("should return false for text nodes in input tags", () => {
+    const input = document.createElement("input");
+    const textNode = document.createTextNode("input text");
     input.appendChild(textNode);
     container.appendChild(input);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in code tags', () => {
-    const code = document.createElement('code');
+  test("should return false for text nodes in code tags", () => {
+    const code = document.createElement("code");
     const textNode = document.createTextNode('console.log("hello world")');
     code.appendChild(textNode);
     container.appendChild(code);
@@ -184,11 +184,11 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes in nested code tags', () => {
-    const pre = document.createElement('pre');
-    const code = document.createElement('code');
+  test("should return false for text nodes in nested code tags", () => {
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
     const textNode = document.createTextNode(
-      'function example() {\n  return "test";\n}'
+      'function example() {\n  return "test";\n}',
     );
     code.appendChild(textNode);
     pre.appendChild(code);
@@ -197,34 +197,34 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false if parent already has a play button', () => {
-    const div = document.createElement('div');
-    const textNode = document.createTextNode('This is a test');
+  test("should return false if parent already has a play button", () => {
+    const div = document.createElement("div");
+    const textNode = document.createTextNode("This is a test");
     div.appendChild(textNode);
     container.appendChild(div);
 
     // Add a play button to the parent
-    const playButton = document.createElement('button');
-    playButton.classList.add('talkient-play-button');
+    const playButton = document.createElement("button");
+    playButton.classList.add("talkient-play-button");
     div.appendChild(playButton);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false if parent is already processed', () => {
-    const div = document.createElement('div');
-    const textNode = document.createTextNode('This is a test');
+  test("should return false if parent is already processed", () => {
+    const div = document.createElement("div");
+    const textNode = document.createTextNode("This is a test");
     div.appendChild(textNode);
-    div.classList.add('talkient-processed');
+    div.classList.add("talkient-processed");
     container.appendChild(div);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return true for valid text nodes', () => {
-    const article = document.createElement('article');
-    const div = document.createElement('div');
-    const textNode = document.createTextNode('This is a valid text node');
+  test("should return true for valid text nodes", () => {
+    const article = document.createElement("article");
+    const div = document.createElement("div");
+    const textNode = document.createTextNode("This is a valid text node");
     div.appendChild(textNode);
     article.appendChild(div);
     container.appendChild(article);
@@ -232,21 +232,21 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should return false for text nodes not inside article tags', () => {
-    const div = document.createElement('div');
-    const textNode = document.createTextNode('This text is not in an article');
+  test("should return false for text nodes not inside article tags", () => {
+    const div = document.createElement("div");
+    const textNode = document.createTextNode("This text is not in an article");
     div.appendChild(textNode);
     container.appendChild(div);
 
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return true for text nodes deeply nested inside article tags', () => {
-    const article = document.createElement('article');
-    const section = document.createElement('section');
-    const div = document.createElement('div');
-    const p = document.createElement('p');
-    const textNode = document.createTextNode('Deeply nested valid text node');
+  test("should return true for text nodes deeply nested inside article tags", () => {
+    const article = document.createElement("article");
+    const section = document.createElement("section");
+    const div = document.createElement("div");
+    const p = document.createElement("p");
+    const textNode = document.createTextNode("Deeply nested valid text node");
     p.appendChild(textNode);
     div.appendChild(p);
     section.appendChild(div);
@@ -256,11 +256,11 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should return true for text nodes with multiple characters', async () => {
-    const article = document.createElement('article');
-    const div = document.createElement('div');
+  test("should return true for text nodes with multiple characters", async () => {
+    const article = document.createElement("article");
+    const div = document.createElement("div");
     // Use three words to satisfy the minimum words requirement
-    const textNode = document.createTextNode('three words here');
+    const textNode = document.createTextNode("three words here");
     div.appendChild(textNode);
     article.appendChild(div);
     container.appendChild(article);
@@ -268,11 +268,11 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should return false for code elements inside article tags', () => {
-    const article = document.createElement('article');
-    const code = document.createElement('code');
+  test("should return false for code elements inside article tags", () => {
+    const article = document.createElement("article");
+    const code = document.createElement("code");
     const textNode = document.createTextNode(
-      'console.log("test code in article")'
+      'console.log("test code in article")',
     );
     code.appendChild(textNode);
     article.appendChild(code);
@@ -281,11 +281,11 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for script elements inside article tags', () => {
-    const article = document.createElement('article');
-    const script = document.createElement('script');
+  test("should return false for script elements inside article tags", () => {
+    const article = document.createElement("article");
+    const script = document.createElement("script");
     const textNode = document.createTextNode(
-      'console.log("test script in article")'
+      'console.log("test script in article")',
     );
     script.appendChild(textNode);
     article.appendChild(script);
@@ -294,10 +294,10 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for button elements inside article tags', () => {
-    const article = document.createElement('article');
-    const button = document.createElement('button');
-    const textNode = document.createTextNode('Click me button in article');
+  test("should return false for button elements inside article tags", () => {
+    const article = document.createElement("article");
+    const button = document.createElement("button");
+    const textNode = document.createTextNode("Click me button in article");
     button.appendChild(textNode);
     article.appendChild(button);
     container.appendChild(article);
@@ -305,13 +305,13 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for elements in control panel even if inside article', () => {
-    const article = document.createElement('article');
-    const controlPanel = document.createElement('div');
-    controlPanel.id = 'talkient-control-panel';
-    const div = document.createElement('div');
+  test("should return false for elements in control panel even if inside article", () => {
+    const article = document.createElement("article");
+    const controlPanel = document.createElement("div");
+    controlPanel.id = "talkient-control-panel";
+    const div = document.createElement("div");
     const textNode = document.createTextNode(
-      'text in control panel inside article'
+      "text in control panel inside article",
     );
     div.appendChild(textNode);
     controlPanel.appendChild(div);
@@ -321,11 +321,11 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for hidden elements inside article tags', () => {
-    const article = document.createElement('article');
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.display = 'none';
-    const textNode = document.createTextNode('hidden text in article element');
+  test("should return false for hidden elements inside article tags", () => {
+    const article = document.createElement("article");
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.display = "none";
+    const textNode = document.createTextNode("hidden text in article element");
     hiddenDiv.appendChild(textNode);
     article.appendChild(hiddenDiv);
     container.appendChild(article);
@@ -333,19 +333,19 @@ describe('shouldProcessNode', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return true for multiple article tags on same page', () => {
+  test("should return true for multiple article tags on same page", () => {
     // Create first article
-    const article1 = document.createElement('article');
-    const div1 = document.createElement('div');
-    const textNode1 = document.createTextNode('text in first article');
+    const article1 = document.createElement("article");
+    const div1 = document.createElement("div");
+    const textNode1 = document.createTextNode("text in first article");
     div1.appendChild(textNode1);
     article1.appendChild(div1);
     container.appendChild(article1);
 
     // Create second article
-    const article2 = document.createElement('article');
-    const div2 = document.createElement('div');
-    const textNode2 = document.createTextNode('text in second article');
+    const article2 = document.createElement("article");
+    const div2 = document.createElement("div");
+    const textNode2 = document.createTextNode("text in second article");
     div2.appendChild(textNode2);
     article2.appendChild(div2);
     container.appendChild(article2);
@@ -356,7 +356,7 @@ describe('shouldProcessNode', () => {
   });
 });
 
-describe('processTextElements', () => {
+describe("processTextElements", () => {
   beforeEach(() => {
     // Mock document.createTreeWalker
     const mockWalker = {
@@ -367,39 +367,39 @@ describe('processTextElements', () => {
     document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
 
     // Mock requestAnimationFrame
-    (global as any).requestAnimationFrame = jest.fn((callback) => {
+    (global as any).requestAnimationFrame = jest.fn((callback: () => void) => {
       setTimeout(callback, 0);
       return 1;
     });
   });
 
-  test('should log processing message', () => {
-    const consoleSpy = jest.spyOn(console, 'log');
+  test("should log processing message", () => {
+    const consoleSpy = jest.spyOn(console, "log");
     processTextElements();
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[Talkient] Processing the text elements...'
+      "[Talkient] Processing the text elements...",
     );
   });
 
-  test('should create tree walker with correct parameters', () => {
+  test("should create tree walker with correct parameters", () => {
     processTextElements();
     expect(document.createTreeWalker).toHaveBeenCalledWith(
       document.body,
       NodeFilter.SHOW_TEXT,
-      expect.any(Object)
+      expect.any(Object),
     );
   });
 });
 
-describe('Content Script Message Handling', () => {
+describe("Content Script Message Handling", () => {
   let container: HTMLDivElement;
   let playButton: HTMLButtonElement;
 
   beforeEach(() => {
-    container = document.createElement('div');
-    playButton = document.createElement('button');
-    playButton.classList.add('talkient-play-button');
-    playButton.innerHTML = getSvgIcon('pause');
+    container = document.createElement("div");
+    playButton = document.createElement("button");
+    playButton.classList.add("talkient-play-button");
+    playButton.innerHTML = getSvgIcon("pause");
     container.appendChild(playButton);
     document.body.appendChild(container);
 
@@ -414,15 +414,15 @@ describe('Content Script Message Handling', () => {
     jest.resetModules(); // Reset module cache
   });
 
-  test('should handle SPEECH_ENDED message correctly', () => {
+  test("should handle SPEECH_ENDED message correctly", () => {
     // Simulate highlighting
-    const testElement = document.createElement('span');
-    testElement.textContent = 'Test content';
+    const testElement = document.createElement("span");
+    testElement.textContent = "Test content";
     container.appendChild(testElement);
     highlightText(testElement);
 
     // Import content script to trigger message listener registration
-    require('../content');
+    require("../content");
 
     // Verify that the message listener was registered
     expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled();
@@ -432,36 +432,36 @@ describe('Content Script Message Handling', () => {
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Simulate SPEECH_ENDED message
-    const message = { type: 'SPEECH_ENDED' };
+    const message = { type: "SPEECH_ENDED" };
     const sender = {};
     const sendResponse = jest.fn();
 
     messageListener(message, sender, sendResponse);
 
     // Check that play button is reset to play icon
-    const svg = playButton.querySelector('svg');
+    const svg = playButton.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
     // Check that highlighting is cleared
     expect(getCurrentHighlightedElement()).toBeNull();
-    expect(testElement.classList.contains('talkient-highlighted')).toBe(false);
+    expect(testElement.classList.contains("talkient-highlighted")).toBe(false);
   });
 
-  test('should reset all play buttons on SPEECH_ENDED', () => {
+  test("should reset all play buttons on SPEECH_ENDED", () => {
     // Create multiple play buttons
-    const playButton2 = document.createElement('button');
-    playButton2.classList.add('talkient-play-button');
-    playButton2.innerHTML = getSvgIcon('pause');
+    const playButton2 = document.createElement("button");
+    playButton2.classList.add("talkient-play-button");
+    playButton2.innerHTML = getSvgIcon("pause");
     container.appendChild(playButton2);
 
-    const playButton3 = document.createElement('button');
-    playButton3.classList.add('talkient-play-button');
-    playButton3.innerHTML = getSvgIcon('pause');
+    const playButton3 = document.createElement("button");
+    playButton3.classList.add("talkient-play-button");
+    playButton3.innerHTML = getSvgIcon("pause");
     container.appendChild(playButton3);
 
     // Import content script
-    require('../content');
+    require("../content");
 
     // Verify that the message listener was registered
     expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled();
@@ -471,24 +471,24 @@ describe('Content Script Message Handling', () => {
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Simulate SPEECH_ENDED message
-    const message = { type: 'SPEECH_ENDED' };
+    const message = { type: "SPEECH_ENDED" };
     messageListener(message, {}, jest.fn());
 
     // Check that all play buttons are reset to play icon
-    document.querySelectorAll('.talkient-play-button').forEach((button) => {
-      const svg = (button as HTMLButtonElement).querySelector('svg');
+    document.querySelectorAll(".talkient-play-button").forEach((button) => {
+      const svg = (button as HTMLButtonElement).querySelector("svg");
       expect(svg).not.toBeNull();
       expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
     });
   });
 
-  test('should ignore unknown message types', () => {
-    const testElement = document.createElement('span');
+  test("should ignore unknown message types", () => {
+    const testElement = document.createElement("span");
     container.appendChild(testElement);
     highlightText(testElement);
 
     // Import content script
-    require('../content');
+    require("../content");
 
     // Verify that the message listener was registered
     expect(mockChrome.runtime.onMessage.addListener).toHaveBeenCalled();
@@ -498,24 +498,24 @@ describe('Content Script Message Handling', () => {
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Simulate unknown message
-    const message = { type: 'UNKNOWN_TYPE' };
+    const message = { type: "UNKNOWN_TYPE" };
     messageListener(message, {}, jest.fn());
 
     // Check that nothing changed
-    const svg = playButton.querySelector('svg');
+    const svg = playButton.querySelector("svg");
     expect(isSvgPauseIcon(svg as SVGElement)).toBe(true);
     expect(getCurrentHighlightedElement()).toBe(testElement);
   });
 
-  test('should handle SPEECH_CANCELLED message correctly', () => {
+  test("should handle SPEECH_CANCELLED message correctly", () => {
     // Simulate highlighting
-    const testElement = document.createElement('span');
-    testElement.textContent = 'Test content';
+    const testElement = document.createElement("span");
+    testElement.textContent = "Test content";
     container.appendChild(testElement);
     highlightText(testElement);
 
     // Import content script
-    require('../content');
+    require("../content");
 
     // Get the registered message listener
     const messageListener =
@@ -524,40 +524,40 @@ describe('Content Script Message Handling', () => {
     // Need to mock the getCurrentHighlightedElement function
     // since it's not actually changing the highlight in the test environment
     jest
-      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .spyOn(require("../highlight"), "getCurrentHighlightedElement")
       .mockReturnValue(null);
 
     // Simulate SPEECH_CANCELLED message
-    const message = { type: 'SPEECH_CANCELLED' };
+    const message = { type: "SPEECH_CANCELLED" };
     messageListener(message, {}, jest.fn());
 
     // Check that play button is reset to play icon
-    const svg = playButton.querySelector('svg');
+    const svg = playButton.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
     // In a real environment, highlighting would be cleared
     // but we can't check that directly in the test since it's mocked
-    expect(testElement.classList.contains('talkient-highlighted')).toBe(false);
+    expect(testElement.classList.contains("talkient-highlighted")).toBe(false);
   });
 
-  test('should handle SPEECH_ERROR message correctly', () => {
+  test("should handle SPEECH_ERROR message correctly", () => {
     // Simulate highlighting
-    const testElement = document.createElement('span');
-    testElement.textContent = 'Test content';
+    const testElement = document.createElement("span");
+    testElement.textContent = "Test content";
     container.appendChild(testElement);
     highlightText(testElement);
 
     // Spy on console.error
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
     // Import content script
-    require('../content');
+    require("../content");
 
     // Need to mock the getCurrentHighlightedElement function
     // since it's not actually changing the highlight in the test environment
     jest
-      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .spyOn(require("../highlight"), "getCurrentHighlightedElement")
       .mockReturnValue(null);
 
     // Get the registered message listener
@@ -565,134 +565,134 @@ describe('Content Script Message Handling', () => {
       mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
 
     // Simulate SPEECH_ERROR message
-    const message = { type: 'SPEECH_ERROR', error: 'Test error' };
+    const message = { type: "SPEECH_ERROR", error: "Test error" };
     messageListener(message, {}, jest.fn());
 
     // Check that play button is reset to play icon
-    const svg = playButton.querySelector('svg');
+    const svg = playButton.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(isSvgPlayIcon(svg as SVGElement)).toBe(true);
 
     // In a real environment, highlighting would be cleared
     // but we can't check that directly in the test since it's mocked
-    expect(testElement.classList.contains('talkient-highlighted')).toBe(false);
+    expect(testElement.classList.contains("talkient-highlighted")).toBe(false);
 
     // Check that error was logged
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[Talkient] Speech error occurred:',
-      'Test error'
+      "[Talkient] Speech error occurred:",
+      "Test error",
     );
 
     consoleSpy.mockRestore();
   });
 
-  test('should send stop message on beforeunload event', () => {
+  test("should send stop message on beforeunload event", () => {
     // Clear any previous calls
     mockChrome.runtime.sendMessage.mockClear();
 
     // Import content script to register event listeners
-    require('../content');
+    require("../content");
 
     // Trigger beforeunload event
-    const beforeUnloadEvent = new Event('beforeunload');
+    const beforeUnloadEvent = new Event("beforeunload");
     window.dispatchEvent(beforeUnloadEvent);
 
     // Check that correct message was sent at least once
     const calls = mockChrome.runtime.sendMessage.mock.calls;
     const hasCorrectCall = calls.some(
       (call) =>
-        call[0]?.type === 'PAUSE_SPEECH' && call[0]?.isPageUnload === true
+        call[0]?.type === "PAUSE_SPEECH" && call[0]?.isPageUnload === true,
     );
     expect(hasCorrectCall).toBe(true);
   });
 });
 
-describe('Button Position Configuration', () => {
+describe("Button Position Configuration", () => {
   beforeEach(() => {
     // Clear mock calls
     mockChrome.storage.local.get.mockClear();
     mockChrome.storage.local.set.mockClear();
   });
 
-  describe('loadButtonPositionFromStorage', () => {
-    test('should load button position from storage (right)', async () => {
+  describe("loadButtonPositionFromStorage", () => {
+    test("should load button position from storage (right)", async () => {
       mockChrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ buttonPosition: 'right' });
+        callback({ buttonPosition: "right" });
       });
 
       const position = await loadButtonPositionFromStorage();
-      expect(position).toBe('right');
-      expect(getButtonPosition()).toBe('right');
+      expect(position).toBe("right");
+      expect(getButtonPosition()).toBe("right");
     });
 
-    test('should default to left when not stored', async () => {
+    test("should default to left when not stored", async () => {
       mockChrome.storage.local.get.mockImplementation((keys, callback) => {
         callback({});
       });
 
       const position = await loadButtonPositionFromStorage();
-      expect(position).toBe('left');
-      expect(getButtonPosition()).toBe('left');
+      expect(position).toBe("left");
+      expect(getButtonPosition()).toBe("left");
     });
 
-    test('should default to left when invalid value is stored', async () => {
+    test("should default to left when invalid value is stored", async () => {
       mockChrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ buttonPosition: 'invalid' });
+        callback({ buttonPosition: "invalid" });
       });
 
       const position = await loadButtonPositionFromStorage();
-      expect(position).toBe('left');
-      expect(getButtonPosition()).toBe('left');
+      expect(position).toBe("left");
+      expect(getButtonPosition()).toBe("left");
     });
   });
 
-  describe('setButtonPosition', () => {
-    test('should set button position to right', () => {
-      setButtonPosition('right');
-      expect(getButtonPosition()).toBe('right');
+  describe("setButtonPosition", () => {
+    test("should set button position to right", () => {
+      setButtonPosition("right");
+      expect(getButtonPosition()).toBe("right");
     });
 
-    test('should set button position to left', () => {
-      setButtonPosition('left');
-      expect(getButtonPosition()).toBe('left');
+    test("should set button position to left", () => {
+      setButtonPosition("left");
+      expect(getButtonPosition()).toBe("left");
     });
   });
 
-  describe('button position classes', () => {
-    test('button should have left class when position is set to left', () => {
-      setButtonPosition('left');
+  describe("button position classes", () => {
+    test("button should have left class when position is set to left", () => {
+      setButtonPosition("left");
 
       const button = createPlayButton();
-      button.classList.add('talkient-play-button');
+      button.classList.add("talkient-play-button");
 
       // Simulate adding position class based on configuration
-      if (getButtonPosition() === 'left') {
-        button.classList.add('talkient-button-left');
+      if (getButtonPosition() === "left") {
+        button.classList.add("talkient-button-left");
       }
 
-      expect(button.classList.contains('talkient-button-left')).toBe(true);
+      expect(button.classList.contains("talkient-button-left")).toBe(true);
     });
 
-    test('button should not have left class when position is set to right', () => {
-      setButtonPosition('right');
+    test("button should not have left class when position is set to right", () => {
+      setButtonPosition("right");
 
       const button = createPlayButton();
-      button.classList.add('talkient-play-button');
+      button.classList.add("talkient-play-button");
 
       // Simulate adding position class based on configuration
-      if (getButtonPosition() === 'left') {
-        button.classList.add('talkient-button-left');
+      if (getButtonPosition() === "left") {
+        button.classList.add("talkient-button-left");
       }
 
-      expect(button.classList.contains('talkient-button-left')).toBe(false);
+      expect(button.classList.contains("talkient-button-left")).toBe(false);
     });
 
-    test('getButtonPosition should return the set position', () => {
-      setButtonPosition('left');
-      expect(getButtonPosition()).toBe('left');
+    test("getButtonPosition should return the set position", () => {
+      setButtonPosition("left");
+      expect(getButtonPosition()).toBe("left");
 
-      setButtonPosition('right');
-      expect(getButtonPosition()).toBe('right');
+      setButtonPosition("right");
+      expect(getButtonPosition()).toBe("right");
     });
   });
 });

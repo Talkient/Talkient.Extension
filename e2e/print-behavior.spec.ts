@@ -8,13 +8,13 @@ test.describe('Talkient Print Behavior Tests', () => {
 
   test('should remove UI elements when print dialog opens and restore after closing', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -33,12 +33,10 @@ test.describe('Talkient Print Behavior Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Play-Pause Test Page');
 
-
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Verify initial state - play buttons exist
     const initialPlayButtonsCount = await page.evaluate(() => {
@@ -110,18 +108,17 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page.screenshot({
       path: 'e2e-results/print-behavior-after-afterprint.png',
     });
-
   });
 
   test('should clear highlights when print dialog opens', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Convert to file:// URL format
@@ -136,8 +133,7 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Wait for content script to process the page
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Click a play button to create a highlight
     await page.evaluate(() => {
@@ -150,8 +146,8 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Wait for potential highlight to appear
     await page.waitForTimeout(1000);
 
-    // Check if any highlight exists (may or may not depending on TTS availability)
-    const highlightBeforePrint = await page.evaluate(() => {
+    // Check if any highlight exists (evaluated for diagnostic purposes)
+    await page.evaluate(() => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
 
@@ -168,18 +164,17 @@ test.describe('Talkient Print Behavior Tests', () => {
       return document.querySelector('.talkient-highlighted') !== null;
     });
     expect(highlightAfterPrint).toBe(false);
-
   });
 
   test('should handle multiple print dialog cycles', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Convert to file:// URL format
@@ -194,8 +189,7 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Wait for content script to process the page
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Verify initial state
     const initialCount = await page.evaluate(() => {
@@ -205,7 +199,6 @@ test.describe('Talkient Print Behavior Tests', () => {
 
     // Run multiple print cycles
     for (let cycle = 1; cycle <= 3; cycle++) {
-
       // Trigger beforeprint
       await page.evaluate(() => {
         window.dispatchEvent(new Event('beforeprint'));
@@ -222,7 +215,6 @@ test.describe('Talkient Print Behavior Tests', () => {
         return document.getElementById('talkient-control-panel') !== null;
       });
       expect(panelAfterBeforeprint).toBe(false);
-
 
       // Trigger afterprint
       await page.evaluate(() => {
@@ -241,18 +233,17 @@ test.describe('Talkient Print Behavior Tests', () => {
       });
       expect(panelAfterAfterprint).toBe(true);
     }
-
   });
 
   test('should preserve article content during print workflow', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Convert to file:// URL format
@@ -267,11 +258,10 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Wait for content script to process the page
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
-    // Get text content of a paragraph before print workflow
-    const originalTextContent = await page.evaluate(() => {
+    // Get text content of a paragraph before print workflow (evaluated for baseline timing)
+    await page.evaluate(() => {
       const para = document.getElementById('para1');
       // Get text without the play button
       return para?.textContent?.trim() || '';
@@ -302,18 +292,17 @@ test.describe('Talkient Print Behavior Tests', () => {
       return document.querySelector('article') !== null;
     });
     expect(articleExists).toBe(true);
-
   });
 
   test('should not show UI elements in print preview (CSS media query)', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Convert to file:// URL format
@@ -328,8 +317,7 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Wait for content script to process the page
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Emulate print media to check CSS @media print rules
     await page.emulateMedia({ media: 'print' });
@@ -363,18 +351,17 @@ test.describe('Talkient Print Behavior Tests', () => {
     await page.screenshot({
       path: 'e2e-results/print-behavior-css-media-test.png',
     });
-
   });
 
   test('should handle print on page without article element', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our no-article test page
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/no-article-test.html'
+      'test-pages/no-article-test.html',
     );
 
     // Convert to file:// URL format
@@ -411,6 +398,5 @@ test.describe('Talkient Print Behavior Tests', () => {
       return document.body !== null;
     });
     expect(bodyExists).toBe(true);
-
   });
 });

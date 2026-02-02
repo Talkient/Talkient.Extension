@@ -7,7 +7,7 @@ test.describe('Button Position Visual Tests', () => {
 
   test('should display buttons on the left when configured', async ({
     page,
-    context,
+    context: _context,
     extensionId,
   }) => {
     // First, set the button position to left in options
@@ -20,7 +20,7 @@ test.describe('Button Position Visual Tests', () => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -54,7 +54,7 @@ test.describe('Button Position Visual Tests', () => {
 
       // Check if at least one button has the left class
       return Array.from(buttons).some((button) =>
-        button.classList.contains('talkient-button-left')
+        button.classList.contains('talkient-button-left'),
       );
     });
 
@@ -65,12 +65,11 @@ test.describe('Button Position Visual Tests', () => {
       path: 'e2e-results/button-position-left-screenshot.png',
       fullPage: true,
     });
-
   });
 
   test('should display buttons on the right when configured', async ({
     page,
-    context,
+    context: _context,
     extensionId,
   }) => {
     // First, set the button position to right in options
@@ -83,7 +82,7 @@ test.describe('Button Position Visual Tests', () => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     // Verify the file exists
@@ -117,7 +116,7 @@ test.describe('Button Position Visual Tests', () => {
 
       // Check if any button has the left class
       return Array.from(buttons).some((button) =>
-        button.classList.contains('talkient-button-left')
+        button.classList.contains('talkient-button-left'),
       );
     });
 
@@ -128,18 +127,17 @@ test.describe('Button Position Visual Tests', () => {
       path: 'e2e-results/button-position-right-screenshot.png',
       fullPage: true,
     });
-
   });
 
   test('should change button position dynamically', async ({
     page,
-    context,
+    context: _context,
     extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/play-pause-test.html'
+      'test-pages/play-pause-test.html',
     );
 
     expect(fs.existsSync(testHtmlPath)).toBeTruthy();
@@ -160,8 +158,7 @@ test.describe('Button Position Visual Tests', () => {
     // Wait for play buttons with timeout
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Force reprocess if needed
     await page.evaluate(() => {
@@ -202,7 +199,7 @@ test.describe('Button Position Visual Tests', () => {
     const hasLeftClass = await page.evaluate(() => {
       const buttons = document.querySelectorAll('.talkient-play-button');
       return Array.from(buttons).some((button) =>
-        button.classList.contains('talkient-button-left')
+        button.classList.contains('talkient-button-left'),
       );
     });
 
@@ -212,6 +209,5 @@ test.describe('Button Position Visual Tests', () => {
     await page.screenshot({
       path: 'e2e-results/button-position-dynamic-left-screenshot.png',
     });
-
   });
 });

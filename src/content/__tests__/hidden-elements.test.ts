@@ -7,7 +7,7 @@ import {
   processTextElements,
   loadMinimumWordsFromStorage,
   loadMaxNodesFromStorage,
-} from '../content-lib';
+} from "../content-lib";
 
 // Mock chrome runtime
 const mockChrome = {
@@ -24,7 +24,7 @@ const mockChrome = {
         // Default settings
         callback({
           minimumWords: 3,
-          highlightStyle: 'default',
+          highlightStyle: "default",
           maxNodesProcessed: 1000,
         });
       }),
@@ -40,11 +40,11 @@ const mockChrome = {
 // Mock for window.getComputedStyle
 const originalGetComputedStyle = window.getComputedStyle;
 
-describe('Hidden element handling', () => {
+describe("Hidden element handling", () => {
   let container: HTMLDivElement;
 
   beforeEach(async () => {
-    container = document.createElement('div');
+    container = document.createElement("div");
     document.body.appendChild(container);
 
     // Load settings
@@ -52,7 +52,7 @@ describe('Hidden element handling', () => {
     await loadMaxNodesFromStorage();
 
     // Mock requestAnimationFrame
-    (global as any).requestAnimationFrame = jest.fn((callback) => {
+    (global as any).requestAnimationFrame = jest.fn((callback: () => void) => {
       setTimeout(callback, 0);
       return 1;
     });
@@ -66,12 +66,12 @@ describe('Hidden element handling', () => {
     window.getComputedStyle = originalGetComputedStyle;
   });
 
-  test('should return false for text nodes with display:none', () => {
+  test("should return false for text nodes with display:none", () => {
     // Create a parent with display:none
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.display = 'none';
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.display = "none";
     const textNode = document.createTextNode(
-      'This is hidden with display none'
+      "This is hidden with display none",
     );
     hiddenDiv.appendChild(textNode);
     container.appendChild(hiddenDiv);
@@ -79,12 +79,12 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes with visibility:hidden', () => {
+  test("should return false for text nodes with visibility:hidden", () => {
     // Create a parent with visibility:hidden
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.visibility = 'hidden';
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.visibility = "hidden";
     const textNode = document.createTextNode(
-      'This is hidden with visibility hidden'
+      "This is hidden with visibility hidden",
     );
     hiddenDiv.appendChild(textNode);
     container.appendChild(hiddenDiv);
@@ -92,12 +92,12 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes with opacity:0', () => {
+  test("should return false for text nodes with opacity:0", () => {
     // Create a parent with opacity:0
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.opacity = '0';
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.opacity = "0";
     const textNode = document.createTextNode(
-      'This is hidden with opacity zero'
+      "This is hidden with opacity zero",
     );
     hiddenDiv.appendChild(textNode);
     container.appendChild(hiddenDiv);
@@ -105,13 +105,13 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return false for text nodes with hidden ancestor', () => {
+  test("should return false for text nodes with hidden ancestor", () => {
     // Create a nested structure with a hidden ancestor
-    const outerDiv = document.createElement('div');
-    outerDiv.style.display = 'none';
+    const outerDiv = document.createElement("div");
+    outerDiv.style.display = "none";
 
-    const innerDiv = document.createElement('div');
-    const textNode = document.createTextNode('This has a hidden ancestor');
+    const innerDiv = document.createElement("div");
+    const textNode = document.createTextNode("This has a hidden ancestor");
 
     innerDiv.appendChild(textNode);
     outerDiv.appendChild(innerDiv);
@@ -120,11 +120,11 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should handle computed styles properly', () => {
+  test("should handle computed styles properly", () => {
     // Create an element that appears visible but is actually hidden via CSS
-    const hiddenViaCSS = document.createElement('div');
-    hiddenViaCSS.className = 'hidden-by-css';
-    const textNode = document.createTextNode('This is hidden via external CSS');
+    const hiddenViaCSS = document.createElement("div");
+    hiddenViaCSS.className = "hidden-by-css";
+    const textNode = document.createTextNode("This is hidden via external CSS");
     hiddenViaCSS.appendChild(textNode);
     container.appendChild(hiddenViaCSS);
 
@@ -132,9 +132,9 @@ describe('Hidden element handling', () => {
     window.getComputedStyle = jest.fn().mockImplementation((element) => {
       if (element === hiddenViaCSS) {
         return {
-          display: 'none',
-          visibility: 'visible',
-          opacity: '1',
+          display: "none",
+          visibility: "visible",
+          opacity: "1",
         } as CSSStyleDeclaration;
       }
       return originalGetComputedStyle(element);
@@ -143,11 +143,11 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('should return true for visible text nodes', () => {
+  test("should return true for visible text nodes", () => {
     // Create a visible element inside an article tag
-    const article = document.createElement('article');
-    const visibleDiv = document.createElement('div');
-    const textNode = document.createTextNode('This is a visible text node');
+    const article = document.createElement("article");
+    const visibleDiv = document.createElement("div");
+    const textNode = document.createTextNode("This is a visible text node");
     visibleDiv.appendChild(textNode);
     article.appendChild(visibleDiv);
     container.appendChild(article);
@@ -155,18 +155,18 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
   });
 
-  test('should handle multiple levels of DOM hierarchy', () => {
+  test("should handle multiple levels of DOM hierarchy", () => {
     // Create a deeply nested structure
-    const level1 = document.createElement('div');
-    const level2 = document.createElement('div');
-    const level3 = document.createElement('div');
-    const level4 = document.createElement('div');
-    const level5 = document.createElement('div');
+    const level1 = document.createElement("div");
+    const level2 = document.createElement("div");
+    const level3 = document.createElement("div");
+    const level4 = document.createElement("div");
+    const level5 = document.createElement("div");
 
     // Make level 3 hidden
-    level3.style.display = 'none';
+    level3.style.display = "none";
 
-    const textNode = document.createTextNode('This is deeply nested');
+    const textNode = document.createTextNode("This is deeply nested");
 
     level5.appendChild(textNode);
     level4.appendChild(level5);
@@ -178,17 +178,17 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(false);
   });
 
-  test('processTextElements should not add buttons to hidden elements', async () => {
+  test("processTextElements should not add buttons to hidden elements", async () => {
     // Set up document with visible and hidden elements inside article tags
-    const article = document.createElement('article');
-    const visibleDiv = document.createElement('div');
+    const article = document.createElement("article");
+    const visibleDiv = document.createElement("div");
     visibleDiv.innerHTML =
-      '<p>This is visible text that should get a button</p>';
+      "<p>This is visible text that should get a button</p>";
 
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.display = 'none';
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.display = "none";
     hiddenDiv.innerHTML =
-      '<p>This is hidden text that should not get a button</p>';
+      "<p>This is hidden text that should not get a button</p>";
 
     article.appendChild(visibleDiv);
     article.appendChild(hiddenDiv);
@@ -206,22 +206,22 @@ describe('Hidden element handling', () => {
 
     // Check that visible element has a play button
     expect(
-      visibleDiv.querySelectorAll('.talkient-play-button').length
+      visibleDiv.querySelectorAll(".talkient-play-button").length,
     ).toBeGreaterThan(0);
 
     // Check that hidden element doesn't have a play button
-    expect(hiddenDiv.querySelectorAll('.talkient-play-button').length).toBe(0);
+    expect(hiddenDiv.querySelectorAll(".talkient-play-button").length).toBe(0);
 
     // Restore original createTreeWalker
     document.createTreeWalker = originalCreateTreeWalker;
   });
 
-  test('should handle dynamically changed visibility', async () => {
+  test("should handle dynamically changed visibility", async () => {
     // Create an element that starts visible inside an article tag
-    const article = document.createElement('article');
-    const dynamicDiv = document.createElement('div');
+    const article = document.createElement("article");
+    const dynamicDiv = document.createElement("div");
     const textNode = document.createTextNode(
-      'This visibility will change dynamically'
+      "This visibility will change dynamically",
     );
     dynamicDiv.appendChild(textNode);
     article.appendChild(dynamicDiv);
@@ -231,13 +231,13 @@ describe('Hidden element handling', () => {
     expect(shouldProcessNode(textNode)).toBe(true);
 
     // Now hide it
-    dynamicDiv.style.visibility = 'hidden';
+    dynamicDiv.style.visibility = "hidden";
 
     // Now it should not be processable
     expect(shouldProcessNode(textNode)).toBe(false);
 
     // Make it visible again
-    dynamicDiv.style.visibility = 'visible';
+    dynamicDiv.style.visibility = "visible";
 
     // Now it should be processable again
     expect(shouldProcessNode(textNode)).toBe(true);

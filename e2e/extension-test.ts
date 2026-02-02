@@ -7,12 +7,13 @@ export const test = base.extend<{
   context: BrowserContext;
   extensionId: string;
 }>({
+  // eslint-disable-next-line no-empty-pattern
   context: async ({}, use) => {
     // Build the extension first
     const distPath = path.join(__dirname, '..', 'dist');
     if (!fs.existsSync(distPath)) {
       throw new Error(
-        'Extension dist folder not found. Please build the extension first with "pnpm build"'
+        'Extension dist folder not found. Please build the extension first with "pnpm build"',
       );
     }
 
@@ -37,12 +38,14 @@ export const test = base.extend<{
     if (!page) {
       page = await context.newPage();
     }
-    
+
     // Navigate to a simple page to trigger the extension
     try {
-        await page.goto('data:text/html,<html><body><h1>Trigger Extension</h1></body></html>');
+      await page.goto(
+        'data:text/html,<html><body><h1>Trigger Extension</h1></body></html>',
+      );
     } catch (e) {
-        console.log('Navigation to trigger page failed', e);
+      console.log('Navigation to trigger page failed', e);
     }
 
     // Wait for the extension background service worker to be available
@@ -55,10 +58,8 @@ export const test = base.extend<{
         background = await context.waitForEvent('serviceworker', {
           timeout: 20000, // Increased from 10s to 20s
         });
-      } catch (error) {
-        console.log(
-          'Service worker event timeout, trying polling...'
-        );
+      } catch {
+        console.log('Service worker event timeout, trying polling...');
 
         // If that fails, try checking a few times with delay
         for (let attempt = 0; attempt < 20; attempt++) {
@@ -73,9 +74,11 @@ export const test = base.extend<{
           // Wait a bit before next attempt
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        
+
         if (!background) {
-             throw new Error('Could not find extension service worker after multiple attempts.');
+          throw new Error(
+            'Could not find extension service worker after multiple attempts.',
+          );
         }
       }
     }

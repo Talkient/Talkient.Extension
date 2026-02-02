@@ -33,7 +33,7 @@ test.describe('Button Position Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Button position setting saved!'
+      'Button position setting saved!',
     );
 
     // Take a screenshot for verification
@@ -50,7 +50,7 @@ test.describe('Button Position Configuration', () => {
     // Verify status message appears again
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Button position setting saved!'
+      'Button position setting saved!',
     );
 
     // Take a screenshot for verification

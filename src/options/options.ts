@@ -1,33 +1,33 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   const voiceSelect = document.getElementById(
-    'voice-select'
+    "voice-select",
   ) as HTMLSelectElement;
-  const rateSlider = document.getElementById('rate-slider') as HTMLInputElement;
+  const rateSlider = document.getElementById("rate-slider") as HTMLInputElement;
   const pitchSlider = document.getElementById(
-    'pitch-slider'
+    "pitch-slider",
   ) as HTMLInputElement;
   const highlightStyleSelect = document.getElementById(
-    'highlight-style-select'
+    "highlight-style-select",
   ) as HTMLSelectElement;
-  const rateValue = document.getElementById('rate-value') as HTMLSpanElement;
-  const pitchValue = document.getElementById('pitch-value') as HTMLSpanElement;
+  const rateValue = document.getElementById("rate-value") as HTMLSpanElement;
+  const pitchValue = document.getElementById("pitch-value") as HTMLSpanElement;
   const autoPlayNextToggle = document.getElementById(
-    'auto-play-next-toggle'
+    "auto-play-next-toggle",
   ) as HTMLInputElement;
   const followHighlightToggle = document.getElementById(
-    'follow-highlight-toggle'
+    "follow-highlight-toggle",
   ) as HTMLInputElement;
   const buttonPositionSelect = document.getElementById(
-    'button-position-select'
+    "button-position-select",
   ) as HTMLSelectElement;
   const minimumWordsInput = document.getElementById(
-    'minimum-words-input'
+    "minimum-words-input",
   ) as HTMLInputElement;
   const maxNodesInput = document.getElementById(
-    'max-nodes-input'
+    "max-nodes-input",
   ) as HTMLInputElement;
   const panelHideDurationInput = document.getElementById(
-    'panel-hide-duration-input'
+    "panel-hide-duration-input",
   ) as HTMLInputElement;
 
   if (
@@ -49,48 +49,48 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore settings from storage
   chrome.storage.local.get(
     [
-      'selectedVoice',
-      'speechRate',
-      'speechPitch',
-      'highlightStyle',
-      'autoPlayNext',
-      'followHighlight',
-      'buttonPosition',
-      'minimumWords',
-      'maxNodesProcessed',
-      'panelHideDuration',
+      "selectedVoice",
+      "speechRate",
+      "speechPitch",
+      "highlightStyle",
+      "autoPlayNext",
+      "followHighlight",
+      "buttonPosition",
+      "minimumWords",
+      "maxNodesProcessed",
+      "panelHideDuration",
     ],
     (result) => {
       const selectedVoice =
-        typeof result.selectedVoice === 'string'
+        typeof result.selectedVoice === "string"
           ? result.selectedVoice
-          : 'default';
+          : "default";
       const speechRate =
-        typeof result.speechRate === 'number' ? result.speechRate : 1.0;
+        typeof result.speechRate === "number" ? result.speechRate : 1.0;
       const speechPitch =
-        typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
+        typeof result.speechPitch === "number" ? result.speechPitch : 1.0;
       const highlightStyle =
-        typeof result.highlightStyle === 'string'
+        typeof result.highlightStyle === "string"
           ? result.highlightStyle
-          : 'default';
+          : "default";
       const autoPlayNext =
-        typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : true;
+        typeof result.autoPlayNext === "boolean" ? result.autoPlayNext : true;
       const followHighlight =
-        typeof result.followHighlight === 'boolean'
+        typeof result.followHighlight === "boolean"
           ? result.followHighlight
           : true;
       const buttonPosition =
-        typeof result.buttonPosition === 'string'
+        typeof result.buttonPosition === "string"
           ? result.buttonPosition
-          : 'left';
+          : "left";
       const minimumWords =
-        typeof result.minimumWords === 'number' ? result.minimumWords : 3;
+        typeof result.minimumWords === "number" ? result.minimumWords : 3;
       const maxNodesProcessed =
-        typeof result.maxNodesProcessed === 'number'
+        typeof result.maxNodesProcessed === "number"
           ? result.maxNodesProcessed
           : 1000;
       const panelHideDuration =
-        typeof result.panelHideDuration === 'number'
+        typeof result.panelHideDuration === "number"
           ? result.panelHideDuration
           : 30;
 
@@ -125,17 +125,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set panel hide duration input
       panelHideDurationInput.value = panelHideDuration.toString();
-    }
+    },
   );
 
   // Listen for storage changes to update UI in real-time
   if (chrome.storage?.onChanged?.addListener) {
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local') {
+      if (namespace === "local") {
         // Update speech rate if changed
         if (changes.speechRate) {
           const newRate = changes.speechRate.newValue;
-          if (typeof newRate === 'number') {
+          if (typeof newRate === "number") {
             // Enforce 0.05 step increment by rounding to nearest 0.05
             const roundedRate = Math.round(newRate * 20) / 20;
             rateSlider.value = roundedRate.toString();
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update speech pitch if changed
         if (changes.speechPitch) {
           const newPitch = changes.speechPitch.newValue;
-          if (typeof newPitch === 'number') {
+          if (typeof newPitch === "number") {
             pitchSlider.value = newPitch.toString();
             pitchValue.textContent = `${newPitch.toFixed(1)}x`;
           }
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update highlight style if changed
         if (changes.highlightStyle) {
           const newStyle = changes.highlightStyle.newValue;
-          if (typeof newStyle === 'string') {
+          if (typeof newStyle === "string") {
             highlightStyleSelect.value = newStyle;
           }
         }
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update auto play next if changed
         if (changes.autoPlayNext) {
           const newAutoPlay = changes.autoPlayNext.newValue;
-          if (typeof newAutoPlay === 'boolean') {
+          if (typeof newAutoPlay === "boolean") {
             autoPlayNextToggle.checked = newAutoPlay;
           }
         }
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update follow highlight if changed
         if (changes.followHighlight) {
           const newFollowHighlight = changes.followHighlight.newValue;
-          if (typeof newFollowHighlight === 'boolean') {
+          if (typeof newFollowHighlight === "boolean") {
             followHighlightToggle.checked = newFollowHighlight;
           }
         }
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update button position if changed
         if (changes.buttonPosition) {
           const newButtonPosition = changes.buttonPosition.newValue;
-          if (typeof newButtonPosition === 'string') {
+          if (typeof newButtonPosition === "string") {
             buttonPositionSelect.value = newButtonPosition;
           }
         }
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update minimum words if changed
         if (changes.minimumWords) {
           const newMinWords = changes.minimumWords.newValue;
-          if (typeof newMinWords === 'number') {
+          if (typeof newMinWords === "number") {
             minimumWordsInput.value = newMinWords.toString();
           }
         }
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update maximum nodes if changed
         if (changes.maxNodesProcessed) {
           const newMaxNodes = changes.maxNodesProcessed.newValue;
-          if (typeof newMaxNodes === 'number') {
+          if (typeof newMaxNodes === "number") {
             maxNodesInput.value = newMaxNodes.toString();
           }
         }
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update panel hide duration if changed
         if (changes.panelHideDuration) {
           const newDuration = changes.panelHideDuration.newValue;
-          if (typeof newDuration === 'number') {
+          if (typeof newDuration === "number") {
             panelHideDurationInput.value = newDuration.toString();
           }
         }
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update voice selection if changed
         if (changes.selectedVoice) {
           const newVoice = changes.selectedVoice.newValue;
-          if (typeof newVoice === 'string') {
+          if (typeof newVoice === "string") {
             voiceSelect.value = newVoice;
           }
         }
@@ -220,16 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Save selected voice to storage
-  voiceSelect.addEventListener('change', () => {
+  voiceSelect.addEventListener("change", () => {
     const selectedVoice = voiceSelect.value;
-    chrome.storage.local.set({ selectedVoice });
+    void chrome.storage.local.set({ selectedVoice });
 
     // Show a brief status message
-    showStatus('Voice selection saved!', 'success');
+    showStatus("Voice selection saved!", "success");
   });
 
   // Save rate to storage and update display
-  rateSlider.addEventListener('input', () => {
+  rateSlider.addEventListener("input", () => {
     // Enforce 0.05 step increment by rounding to nearest 0.05
     const rawValue = parseFloat(rateSlider.value);
     const speechRate = Math.round(rawValue * 20) / 20; // Round to nearest 0.05
@@ -237,88 +237,88 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the slider value to the rounded value
     rateSlider.value = speechRate.toString();
     rateValue.textContent = `${speechRate.toFixed(2)}x`;
-    chrome.storage.local.set({ speechRate });
+    void chrome.storage.local.set({ speechRate });
 
     // Show a brief status message
-    showStatus('Speech rate saved!', 'success');
+    showStatus("Speech rate saved!", "success");
   });
 
   // Save pitch to storage and update display
-  pitchSlider.addEventListener('input', () => {
+  pitchSlider.addEventListener("input", () => {
     const speechPitch = parseFloat(pitchSlider.value);
     pitchValue.textContent = `${speechPitch.toFixed(1)}x`;
-    chrome.storage.local.set({ speechPitch });
+    void chrome.storage.local.set({ speechPitch });
 
     // Show a brief status message
-    showStatus('Speech pitch saved!', 'success');
+    showStatus("Speech pitch saved!", "success");
   });
 
   // Save highlight style to storage
-  highlightStyleSelect.addEventListener('change', () => {
+  highlightStyleSelect.addEventListener("change", () => {
     const highlightStyle = highlightStyleSelect.value;
-    chrome.storage.local.set({ highlightStyle });
+    void chrome.storage.local.set({ highlightStyle });
 
     // Show a brief status message
-    showStatus('Highlight style saved!', 'success');
+    showStatus("Highlight style saved!", "success");
   });
 
   // Save auto play next setting to storage
-  autoPlayNextToggle.addEventListener('change', () => {
+  autoPlayNextToggle.addEventListener("change", () => {
     const autoPlayNext = autoPlayNextToggle.checked;
-    chrome.storage.local.set({ autoPlayNext });
+    void chrome.storage.local.set({ autoPlayNext });
 
     // Show a brief status message
-    showStatus('Auto play next item setting saved!', 'success');
+    showStatus("Auto play next item setting saved!", "success");
   });
 
   // Save follow highlight setting to storage
-  followHighlightToggle.addEventListener('change', () => {
+  followHighlightToggle.addEventListener("change", () => {
     const followHighlight = followHighlightToggle.checked;
-    chrome.storage.local.set({ followHighlight });
+    void chrome.storage.local.set({ followHighlight });
 
     // Show a brief status message
-    showStatus('Follow highlight setting saved!', 'success');
+    showStatus("Follow highlight setting saved!", "success");
   });
 
   // Save button position setting to storage
-  buttonPositionSelect.addEventListener('change', () => {
+  buttonPositionSelect.addEventListener("change", () => {
     const buttonPosition = buttonPositionSelect.value;
-    chrome.storage.local.set({ buttonPosition });
+    void chrome.storage.local.set({ buttonPosition });
 
     // Show a brief status message
-    showStatus('Button position setting saved!', 'success');
+    showStatus("Button position setting saved!", "success");
   });
 
   // Save minimum words setting to storage
-  minimumWordsInput.addEventListener('input', () => {
+  minimumWordsInput.addEventListener("input", () => {
     let minimumWords = parseInt(minimumWordsInput.value);
     // Ensure minimumWords is at least 1
     if (isNaN(minimumWords) || minimumWords < 1) {
       minimumWords = 1;
       minimumWordsInput.value = minimumWords.toString();
     }
-    chrome.storage.local.set({ minimumWords });
+    void chrome.storage.local.set({ minimumWords });
 
     // Show a brief status message
-    showStatus('Minimum words setting saved!', 'success');
+    showStatus("Minimum words setting saved!", "success");
   });
 
   // Save maximum nodes setting to storage
-  maxNodesInput.addEventListener('input', () => {
+  maxNodesInput.addEventListener("input", () => {
     let maxNodesProcessed = parseInt(maxNodesInput.value);
     // Ensure maxNodesProcessed is at least 0
     if (isNaN(maxNodesProcessed) || maxNodesProcessed < 0) {
       maxNodesProcessed = 0;
       maxNodesInput.value = maxNodesProcessed.toString();
     }
-    chrome.storage.local.set({ maxNodesProcessed });
+    void chrome.storage.local.set({ maxNodesProcessed });
 
     // Show a brief status message
-    showStatus('Maximum nodes setting saved!', 'success');
+    showStatus("Maximum nodes setting saved!", "success");
   });
 
   // Save panel hide duration setting to storage
-  panelHideDurationInput.addEventListener('input', () => {
+  panelHideDurationInput.addEventListener("input", () => {
     let panelHideDuration = parseInt(panelHideDurationInput.value);
     // Ensure panelHideDuration is between 0 and 9999
     if (isNaN(panelHideDuration) || panelHideDuration < 0) {
@@ -328,18 +328,18 @@ document.addEventListener('DOMContentLoaded', () => {
       panelHideDuration = 9999;
       panelHideDurationInput.value = panelHideDuration.toString();
     }
-    chrome.storage.local.set({ panelHideDuration });
+    void chrome.storage.local.set({ panelHideDuration });
 
     // Show a brief status message
-    showStatus('Panel hide duration setting saved!', 'success');
+    showStatus("Panel hide duration setting saved!", "success");
   });
 });
 
 function showStatus(
   message: string,
-  type: 'success' | 'error' | 'warning' = 'success'
-) {
-  const statusDiv = document.getElementById('status');
+  type: "success" | "error" | "warning" = "success",
+): void {
+  const statusDiv = document.getElementById("status");
   if (!statusDiv) return;
 
   statusDiv.textContent = message;
@@ -347,27 +347,27 @@ function showStatus(
 
   // Hide after 3 seconds
   setTimeout(() => {
-    statusDiv.classList.remove('visible');
+    statusDiv.classList.remove("visible");
   }, 3000);
 }
 
-function populateVoices(selectedVoice: string) {
+function populateVoices(selectedVoice: string): void {
   const voiceSelect = document.getElementById(
-    'voice-select'
+    "voice-select",
   ) as HTMLSelectElement;
   if (!voiceSelect) return;
 
   // Clear existing options except the default
-  voiceSelect.innerHTML = '';
-  const defaultOption = document.createElement('option');
-  defaultOption.value = 'default';
-  defaultOption.textContent = 'Default Voice';
+  voiceSelect.innerHTML = "";
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "default";
+  defaultOption.textContent = "Default Voice";
   voiceSelect.appendChild(defaultOption);
 
   chrome.tts.getVoices((voices) => {
     voices.forEach((voice) => {
-      const option = document.createElement('option');
-      option.value = voice.voiceName || '';
+      const option = document.createElement("option");
+      option.value = voice.voiceName || "";
       option.textContent = `${voice.voiceName} (${voice.lang})`;
       if (voice.voiceName === selectedVoice) {
         option.selected = true;
@@ -376,7 +376,7 @@ function populateVoices(selectedVoice: string) {
     });
     // If no match, select default
     if (!voiceSelect.value || voiceSelect.value !== selectedVoice) {
-      voiceSelect.value = selectedVoice || 'default';
+      voiceSelect.value = selectedVoice || "default";
     }
   });
 }

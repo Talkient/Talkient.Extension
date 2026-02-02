@@ -23,9 +23,7 @@ test.describe('Debug Control Panel on Example.html', () => {
       const header = panel.querySelector('.talkient-panel-header');
       const content = panel.querySelector('.talkient-panel-content');
       const headerStyles = header ? window.getComputedStyle(header) : null;
-      const contentStyles = content
-        ? window.getComputedStyle(content as Element)
-        : null;
+      const contentStyles = content ? window.getComputedStyle(content) : null;
 
       // Get all child divs
       const allDivs = Array.from(panel.querySelectorAll('div')).map((div) => {
@@ -76,7 +74,6 @@ test.describe('Debug Control Panel on Example.html', () => {
       };
     });
 
-
     // Take a screenshot
     await page.screenshot({
       path: 'e2e-results/debug-example-screenshot.png',
@@ -88,13 +85,11 @@ test.describe('Debug Control Panel on Example.html', () => {
       await page.click('.talkient-panel-toggle');
       await page.waitForTimeout(500);
 
-      // Get info again after expansion
-      const expandedInfo = await page.evaluate(() => {
+      // Get info again after expansion (evaluated for side effects)
+      await page.evaluate(() => {
         const panel = document.getElementById('talkient-control-panel');
         const content = panel?.querySelector('.talkient-panel-content');
-        const contentStyles = content
-          ? window.getComputedStyle(content as Element)
-          : null;
+        const contentStyles = content ? window.getComputedStyle(content) : null;
 
         return {
           isCollapsed: panel?.classList.contains('talkient-collapsed'),
@@ -102,7 +97,6 @@ test.describe('Debug Control Panel on Example.html', () => {
           contentHeight: contentStyles?.height,
         };
       });
-
 
       // Take another screenshot
       await page.screenshot({

@@ -26,7 +26,7 @@ test.describe('Panel Hide Duration Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Panel hide duration setting saved!'
+      'Panel hide duration setting saved!',
     );
 
     // Take a screenshot for verification
@@ -54,7 +54,7 @@ test.describe('Panel Hide Duration Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Panel hide duration setting saved!'
+      'Panel hide duration setting saved!',
     );
 
     // Take a screenshot for verification
@@ -78,13 +78,13 @@ test.describe('Panel Hide Duration Configuration', () => {
 
     // Verify the value was corrected to 9999
     await expect(page.locator('#panel-hide-duration-input')).toHaveValue(
-      '9999'
+      '9999',
     );
 
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Panel hide duration setting saved!'
+      'Panel hide duration setting saved!',
     );
 
     // Take a screenshot for verification
@@ -139,7 +139,7 @@ test.describe('Panel Hide Duration Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Panel hide duration setting saved!'
+      'Panel hide duration setting saved!',
     );
 
     // Take a screenshot for verification

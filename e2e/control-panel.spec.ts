@@ -2,13 +2,13 @@ import { test, expect } from './extension-test';
 
 test.describe('Talkient Control Panel', () => {
   // Setup before each test - navigate to a test page and make sure the control panel exists
-  test.beforeEach(async ({ page, context }) => {
+  test.beforeEach(async ({ page, context: _context }) => {
     // Calculate the path to the local semantic kernel test page
     const path = require('path');
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'semantic-kernel-agent-contextual-function-selection.html'
+      'semantic-kernel-agent-contextual-function-selection.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -95,15 +95,10 @@ test.describe('Talkient Control Panel', () => {
     });
 
     // Wait for the panel to be fully expanded with increased timeout and debug logging
-    try {
-      await page.waitForSelector(
-        '#talkient-control-panel:not(.talkient-collapsed)',
-        { timeout: 10000 }
-      );
-    } catch (error) {
-      // Log the DOM state for debugging
-      throw error;
-    }
+    await page.waitForSelector(
+      '#talkient-control-panel:not(.talkient-collapsed)',
+      { timeout: 10000 },
+    );
   });
 
   // Cleanup after each test
@@ -128,7 +123,7 @@ test.describe('Talkient Control Panel', () => {
       // Click the settings button using JavaScript to ensure it works
       await page.evaluate(() => {
         const settingsBtn = document.querySelector(
-          '.talkient-control-btn.settings'
+          '.talkient-control-btn.settings',
         ) as HTMLElement;
         if (settingsBtn) {
           // Force visibility if needed
@@ -151,7 +146,7 @@ test.describe('Talkient Control Panel', () => {
         // Verify the URL of the options page
         const url = optionsPage.url();
         expect(url).toContain(
-          `chrome-extension://${extensionId}/options/options.html`
+          `chrome-extension://${extensionId}/options/options.html`,
         );
 
         // Take a screenshot for verification
@@ -161,7 +156,7 @@ test.describe('Talkient Control Panel', () => {
 
         // Verify some content on the options page
         await expect(optionsPage).toHaveTitle(/Talkient Options/);
-      } catch (e) {
+      } catch {
         // Take a screenshot of the current state for debugging
         await page.screenshot({
           path: 'e2e-results/control-panel-settings-failed-screenshot.png',
@@ -255,8 +250,8 @@ test.describe('Talkient Control Panel', () => {
       // Allow some time for the buttons to be added
       await page.waitForTimeout(1000);
 
-      // Check if play buttons exist (this might need adjustment based on your actual implementation)
-      const buttonsExistBefore = await page.evaluate(() => {
+      // Check if play buttons exist (evaluated for side effects during debugging)
+      await page.evaluate(() => {
         return document.querySelectorAll('.talkient-play-button').length > 0;
       });
     });
@@ -286,7 +281,7 @@ test.describe('Talkient Control Panel', () => {
 
         // Verify that the buttons were removed when the toggle was turned off
         expect(buttonsExistAfter).toBe(false);
-      } catch (error) {
+      } catch {
         // If there's an error evaluating, we'll assume buttons aren't there
         // which is what we want anyway
       }
@@ -354,7 +349,7 @@ test.describe('Talkient Control Panel', () => {
     // Note: Cookies cannot be set on file:// URLs due to browser security restrictions
     // This test verifies the close button functionality and logs a warning if cookies can't be set
     const isFileProtocol = await page.evaluate(
-      () => window.location.protocol === 'file:'
+      () => window.location.protocol === 'file:',
     );
 
     await test.step('Verify panel is created by extension content script', async () => {
@@ -372,7 +367,7 @@ test.describe('Talkient Control Panel', () => {
       await page.evaluate(() => {
         const panel = document.getElementById('talkient-control-panel');
         const closeBtn = panel?.querySelector(
-          '.talkient-panel-close'
+          '.talkient-panel-close',
         ) as HTMLButtonElement;
         if (closeBtn) {
           closeBtn.click();
@@ -392,7 +387,7 @@ test.describe('Talkient Control Panel', () => {
     await test.step('Verify cookie behavior (skipped on file:// protocol)', async () => {
       if (isFileProtocol) {
         console.log(
-          '[E2E Test] Skipping cookie verification - cookies cannot be set on file:// URLs'
+          '[E2E Test] Skipping cookie verification - cookies cannot be set on file:// URLs',
         );
         // Verify that attempting to set cookie on file:// protocol doesn't break anything
         const hasHideCookie = await page.evaluate(() => {
@@ -412,17 +407,17 @@ test.describe('Talkient Control Panel', () => {
 
   test('should not recreate panel on page reload when cookie is set', async ({
     page,
-    context,
+    context: _context,
   }) => {
     // Note: This test verifies the cookie-based hiding behavior
     // It will be skipped on file:// URLs where cookies cannot be set
     const isFileProtocol = await page.evaluate(
-      () => window.location.protocol === 'file:'
+      () => window.location.protocol === 'file:',
     );
 
     if (isFileProtocol) {
       console.log(
-        '[E2E Test] Skipping cookie persistence test - cookies cannot be set on file:// URLs'
+        '[E2E Test] Skipping cookie persistence test - cookies cannot be set on file:// URLs',
       );
       // On file:// URLs, just verify the panel exists and can be closed
       const panelExists = await page.evaluate(() => {
@@ -478,12 +473,12 @@ test.describe('Talkient Control Panel', () => {
     // Note: This test verifies the cookie clearing behavior
     // It will be skipped on file:// URLs where cookies cannot be set
     const isFileProtocol = await page.evaluate(
-      () => window.location.protocol === 'file:'
+      () => window.location.protocol === 'file:',
     );
 
     if (isFileProtocol) {
       console.log(
-        '[E2E Test] Skipping cookie clearing test - cookies cannot be set on file:// URLs'
+        '[E2E Test] Skipping cookie clearing test - cookies cannot be set on file:// URLs',
       );
       // On file:// URLs, just verify the panel exists
       const panelExists = await page.evaluate(() => {

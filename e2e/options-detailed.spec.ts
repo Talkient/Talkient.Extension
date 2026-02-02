@@ -28,14 +28,12 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
 
     // Change all settings at once
     await test.step('Change auto-play toggle', async () => {
-      const initialState = await page
-        .locator('#auto-play-next-toggle')
-        .isChecked();
+      await page.locator('#auto-play-next-toggle').isChecked();
 
       // Click the toggle using JavaScript to avoid visibility issues
       await page.evaluate(() => {
         const toggle = document.getElementById(
-          'auto-play-next-toggle'
+          'auto-play-next-toggle',
         ) as HTMLInputElement;
         toggle.checked = !toggle.checked;
         toggle.dispatchEvent(new Event('change', { bubbles: true }));
@@ -43,14 +41,12 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
     });
 
     await test.step('Change follow highlight toggle', async () => {
-      const initialState = await page
-        .locator('#follow-highlight-toggle')
-        .isChecked();
+      await page.locator('#follow-highlight-toggle').isChecked();
 
       // Click the toggle using JavaScript to avoid visibility issues
       await page.evaluate(() => {
         const toggle = document.getElementById(
-          'follow-highlight-toggle'
+          'follow-highlight-toggle',
         ) as HTMLInputElement;
         toggle.checked = !toggle.checked;
         toggle.dispatchEvent(new Event('change', { bubbles: true }));
@@ -68,7 +64,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
     await test.step('Change speech rate', async () => {
       await page.evaluate(() => {
         const slider = document.getElementById(
-          'rate-slider'
+          'rate-slider',
         ) as HTMLInputElement;
         slider.value = '1.75';
         const event = new Event('input', { bubbles: true });
@@ -79,7 +75,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
     await test.step('Change speech pitch', async () => {
       await page.evaluate(() => {
         const slider = document.getElementById(
-          'pitch-slider'
+          'pitch-slider',
         ) as HTMLInputElement;
         slider.value = '1.2';
         const event = new Event('input', { bubbles: true });
@@ -101,12 +97,8 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
 
     // Verify all settings were persisted
     await test.step('Verify all settings were persisted after reload', async () => {
-      const autoPlayChecked = await page
-        .locator('#auto-play-next-toggle')
-        .isChecked();
-      const followHighlightChecked = await page
-        .locator('#follow-highlight-toggle')
-        .isChecked();
+      await page.locator('#auto-play-next-toggle').isChecked();
+      await page.locator('#follow-highlight-toggle').isChecked();
       const minimumWords = await page
         .locator('#minimum-words-input')
         .inputValue();
@@ -141,7 +133,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       // Set to a value with decimals
       await page.evaluate(() => {
         const slider = document.getElementById(
-          'rate-slider'
+          'rate-slider',
         ) as HTMLInputElement;
         slider.value = '1.15';
         const event = new Event('input', { bubbles: true });
@@ -155,7 +147,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       // Check rounding to nearest 0.05
       await page.evaluate(() => {
         const slider = document.getElementById(
-          'rate-slider'
+          'rate-slider',
         ) as HTMLInputElement;
         slider.value = '1.23';
         const event = new Event('input', { bubbles: true });
@@ -174,7 +166,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       // Set to a value with decimals
       await page.evaluate(() => {
         const slider = document.getElementById(
-          'pitch-slider'
+          'pitch-slider',
         ) as HTMLInputElement;
         slider.value = '1.5';
         const event = new Event('input', { bubbles: true });
@@ -260,7 +252,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
       // Verify status appears with correct message
       await expect(page.locator('#status')).toHaveClass(/visible success/);
       await expect(page.locator('#status')).toContainText(
-        'Highlight style saved!'
+        'Highlight style saved!',
       );
 
       // Take a screenshot with the status visible

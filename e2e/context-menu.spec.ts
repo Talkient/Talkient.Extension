@@ -26,7 +26,7 @@ test.describe('Context Menu', () => {
   test('should show "Play text" option when text is selected', async ({
     page,
     context,
-    extensionId,
+    extensionId: _extensionId,
   }) => {
     // Select text in the paragraph
     await page.locator('#test-paragraph').selectText();
@@ -45,9 +45,8 @@ test.describe('Context Menu', () => {
     // 3. The context menu permission is granted
 
     // Verify the extension has context menu permission
-    const serviceWorker = await context.serviceWorkers()[0];
+    const serviceWorker = context.serviceWorkers()[0];
     expect(serviceWorker).toBeDefined();
-
   });
 
   test('should handle context menu with multiple selections', async ({

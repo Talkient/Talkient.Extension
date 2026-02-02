@@ -35,7 +35,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       const toggleButton = panel?.querySelector(
-        '.talkient-panel-toggle'
+        '.talkient-panel-toggle',
       ) as HTMLButtonElement;
       if (toggleButton) {
         toggleButton.click();
@@ -49,7 +49,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     const panelHeaderWidth = await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       const header = panel?.querySelector('.talkient-panel-header');
-      return header ? window.getComputedStyle(header as Element).width : null;
+      return header ? window.getComputedStyle(header).width : null;
     });
 
     // Header should not be 600px
@@ -59,7 +59,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     const controlSectionWidth = await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       const section = panel?.querySelector('.talkient-control-section');
-      return section ? window.getComputedStyle(section as Element).width : null;
+      return section ? window.getComputedStyle(section).width : null;
     });
 
     // Section should not be 600px
@@ -103,7 +103,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       const toggleButton = panel?.querySelector(
-        '.talkient-panel-toggle'
+        '.talkient-panel-toggle',
       ) as HTMLButtonElement;
       if (toggleButton) {
         toggleButton.click();
@@ -116,7 +116,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     // Check if toggle input exists and is checked
     const toggleState = await page.evaluate(() => {
       const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
+        '.talkient-toggle-input',
       ) as HTMLInputElement;
       return toggleInput ? toggleInput.checked : null;
     });
@@ -130,7 +130,7 @@ test.describe('Talkient Control Panel on Example.html', () => {
     // Verify it's off
     const toggleStateAfter = await page.evaluate(() => {
       const toggleInput = document.querySelector(
-        '.talkient-toggle-input'
+        '.talkient-toggle-input',
       ) as HTMLInputElement;
       return toggleInput ? toggleInput.checked : null;
     });

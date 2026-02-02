@@ -3,7 +3,7 @@ import { test, expect } from './extension-test';
 test.describe('Talkient Extension Options Page', () => {
   // Increase timeout for this test suite due to service worker initialization
   test.setTimeout(60000);
-  
+
   test('should load options page correctly', async ({ page, extensionId }) => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
@@ -34,7 +34,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Click the toggle to change its state using JavaScript
     await page.evaluate(() => {
       const toggle = document.getElementById(
-        'auto-play-next-toggle'
+        'auto-play-next-toggle',
       ) as HTMLInputElement;
       toggle.checked = !toggle.checked;
       toggle.dispatchEvent(new Event('change', { bubbles: true }));
@@ -48,7 +48,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Auto play next item setting saved!'
+      'Auto play next item setting saved!',
     );
 
     // Take a screenshot for verification
@@ -83,7 +83,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Click the toggle to change its state using JavaScript
     await page.evaluate(() => {
       const toggle = document.getElementById(
-        'follow-highlight-toggle'
+        'follow-highlight-toggle',
       ) as HTMLInputElement;
       toggle.checked = !toggle.checked;
       toggle.dispatchEvent(new Event('change', { bubbles: true }));
@@ -100,7 +100,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Follow highlight setting saved!'
+      'Follow highlight setting saved!',
     );
 
     // Take a screenshot for verification
@@ -116,10 +116,8 @@ test.describe('Talkient Extension Options Page', () => {
     // Wait for input to be ready
     await page.waitForSelector('#minimum-words-input');
 
-    // Get the current value
-    const initialValue = await page
-      .locator('#minimum-words-input')
-      .inputValue();
+    // Get the current value (evaluated for setup timing)
+    await page.locator('#minimum-words-input').inputValue();
 
     // Set a new value
     await page.locator('#minimum-words-input').fill('5');
@@ -133,7 +131,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Minimum words setting saved!'
+      'Minimum words setting saved!',
     );
 
     // Take a screenshot for verification
@@ -146,10 +144,8 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
-    // Get the current value
-    const initialValue = await page
-      .locator('#highlight-style-select')
-      .inputValue();
+    // Get the current value (evaluated for setup timing)
+    await page.locator('#highlight-style-select').inputValue();
 
     // Select a different highlight style
     await page.selectOption('#highlight-style-select', 'bold');
@@ -160,7 +156,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Highlight style saved!'
+      'Highlight style saved!',
     );
 
     // Take a screenshot for verification
@@ -176,8 +172,8 @@ test.describe('Talkient Extension Options Page', () => {
     // Wait for slider to be ready
     await page.waitForSelector('#rate-slider');
 
-    // Get the current value
-    const initialValue = await page.locator('#rate-slider').inputValue();
+    // Get the current value (evaluated for setup timing)
+    await page.locator('#rate-slider').inputValue();
 
     // Set a new speech rate
     await page.locator('#rate-slider').fill('1.5');
@@ -212,8 +208,8 @@ test.describe('Talkient Extension Options Page', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
-    // Get the current value
-    const initialValue = await page.locator('#pitch-slider').inputValue();
+    // Get the current value (evaluated for setup timing)
+    await page.locator('#pitch-slider').inputValue();
 
     // Set a new pitch value
     await page.locator('#pitch-slider').fill('1.5');
@@ -256,13 +252,13 @@ test.describe('Talkient Extension Options Page', () => {
       // Verify status message appears
       await expect(page.locator('#status')).toHaveClass(/visible success/);
       await expect(page.locator('#status')).toContainText(
-        'Voice selection saved!'
+        'Voice selection saved!',
       );
     } else {
       // Just verify there's at least one voice option (default)
       // The actual count may vary based on environment
       await expect(page.locator('#voice-select option')).toHaveCount(
-        await page.locator('#voice-select option').count()
+        await page.locator('#voice-select option').count(),
       );
 
       // Verify that the Default Voice option exists
@@ -288,7 +284,7 @@ test.describe('Talkient Extension Options Page', () => {
   test('should verify settings persistence', async ({
     page,
     extensionId,
-    context,
+    context: _context,
   }) => {
     // Navigate to the options page and change multiple settings
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
@@ -310,7 +306,7 @@ test.describe('Talkient Extension Options Page', () => {
     // Make sure element is visible and use JavaScript click instead of Playwright click
     await page.evaluate(() => {
       const toggle = document.getElementById(
-        'auto-play-next-toggle'
+        'auto-play-next-toggle',
       ) as HTMLInputElement;
       toggle.checked = !toggle.checked;
       toggle.dispatchEvent(new Event('change', { bubbles: true }));
@@ -326,7 +322,7 @@ test.describe('Talkient Extension Options Page', () => {
     await expect(page.locator('#minimum-words-input')).toHaveValue('7');
     await expect(page.locator('#max-nodes-input')).toHaveValue('1200');
     await expect(page.locator('#highlight-style-select')).toHaveValue(
-      'elegant'
+      'elegant',
     );
     await expect(page.locator('#auto-play-next-toggle')).toBeChecked({
       checked: !initialAutoPlayState,

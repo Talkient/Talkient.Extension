@@ -1,10 +1,10 @@
 /// <reference lib="dom" />
 
-import { createControlPanel } from '../control-panel';
-import { processTextElements } from '../content-lib';
+import { createControlPanel } from "../control-panel";
+import { processTextElements } from "../content-lib";
 
 // Mock runtime-utils before importing control-panel
-jest.mock('../runtime-utils', () => ({
+jest.mock("../runtime-utils", () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     const mockChrome = (global as any).chrome;
@@ -17,14 +17,14 @@ jest.mock('../runtime-utils', () => ({
 }));
 
 // Mock processTextElements for tracking calls
-jest.mock('../content-lib', () => {
-  const originalModule = jest.requireActual('../content-lib');
+jest.mock("../content-lib", () => {
+  const originalModule = jest.requireActual("../content-lib");
 
   return {
     ...originalModule,
     processTextElements: jest.fn(() => {
       // Add some text nodes for processing
-      const div = document.createElement('div');
+      const div = document.createElement("div");
       div.innerHTML = `
         <div>
           <span>Some processed text</span>
@@ -34,17 +34,17 @@ jest.mock('../content-lib', () => {
       document.body.appendChild(div);
 
       // Simulate adding play buttons to these text nodes
-      document.querySelectorAll('span, p').forEach((element) => {
-        const wrapper = document.createElement('span');
-        wrapper.classList.add('talkient-processed');
+      document.querySelectorAll("span, p").forEach((element) => {
+        const wrapper = document.createElement("span");
+        wrapper.classList.add("talkient-processed");
 
         // Get text content
-        const text = element.textContent || '';
+        const text = element.textContent || "";
 
         // Create play button
-        const button = document.createElement('button');
-        button.classList.add('talkient-play-button');
-        button.textContent = 'Play';
+        const button = document.createElement("button");
+        button.classList.add("talkient-play-button");
+        button.textContent = "Play";
 
         // Replace the element with our wrapper
         if (element.parentNode) {
@@ -75,12 +75,12 @@ const mockChrome = {
       addListener: jest.fn(),
     },
     sendMessage: jest.fn((message, callback) => {
-      if (message.type === 'RELOAD_PLAY_BUTTONS' && callback) {
+      if (message.type === "RELOAD_PLAY_BUTTONS" && callback) {
         // When message is received, mock that content.ts receives the message
         // and calls processTextElements
         setTimeout(() => {
           // Simulate the background script forwarding the message to content.ts
-          document.dispatchEvent(new CustomEvent('mock-reload-buttons'));
+          document.dispatchEvent(new CustomEvent("mock-reload-buttons"));
         }, 0);
         callback({ success: true });
       } else if (callback) {
@@ -100,20 +100,20 @@ const mockChrome = {
   },
 };
 
-// @ts-ignore
+// @ts-expect-error - Mocking Chrome API
 global.chrome = mockChrome;
 
-describe('Script Control Integration Tests', () => {
+describe("Script Control Integration Tests", () => {
   beforeEach(() => {
     // Set up DOM with an article element (required for control panel to be created)
-    document.body.innerHTML = '<article><p>Test content</p></article>';
+    document.body.innerHTML = "<article><p>Test content</p></article>";
     jest.clearAllMocks();
 
     // Use processTextElements to generate the play buttons
     processTextElements();
 
     // Set up event listener to simulate content.ts message handling
-    document.addEventListener('mock-reload-buttons', () => {
+    document.addEventListener("mock-reload-buttons", () => {
       processTextElements();
     });
 
@@ -122,35 +122,35 @@ describe('Script Control Integration Tests', () => {
   });
 
   afterEach(() => {
-    document.body.innerHTML = '';
-    document.removeEventListener('mock-reload-buttons', () => {});
+    document.body.innerHTML = "";
+    document.removeEventListener("mock-reload-buttons", () => {});
   });
 
-  it('should trigger full reload flow when toggle is turned on', (done) => {
+  it("should trigger full reload flow when toggle is turned on", (done) => {
     // Verify initial state (2 from processTextElements + 1 from article)
-    expect(document.querySelectorAll('.talkient-processed').length).toBe(3);
+    expect(document.querySelectorAll(".talkient-processed").length).toBe(3);
 
     // Get the panel and toggle
-    const panel = document.getElementById('talkient-control-panel');
+    const panel = document.getElementById("talkient-control-panel");
     const toggleInput = panel?.querySelector(
-      '.talkient-toggle-input'
+      ".talkient-toggle-input",
     ) as HTMLInputElement;
 
     // First turn it off
     toggleInput.checked = false;
-    toggleInput.dispatchEvent(new Event('change'));
+    toggleInput.dispatchEvent(new Event("change"));
 
     // Reset the mock call count
     jest.clearAllMocks();
 
     // Now turn it back on to trigger reload
     toggleInput.checked = true;
-    toggleInput.dispatchEvent(new Event('change'));
+    toggleInput.dispatchEvent(new Event("change"));
 
     // Check that message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-      { type: 'RELOAD_PLAY_BUTTONS' },
-      expect.any(Function)
+      { type: "RELOAD_PLAY_BUTTONS" },
+      expect.any(Function),
     );
 
     // Wait for the message handling and processTextElements to be called
@@ -160,28 +160,28 @@ describe('Script Control Integration Tests', () => {
     }, 10);
   });
 
-  it('should integrate with the background script for reload operation', (done) => {
+  it("should integrate with the background script for reload operation", (done) => {
     // Get the toggle input
-    const panel = document.getElementById('talkient-control-panel');
+    const panel = document.getElementById("talkient-control-panel");
     const toggleInput = panel?.querySelector(
-      '.talkient-toggle-input'
+      ".talkient-toggle-input",
     ) as HTMLInputElement;
 
     // First turn it off
     toggleInput.checked = false;
-    toggleInput.dispatchEvent(new Event('change'));
+    toggleInput.dispatchEvent(new Event("change"));
 
     // Reset the mock call count
     jest.clearAllMocks();
 
     // Now turn it back on to start reload flow
     toggleInput.checked = true;
-    toggleInput.dispatchEvent(new Event('change'));
+    toggleInput.dispatchEvent(new Event("change"));
 
     // Verify message was sent
     expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
-      { type: 'RELOAD_PLAY_BUTTONS' },
-      expect.any(Function)
+      { type: "RELOAD_PLAY_BUTTONS" },
+      expect.any(Function),
     );
 
     // Wait for the simulated message handling and verify processTextElements is called

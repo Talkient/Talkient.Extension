@@ -8,13 +8,13 @@ test.describe('Talkient Hidden Elements Tests', () => {
 
   test('should not process hidden elements or add play buttons to them', async ({
     page,
-    context,
-    extensionId,
+    context: _context,
+    extensionId: _extensionId,
   }) => {
     // Get the absolute path to our test HTML file
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/hidden-elements-test.html'
+      'test-pages/hidden-elements-test.html',
     );
 
     // Verify the file exists
@@ -33,12 +33,10 @@ test.describe('Talkient Hidden Elements Tests', () => {
     const pageTitle = await page.title();
     expect(pageTitle).toBe('Talkient Hidden Elements Test Page');
 
-
     // Wait for content script to process the page and add play buttons
     await page
       .waitForSelector('.talkient-play-button', { timeout: 10000 })
-      .catch(() => {
-      });
+      .catch(() => {});
 
     // Take a screenshot of initial state
     await page.screenshot({
@@ -94,7 +92,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       return results;
     });
 
-
     // None of these hidden elements should have play buttons
     expect(hiddenElementsCheck.displayNone).toBeFalsy();
     expect(hiddenElementsCheck.visibilityHidden).toBeFalsy();
@@ -142,12 +139,11 @@ test.describe('Talkient Hidden Elements Tests', () => {
 
       // Check if there's a play button
       const hasButton = !!displayNoneContainer.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       );
 
       return { isVisible, hasButton };
     });
-
 
     // If the element is now visible, it should have a play button
     if (
@@ -194,12 +190,11 @@ test.describe('Talkient Hidden Elements Tests', () => {
         window.getComputedStyle(visibilityHiddenContainer).visibility !==
         'hidden';
       const hasButton = !!visibilityHiddenContainer.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       );
 
       return { isVisible, hasButton };
     });
-
 
     // If the element is now visible, it should have a play button
     if (
@@ -249,7 +244,6 @@ test.describe('Talkient Hidden Elements Tests', () => {
       };
     });
 
-
     // Container should be hidden with display:none
     expect(dynamicButtonAfterHiding.display).toBe('none');
 
@@ -283,16 +277,14 @@ test.describe('Talkient Hidden Elements Tests', () => {
       const isVisible =
         window.getComputedStyle(dynamicContainer).display !== 'none';
       const hasButton = !!dynamicContainer.querySelector(
-        '.talkient-play-button'
+        '.talkient-play-button',
       );
 
       return { isVisible, hasButton };
     });
 
-
     // Container should be visible again and have a play button
     expect(dynamicButtonAfterShowing.isVisible).toBeTruthy();
     expect(dynamicButtonAfterShowing.hasButton).toBeTruthy();
-
   });
 });

@@ -8,8 +8,8 @@ test.describe('Maximum Nodes Configuration', () => {
     // Navigate to the options page
     await page.goto(`chrome-extension://${extensionId}/options/options.html`);
 
-    // Get the current value
-    const initialValue = await page.locator('#max-nodes-input').inputValue();
+    // Get the current value (evaluated for setup timing)
+    await page.locator('#max-nodes-input').inputValue();
 
     // Set a new value
     await page.locator('#max-nodes-input').fill('1250');
@@ -20,7 +20,7 @@ test.describe('Maximum Nodes Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Maximum nodes setting saved!'
+      'Maximum nodes setting saved!',
     );
 
     // Take a screenshot for verification
@@ -48,7 +48,7 @@ test.describe('Maximum Nodes Configuration', () => {
     // Verify status message appears
     await expect(page.locator('#status')).toHaveClass(/visible success/);
     await expect(page.locator('#status')).toContainText(
-      'Maximum nodes setting saved!'
+      'Maximum nodes setting saved!',
     );
 
     // Take a screenshot for verification
@@ -114,7 +114,7 @@ test.describe('Maximum Nodes Configuration', () => {
     await expect(page.locator('#minimum-words-input')).toHaveValue('6');
     await expect(page.locator('#max-nodes-input')).toHaveValue('1550');
     await expect(page.locator('#highlight-style-select')).toHaveValue(
-      'minimal'
+      'minimal',
     );
 
     // Take a screenshot for verification
