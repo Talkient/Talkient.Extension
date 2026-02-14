@@ -6,8 +6,10 @@
   "scripts": {
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"e2e/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"e2e/**/*.ts\"",
     "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js dist/content/control-panel.js dist/content/highlight.js dist/content/icons.js dist/content/runtime-utils.js && rm -rf dist/auth && rm -rf dist/types && rm -f dist/tsconfig.tsbuildinfo",
-    "build": "tsc --build && pnpm build:content && pnpm build:popup && pnpm build:sw",
+    "build": "tsc --build && pnpm build:content && pnpm build:popup && pnpm build:sw && pnpm build:options",
     "update-manifest": "cp manifest.json dist/",
     "update-assets": "cp assets/ dist/ -r",
     "update-htmls": "cp src/options/*.html dist/options -r && cp src/popup/*.html dist/popup -r",
@@ -18,16 +20,24 @@
     "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58",
     "build:popup": "esbuild src/popup/popup.ts --bundle --outfile=dist/popup/popup.js --format=iife --platform=browser --target=chrome58",
     "build:sw": "esbuild src/background/service-worker.ts --bundle --outfile=dist/background/service-worker.js --format=esm --platform=browser --target=chrome58",
+    "build:options": "esbuild src/options/options.ts --bundle --outfile=dist/options/options.js --format=iife --platform=browser --target=chrome58",
     "test:e2e": "pnpm run publish && playwright test --reporter=list",
     "test:e2e:ui-report": "pnpm run publish && playwright test",
     "test:e2e:ui": "pnpm run publish && playwright test --ui",
     "test:e2e:debug": "pnpm run publish && playwright test --debug",
-    "test:e2e:headless": "set CI=true && pnpm test:e2e"
+    "test:e2e:headless": "set CI=true && pnpm test:e2e",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "Talkient Extension Contributors",
   "license": "GPL-3.0-only",
   "packageManager": "pnpm@10.11.0",
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.57.0",
@@ -40,8 +50,10 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3",
