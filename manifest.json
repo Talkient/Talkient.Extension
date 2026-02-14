@@ -7,7 +7,14 @@
     "128": "assets/png/text-to-speech.png"
   },
   "version": "0.0.15",
-  "permissions": ["tts", "storage", "contextMenus"],
+  "permissions": ["tts", "storage", "contextMenus", "identity"],
+  "oauth2": {
+    "client_id": "487597228651-n6g0bj7j2t6ugk8bqe0d1d05b764pmcn.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
   "action": {
     "default_popup": "./popup/popup.html"
   },

@@ -3,8 +3,17 @@ import {
   isPauseSpeechMessage,
   isOpenOptionsMessage,
   isReloadPlayButtonsMessage,
-  type ServiceWorkerMessage,
+  isSignInMessage,
+  isSignOutMessage,
+  isGetAuthStateMessage,
+  type ExtendedServiceWorkerMessage,
 } from '../types/messages';
+import {
+  signInWithGoogle,
+  signOut,
+  getCurrentUser,
+  isAuthenticated,
+} from '../auth';
 
 console.log('Service Worker for Talkient Extension');
 
@@ -172,8 +181,43 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.runtime.onMessage.addListener(
-  (request: ServiceWorkerMessage, sender, sendResponse) => {
+  (request: ExtendedServiceWorkerMessage, sender, sendResponse) => {
     console.log('[Talkient.SW] Firing a request type of ', request.type);
+
+    // Handle authentication messages
+    if (isSignInMessage(request)) {
+      console.log('[Talkient.SW] Processing sign-in request...');
+      void signInWithGoogle(request.interactive !== false).then((result) => {
+        if (result.success) {
+          sendResponse({ success: true, user: result.user });
+        } else {
+          sendResponse({ success: false, error: result.error });
+        }
+      });
+      return true; // Keep channel open for async response
+    }
+
+    if (isSignOutMessage(request)) {
+      console.log('[Talkient.SW] Processing sign-out request...');
+      void signOut().then((result) => {
+        sendResponse(result);
+      });
+      return true;
+    }
+
+    if (isGetAuthStateMessage(request)) {
+      console.log('[Talkient.SW] Getting auth state...');
+      void Promise.all([isAuthenticated(), getCurrentUser()]).then(
+        ([authenticated, user]) => {
+          sendResponse({
+            success: true,
+            isAuthenticated: authenticated,
+            user: user,
+          });
+        },
+      );
+      return true;
+    }
 
     if (isSpeakTextMessage(request)) {
       console.log('[Talkient.SW] Starting to speak... ');
@@ -439,7 +483,7 @@ chrome.runtime.onMessage.addListener(
       // Exhaustive check - this should never be reached if all message types are handled
       const _exhaustiveCheck: never = request;
       console.warn(
-        `[Talkient.SW] Event ${(_exhaustiveCheck as ServiceWorkerMessage).type} not implemented`,
+        `[Talkient.SW] Event ${(_exhaustiveCheck as ExtendedServiceWorkerMessage).type} not implemented`,
       );
     }
 
