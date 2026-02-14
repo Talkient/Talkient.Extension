@@ -1,4 +1,4 @@
-# Talkient.Extenion
+# Talkient.Extension
 
 - Create a System Design or similar (maybe as a isolated github repository)
 
@@ -19,10 +19,10 @@
 - Update the version within `manifest.json` and `package.json`
 - Run `pnpm run publish`
 - Create a zip file with the generated content from `./dist` and call it like `0.0.3.zip`
-- Go to the [Talkient's page on Chrome Web store](https://chrome.google.com/webstore/devconsole/20fe41e7-86af-425d-80aa-e36e07861587/mabpfeobaegdlchpnipdfaahmhdaabdc/edit/package), upload the zip
-- Make sure the [Privacy](https://chrome.google.com/webstore/devconsole/20fe41e7-86af-425d-80aa-e36e07861587/mabpfeobaegdlchpnipdfaahmhdaabdc/edit/privacy) and [Store listing](https://chrome.google.com/webstore/devconsole/20fe41e7-86af-425d-80aa-e36e07861587/mabpfeobaegdlchpnipdfaahmhdaabdc/edit/listing) setting are up to date
-- Click Save draft and then submit.
-- Create a new tag/release on GH.
+- Go to the Chrome Web Store Developer Dashboard, navigate to your extension, and upload the zip
+- Make sure the Privacy and Store listing settings are up to date
+- Click Save draft and then submit
+- Create a new tag/release on GitHub
 
 ## TO DO
 
