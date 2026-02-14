@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "formatter": {
+    "prettier-eslint": {
+      "command": ["npx", "prettier", "--write", "$FILE"],
+      "extensions": [".ts", ".tsx"]
+    },
+    "eslint": {
+      "command": ["npx", "eslint", "--fix", "$FILE"],
+      "extensions": [".ts", ".tsx"]
+    }
+  }
+}
