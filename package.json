@@ -23,8 +23,8 @@
     "test:e2e:headless": "set CI=true && pnpm test:e2e"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Talkient Extension Contributors",
+  "license": "GPL-3.0-only",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
