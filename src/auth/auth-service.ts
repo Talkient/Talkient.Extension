@@ -185,7 +185,9 @@ async function removeCachedToken(token: string): Promise<void> {
 async function revokeToken(token: string): Promise<void> {
   try {
     const response = await fetch(
-      `https://accounts.google.com/o/oauth2/revoke?token=${token}`,
+      `https://accounts.google.com/o/oauth2/revoke?token=${encodeURIComponent(
+        token,
+      )}`,
     );
     if (!response.ok) {
       console.warn(
