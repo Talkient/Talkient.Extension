@@ -207,15 +207,21 @@ chrome.runtime.onMessage.addListener(
 
     if (isGetAuthStateMessage(request)) {
       console.log('[Talkient.SW] Getting auth state...');
-      void Promise.all([isAuthenticated(), getCurrentUser()]).then(
-        ([authenticated, user]) => {
+      void getCurrentUser()
+        .then((user) => {
+          const authenticated = !!user;
           sendResponse({
             success: true,
             isAuthenticated: authenticated,
             user: user,
           });
-        },
-      );
+        })
+        .catch((error) => {
+          sendResponse({
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
       return true;
     }
 
