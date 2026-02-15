@@ -3,7 +3,8 @@
 import type {
   ServiceWorkerMessage,
   MessageResponse,
-} from '../shared/types/messages';
+  ExtendedServiceWorkerMessage,
+} from '../types/messages';
 
 /**
  * Checks if the Chrome extension runtime is still valid
@@ -27,7 +28,7 @@ export function isExtensionContextValid(): boolean {
  * @returns true if the message was sent, false if the context is invalid
  */
 export function safeSendMessage(
-  message: ServiceWorkerMessage,
+  message: ServiceWorkerMessage | ExtendedServiceWorkerMessage,
   callback?: (response: MessageResponse | undefined) => void,
 ): boolean {
   if (!isExtensionContextValid()) {
@@ -64,4 +65,19 @@ export function safeSendMessage(
     console.error('[Talkient] Failed to send message:', error);
     return false;
   }
+}
+
+/**
+ * Send a message and wait for response with Promise
+ * @param message - The message to send
+ * @returns Promise resolving to the response
+ */
+export async function sendMessageAsync(
+  message: ServiceWorkerMessage | ExtendedServiceWorkerMessage,
+): Promise<MessageResponse | undefined> {
+  return new Promise((resolve) => {
+    safeSendMessage(message, (response) => {
+      resolve(response);
+    });
+  });
 }

@@ -7,13 +7,8 @@ import {
   isSignOutMessage,
   isGetAuthStateMessage,
   type ExtendedServiceWorkerMessage,
-} from '../types/messages';
-import {
-  signInWithGoogle,
-  signOut,
-  getCurrentUser,
-  isAuthenticated,
-} from '../auth';
+} from '../shared/types/messages';
+import { signInWithGoogle, signOut, getCurrentUser } from '../auth';
 
 console.log('Service Worker for Talkient Extension');
 

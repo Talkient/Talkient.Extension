@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
-import { safeSendMessage } from "./runtime-utils";
-import type { MessageResponse } from "../types/messages";
+import { safeSendMessage } from './runtime-utils';
+import type { MessageResponse } from '../shared/types/messages';
 
 /**
  * Control Panel Module
@@ -10,7 +10,7 @@ import type { MessageResponse } from "../types/messages";
  */
 
 // Cookie name for hiding the control panel
-const PANEL_HIDDEN_COOKIE_NAME = "talkient_panel_hidden";
+const PANEL_HIDDEN_COOKIE_NAME = 'talkient_panel_hidden';
 
 // Default duration to hide the panel in minutes
 const DEFAULT_PANEL_HIDDEN_DURATION_MINUTES = 30;
@@ -23,8 +23,8 @@ let cachedPanelHideDuration = DEFAULT_PANEL_HIDDEN_DURATION_MINUTES;
  * Should be called when the content script loads
  */
 export function initPanelHideDuration(): void {
-  chrome.storage.local.get(["panelHideDuration"], (result) => {
-    if (typeof result.panelHideDuration === "number") {
+  chrome.storage.local.get(['panelHideDuration'], (result) => {
+    if (typeof result.panelHideDuration === 'number') {
       cachedPanelHideDuration = result.panelHideDuration;
     }
   });
@@ -32,9 +32,9 @@ export function initPanelHideDuration(): void {
   // Listen for storage changes to keep cache in sync
   if (chrome.storage?.onChanged?.addListener) {
     chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === "local" && changes.panelHideDuration) {
+      if (namespace === 'local' && changes.panelHideDuration) {
         const newDuration = changes.panelHideDuration.newValue;
-        if (typeof newDuration === "number") {
+        if (typeof newDuration === 'number') {
           cachedPanelHideDuration = newDuration;
         }
       }
@@ -64,11 +64,11 @@ export function getDomainHideCookieName(): string {
  */
 export function isPanelHiddenForDomain(): boolean {
   const cookieName = getDomainHideCookieName();
-  const cookies = document.cookie.split(";");
+  const cookies = document.cookie.split(';');
 
   for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split("=");
-    if (name === cookieName && value === "true") {
+    const [name, value] = cookie.trim().split('=');
+    if (name === cookieName && value === 'true') {
       return true;
     }
   }
@@ -106,30 +106,30 @@ export function clearDomainHideCookie(): void {
 // Function to create and inject the control panel
 export function createControlPanel(): void {
   // Check if control panel already exists
-  if (document.getElementById("talkient-control-panel")) {
+  if (document.getElementById('talkient-control-panel')) {
     return;
   }
 
   // Check if the panel is hidden for this domain (via cookie)
   if (isPanelHiddenForDomain()) {
     console.log(
-      "[Talkient.ControlPanel] Control panel is hidden for this domain. Will be available again after cookie expires.",
+      '[Talkient.ControlPanel] Control panel is hidden for this domain. Will be available again after cookie expires.',
     );
     return;
   }
 
   // Check if there's an article element in the DOM
-  const articleElement = document.querySelector("article");
+  const articleElement = document.querySelector('article');
   if (!articleElement) {
     console.log(
-      "[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.",
+      '[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.',
     );
     return;
   }
 
   // Create the control panel container
-  const panel = document.createElement("div");
-  panel.id = "talkient-control-panel";
+  const panel = document.createElement('div');
+  panel.id = 'talkient-control-panel';
 
   // Create panel content
   panel.innerHTML = `
@@ -192,10 +192,10 @@ export function createControlPanel(): void {
   setupControlPanelEventListeners(panel);
 
   // Set panel to collapsed state by default
-  const content = panel.querySelector(".talkient-panel-content") as HTMLElement;
+  const content = panel.querySelector('.talkient-panel-content') as HTMLElement;
   if (content) {
-    content.style.display = "none";
-    panel.classList.add("talkient-collapsed");
+    content.style.display = 'none';
+    panel.classList.add('talkient-collapsed');
   }
 
   // Add the panel to the document
@@ -221,10 +221,10 @@ function setupControlPanelEventListeners(panel: HTMLElement): void {
  */
 function setupCloseButton(panel: HTMLElement): void {
   const closeButton = panel.querySelector(
-    ".talkient-panel-close",
+    '.talkient-panel-close',
   ) as HTMLButtonElement;
 
-  closeButton?.addEventListener("click", () => {
+  closeButton?.addEventListener('click', () => {
     const duration = getPanelHideDuration();
     // Set cookie to hide panel on this domain
     setDomainHideCookie();
@@ -234,7 +234,7 @@ function setupCloseButton(panel: HTMLElement): void {
       );
     } else {
       console.log(
-        "[Talkient.ControlPanel] Panel closed. Duration is 0, panel will reappear on next page load.",
+        '[Talkient.ControlPanel] Panel closed. Duration is 0, panel will reappear on next page load.',
       );
     }
     panel.remove();
@@ -246,23 +246,23 @@ function setupCloseButton(panel: HTMLElement): void {
  */
 function setupToggleButton(panel: HTMLElement): void {
   const toggleButton = panel.querySelector(
-    ".talkient-panel-toggle",
+    '.talkient-panel-toggle',
   ) as HTMLButtonElement;
-  const content = panel.querySelector(".talkient-panel-content") as HTMLElement;
+  const content = panel.querySelector('.talkient-panel-content') as HTMLElement;
   let isCollapsed = true; // Start collapsed by default
 
-  toggleButton?.addEventListener("click", () => {
+  toggleButton?.addEventListener('click', () => {
     isCollapsed = !isCollapsed;
     if (isCollapsed) {
-      content.style.display = "none";
-      toggleButton.innerHTML = "+";
-      toggleButton.title = "Expand panel";
-      panel.classList.add("talkient-collapsed");
+      content.style.display = 'none';
+      toggleButton.innerHTML = '+';
+      toggleButton.title = 'Expand panel';
+      panel.classList.add('talkient-collapsed');
     } else {
-      content.style.display = "block";
-      toggleButton.innerHTML = "−";
-      toggleButton.title = "Collapse panel";
-      panel.classList.remove("talkient-collapsed");
+      content.style.display = 'block';
+      toggleButton.innerHTML = '−';
+      toggleButton.title = 'Collapse panel';
+      panel.classList.remove('talkient-collapsed');
     }
   });
 }
@@ -272,18 +272,18 @@ function setupToggleButton(panel: HTMLElement): void {
  */
 function setupSettingsButton(panel: HTMLElement): void {
   const settingsButton = panel.querySelector(
-    ".talkient-control-btn.settings",
+    '.talkient-control-btn.settings',
   ) as HTMLButtonElement;
 
-  settingsButton?.addEventListener("click", () => {
+  settingsButton?.addEventListener('click', () => {
     // Send message to background script to open the options page
     safeSendMessage(
-      { type: "OPEN_OPTIONS" },
+      { type: 'OPEN_OPTIONS' },
       (response: MessageResponse | undefined) => {
         if (!response?.success) {
           console.error(
-            "[Talkient.Content] Failed to open options page:",
-            response && "error" in response ? response.error : "Unknown error",
+            '[Talkient.Content] Failed to open options page:',
+            response && 'error' in response ? response.error : 'Unknown error',
           );
         }
       },
@@ -297,11 +297,11 @@ function setupSettingsButton(panel: HTMLElement): void {
 function setupScriptControlButtons(panel: HTMLElement): void {
   // Setup toggle switch
   const toggleInput = panel.querySelector(
-    ".talkient-toggle-input",
+    '.talkient-toggle-input',
   ) as HTMLInputElement;
 
   // Load the current state from storage
-  chrome.storage.local.get(["playButtonsEnabled"], (result) => {
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
     // Default to true if not set
     const isEnabled = result.playButtonsEnabled !== false;
     toggleInput.checked = isEnabled;
@@ -312,7 +312,7 @@ function setupScriptControlButtons(panel: HTMLElement): void {
     }
   });
 
-  toggleInput?.addEventListener("change", () => {
+  toggleInput?.addEventListener('change', () => {
     const isEnabled = toggleInput.checked;
 
     // Save the state to storage
@@ -323,15 +323,15 @@ function setupScriptControlButtons(panel: HTMLElement): void {
       removeAllPlayButtons();
 
       // Re-process text elements to add new play buttons
-      safeSendMessage({ type: "RELOAD_PLAY_BUTTONS" }, (_response) => {
+      safeSendMessage({ type: 'RELOAD_PLAY_BUTTONS' }, (_response) => {
         console.log(
-          "[Talkient.Content] Play buttons enabled and loaded successfully",
+          '[Talkient.Content] Play buttons enabled and loaded successfully',
         );
       });
     } else {
       // Remove all play buttons without re-adding them
       removeAllPlayButtons();
-      console.log("[Talkient.Content] Play buttons disabled and removed");
+      console.log('[Talkient.Content] Play buttons disabled and removed');
     }
   });
 }
@@ -341,18 +341,18 @@ function setupScriptControlButtons(panel: HTMLElement): void {
  */
 function setupSpeechRateSlider(panel: HTMLElement): void {
   const rateSlider = panel.querySelector(
-    ".talkient-rate-slider",
+    '.talkient-rate-slider',
   ) as HTMLInputElement;
   const rateValue = panel.querySelector(
-    ".talkient-rate-value",
+    '.talkient-rate-value',
   ) as HTMLSpanElement;
 
   if (!rateSlider || !rateValue) return;
 
   // Load the current rate from storage
-  chrome.storage.local.get(["speechRate"], (result) => {
+  chrome.storage.local.get(['speechRate'], (result) => {
     const speechRate =
-      typeof result.speechRate === "number" ? result.speechRate : 1.0;
+      typeof result.speechRate === 'number' ? result.speechRate : 1.0;
 
     // Enforce 0.05 step increment by rounding to nearest 0.05
     const roundedRate = Math.round(speechRate * 20) / 20;
@@ -363,7 +363,7 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
   });
 
   // Save rate to storage and update display on change
-  rateSlider.addEventListener("input", () => {
+  rateSlider.addEventListener('input', () => {
     // Enforce 0.05 step increment by rounding to nearest 0.05
     const rawValue = parseFloat(rateSlider.value);
     const speechRate = Math.round(rawValue * 20) / 20; // Round to nearest 0.05
@@ -375,18 +375,18 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 
     // Enable the play button if it's disabled
     const playButton = panel.querySelector(
-      ".talkient-control-btn.primary",
+      '.talkient-control-btn.primary',
     ) as HTMLButtonElement;
     if (playButton && playButton.disabled) {
       playButton.disabled = false;
     }
 
     // Update content-lib cache for sync
-    void import("./content-lib").then(({ setSpeechRate }) => {
+    void import('./content-lib').then(({ setSpeechRate }) => {
       setSpeechRate(speechRate);
     });
 
-    console.log("[Talkient.Content] Speech rate updated to:", speechRate);
+    console.log('[Talkient.Content] Speech rate updated to:', speechRate);
   });
 }
 
@@ -395,41 +395,41 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
  */
 function setupMainControlButton(panel: HTMLElement): void {
   const mainButton = panel.querySelector(
-    ".talkient-control-btn.primary",
+    '.talkient-control-btn.primary',
   ) as HTMLButtonElement;
 
   if (!mainButton) return;
 
   // Import the required icons
-  void import("./icons").then(
+  void import('./icons').then(
     ({ getSvgIcon, isSvgPlayIcon: _isSvgPlayIcon, isSvgPauseIcon }) => {
       // Set the initial icon to play
-      mainButton.innerHTML = getSvgIcon("play");
+      mainButton.innerHTML = getSvgIcon('play');
 
       // Keep the button disabled by default
       // mainButton.disabled = false; // Removed to keep button disabled
 
       // Enable the speech rate slider when the play button is enabled
       const rateSlider = panel.querySelector(
-        ".talkient-rate-slider",
+        '.talkient-rate-slider',
       ) as HTMLInputElement;
       if (rateSlider) {
         rateSlider.disabled = false;
       }
 
-      mainButton.addEventListener("click", () => {
+      mainButton.addEventListener('click', () => {
         const isPlaying = isSvgPauseIcon(
-          mainButton.querySelector("svg") as SVGElement,
+          mainButton.querySelector('svg') as SVGElement,
         );
 
         if (isPlaying) {
           // Pause the speech
-          safeSendMessage({ type: "PAUSE_SPEECH" }, (_response) => {
+          safeSendMessage({ type: 'PAUSE_SPEECH' }, (_response) => {
             // Set play icon
-            mainButton.innerHTML = getSvgIcon("play");
+            mainButton.innerHTML = getSvgIcon('play');
 
             // Import and use the clearHighlight function
-            void import("./highlight").then(({ clearHighlight }) => {
+            void import('./highlight').then(({ clearHighlight }) => {
               clearHighlight();
             });
           });
@@ -437,7 +437,7 @@ function setupMainControlButton(panel: HTMLElement): void {
           // Currently, we can't play from the control panel because we don't have a text selection
           // Show a notification or hint to the user
           alert(
-            "Please select text on the page to speak, or use the play buttons next to paragraphs.",
+            'Please select text on the page to speak, or use the play buttons next to paragraphs.',
           );
         }
       });
@@ -450,13 +450,13 @@ function setupMainControlButton(panel: HTMLElement): void {
  */
 function removeAllPlayButtons(): void {
   // Remove all processed elements
-  const processedElements = document.querySelectorAll(".talkient-processed");
+  const processedElements = document.querySelectorAll('.talkient-processed');
   processedElements.forEach((element) => {
     // Get the text content
-    const textContent = element.textContent || "";
+    const textContent = element.textContent || '';
 
     // Create a text node with the original content
-    const textNode = document.createTextNode(textContent.replace(/\s*$/, ""));
+    const textNode = document.createTextNode(textContent.replace(/\s*$/, ''));
 
     // Replace the processed element with the original text node
     if (element.parentNode) {
@@ -466,7 +466,7 @@ function removeAllPlayButtons(): void {
   });
 
   // Remove all play buttons that might not be in processed elements
-  const playButtons = document.querySelectorAll(".talkient-play-button");
+  const playButtons = document.querySelectorAll('.talkient-play-button');
   playButtons.forEach((button) => button.remove());
 }
 
@@ -474,7 +474,7 @@ function removeAllPlayButtons(): void {
  * Sets up drag functionality for moving the panel
  */
 function setupDragFunctionality(panel: HTMLElement): void {
-  const header = panel.querySelector(".talkient-panel-header") as HTMLElement;
+  const header = panel.querySelector('.talkient-panel-header') as HTMLElement;
 
   let isDragging = false;
   let startX = 0;
@@ -483,17 +483,17 @@ function setupDragFunctionality(panel: HTMLElement): void {
   let startTop = 0;
 
   // Make the header draggable
-  header.style.cursor = "grab";
-  header.title = "Drag to move panel";
+  header.style.cursor = 'grab';
+  header.title = 'Drag to move panel';
 
-  header.addEventListener("mousedown", (e) => {
+  header.addEventListener('mousedown', (e) => {
     // Don't start dragging if clicking on buttons
-    if ((e.target as HTMLElement).tagName === "BUTTON") {
+    if ((e.target as HTMLElement).tagName === 'BUTTON') {
       return;
     }
 
     isDragging = true;
-    header.style.cursor = "grabbing";
+    header.style.cursor = 'grabbing';
 
     startX = e.clientX;
     startY = e.clientY;
@@ -504,15 +504,15 @@ function setupDragFunctionality(panel: HTMLElement): void {
     startTop = rect.top;
 
     // Change to absolute positioning
-    panel.style.position = "fixed";
-    panel.style.left = startLeft + "px";
-    panel.style.top = startTop + "px";
-    panel.style.transform = "none";
+    panel.style.position = 'fixed';
+    panel.style.left = startLeft + 'px';
+    panel.style.top = startTop + 'px';
+    panel.style.transform = 'none';
 
     e.preventDefault();
   });
 
-  document.addEventListener("mousemove", (e) => {
+  document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
 
     const deltaX = e.clientX - startX;
@@ -529,14 +529,14 @@ function setupDragFunctionality(panel: HTMLElement): void {
     newLeft = Math.max(0, Math.min(newLeft, viewportWidth - panelRect.width));
     newTop = Math.max(0, Math.min(newTop, viewportHeight - panelRect.height));
 
-    panel.style.left = newLeft + "px";
-    panel.style.top = newTop + "px";
+    panel.style.left = newLeft + 'px';
+    panel.style.top = newTop + 'px';
   });
 
-  document.addEventListener("mouseup", () => {
+  document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
-      header.style.cursor = "grab";
+      header.style.cursor = 'grab';
     }
   });
 }
@@ -545,7 +545,7 @@ function setupDragFunctionality(panel: HTMLElement): void {
  * Removes the control panel from the DOM if it exists
  */
 export function removeControlPanel(): void {
-  const panel = document.getElementById("talkient-control-panel");
+  const panel = document.getElementById('talkient-control-panel');
   if (panel) {
     panel.remove();
   }
@@ -555,7 +555,7 @@ export function removeControlPanel(): void {
  * Checks if the control panel is currently visible
  */
 export function isControlPanelVisible(): boolean {
-  const panel = document.getElementById("talkient-control-panel");
+  const panel = document.getElementById('talkient-control-panel');
   return panel !== null;
 }
 

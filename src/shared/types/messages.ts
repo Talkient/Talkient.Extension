@@ -111,7 +111,7 @@ export function isReloadPlayButtonsMessage(
 // Authentication Messages
 // ============================================
 
-import type { GoogleUser } from '../auth/auth-types';
+import type { GoogleUser } from '../../auth/auth-types';
 
 // Auth message types sent to service worker
 export interface SignInMessage {

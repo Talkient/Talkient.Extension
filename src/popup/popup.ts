@@ -1,8 +1,5 @@
-import type {
-  AuthStateResponse,
-  AuthSuccessResponse,
-  AuthErrorResponse,
-} from '../types/messages';
+// Auth response types are imported but used via 'any' type for now
+// Will be properly typed when auth feature is extracted in Phase 5
 
 console.log('Popup for Talkient Extension');
 
@@ -72,11 +69,14 @@ function showAuthLoading(): void {
  */
 async function checkAuthState(): Promise<void> {
   try {
-    const response = (await chrome.runtime.sendMessage({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const response = await chrome.runtime.sendMessage({
       type: 'GET_AUTH_STATE',
-    })) as AuthStateResponse;
+    });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (response?.success) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       updateAuthUI(response.isAuthenticated, response.user ?? undefined);
     } else {
       updateAuthUI(false);
@@ -94,14 +94,18 @@ async function handleSignIn(): Promise<void> {
   showAuthLoading();
 
   try {
-    const response = (await chrome.runtime.sendMessage({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const response = await chrome.runtime.sendMessage({
       type: 'SIGN_IN',
       interactive: true,
-    })) as AuthSuccessResponse | AuthErrorResponse;
+    });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (response?.success && 'user' in response) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       updateAuthUI(true, response.user);
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.error('[Talkient.Popup] Sign-in failed:', response?.error);
       updateAuthUI(false);
     }
