@@ -217,7 +217,7 @@ async function fetchUserProfile(token: string): Promise<GoogleUser | null> {
       return null;
     }
 
-    const data: GoogleUserInfoResponse = await response.json();
+    const data = (await response.json()) as GoogleUserInfoResponse;
 
     return {
       id: data.id,
