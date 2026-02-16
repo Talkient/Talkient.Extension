@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 
-import type { ServiceWorkerMessage, MessageResponse } from "../types/messages";
+import type { ServiceWorkerMessage, MessageResponse } from '../types/messages';
 
 /**
  * Checks if the Chrome extension runtime is still valid
@@ -12,7 +12,7 @@ export function isExtensionContextValid(): boolean {
     // If the extension context is invalidated, this will throw an error or return undefined
     return !!chrome.runtime?.id;
   } catch (error) {
-    console.warn("[Talkient] Extension context is no longer valid:", error);
+    console.warn('[Talkient] Extension context is no longer valid:', error);
     return false;
   }
 }
@@ -29,7 +29,7 @@ export function safeSendMessage(
 ): boolean {
   if (!isExtensionContextValid()) {
     console.warn(
-      "[Talkient] Cannot send message - extension context is invalidated. The extension may have been reloaded.",
+      '[Talkient] Cannot send message - extension context is invalidated. The extension may have been reloaded.',
     );
     return false;
   }
@@ -38,17 +38,17 @@ export function safeSendMessage(
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError) {
         // Check if it's a context invalidation error
-        const errorMessage = chrome.runtime.lastError.message || "";
+        const errorMessage = chrome.runtime.lastError.message || '';
         if (
-          errorMessage.includes("Extension context invalidated") ||
-          errorMessage.includes("message port closed")
+          errorMessage.includes('Extension context invalidated') ||
+          errorMessage.includes('message port closed')
         ) {
           console.warn(
-            "[Talkient] Extension context was invalidated during message send. This usually happens when the extension is reloaded.",
+            '[Talkient] Extension context was invalidated during message send. This usually happens when the extension is reloaded.',
           );
         } else {
           console.error(
-            "[Talkient] Error sending message:",
+            '[Talkient] Error sending message:',
             chrome.runtime.lastError,
           );
         }
@@ -58,7 +58,7 @@ export function safeSendMessage(
     });
     return true;
   } catch (error) {
-    console.error("[Talkient] Failed to send message:", error);
+    console.error('[Talkient] Failed to send message:', error);
     return false;
   }
 }

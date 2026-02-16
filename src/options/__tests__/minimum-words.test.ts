@@ -24,7 +24,7 @@ describe('Minimum words setting', () => {
 
     // Get references to elements
     minimumWordsInput = document.getElementById(
-      'minimum-words-input'
+      'minimum-words-input',
     ) as HTMLInputElement;
 
     // Mock Chrome storage with default values
@@ -39,13 +39,13 @@ describe('Minimum words setting', () => {
           minimumWords: 3, // Default value
           maxNodesProcessed: 1000, // Default value
         });
-      }
+      },
     );
 
     (chrome.storage.local.set as jest.Mock).mockImplementation(
       (obj, callback) => {
         if (callback) callback();
-      }
+      },
     );
 
     // Clear all mocks before each test
@@ -71,7 +71,7 @@ describe('Minimum words setting', () => {
 
     it('should have setting label for minimum words', () => {
       const minimumWordsLabel = document.querySelector(
-        '.setting-row:has(#minimum-words-input) .setting-label'
+        '.setting-row:has(#minimum-words-input) .setting-label',
       );
       expect(minimumWordsLabel).toBeTruthy();
       expect(minimumWordsLabel?.textContent).toBe('Minimum words');
@@ -93,7 +93,7 @@ describe('Minimum words setting', () => {
 
       expect(chrome.storage.local.get).toHaveBeenCalledWith(
         expect.arrayContaining(['minimumWords']),
-        expect.any(Function)
+        expect.any(Function),
       );
 
       expect(minimumWordsInput.value).toBe('3');
@@ -111,7 +111,7 @@ describe('Minimum words setting', () => {
             autoPlayNext: false,
             // minimumWords is missing
           });
-        }
+        },
       );
 
       // Reload the module and trigger DOMContentLoaded
