@@ -26,7 +26,7 @@ describe('popup.ts - using actual HTML', () => {
     // Get references to elements
     optionsLink = document.getElementById('options-link') as HTMLAnchorElement;
     reportIssueLink = document.getElementById(
-      'report-issue-link'
+      'report-issue-link',
     ) as HTMLAnchorElement;
 
     // Clear all mocks before each test
