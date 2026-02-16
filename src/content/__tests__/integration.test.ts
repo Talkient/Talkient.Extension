@@ -6,7 +6,10 @@ import {
   clearHighlight,
   getCurrentHighlightedElement,
 } from '../content-lib';
-import { isSvgPlayIcon, isSvgPauseIcon } from '../icons';
+import {
+  isSvgPlayIcon,
+  isSvgPauseIcon,
+} from '../../features/assets/content/icons';
 
 // Mock runtime-utils before importing content-lib
 jest.mock('../runtime-utils', () => ({

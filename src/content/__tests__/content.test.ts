@@ -12,7 +12,11 @@ import {
   setButtonPosition,
 } from '../content-lib';
 
-import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from '../icons';
+import {
+  getSvgIcon,
+  isSvgPlayIcon,
+  isSvgPauseIcon,
+} from '../../features/assets/content/icons';
 
 // Mock runtime-utils before importing content-lib
 jest.mock('../runtime-utils', () => ({

@@ -401,7 +401,7 @@ function setupMainControlButton(panel: HTMLElement): void {
   if (!mainButton) return;
 
   // Import the required icons
-  void import('./icons').then(
+  void import('../features/assets/content/icons').then(
     ({ getSvgIcon, isSvgPlayIcon: _isSvgPlayIcon, isSvgPauseIcon }) => {
       // Set the initial icon to play
       mainButton.innerHTML = getSvgIcon('play');

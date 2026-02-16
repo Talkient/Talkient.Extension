@@ -12,7 +12,11 @@ import {
   scrollToHighlightedElement,
 } from './highlight';
 
-import { getSvgIcon, isSvgPlayIcon, isSvgPauseIcon } from './icons';
+import {
+  getSvgIcon,
+  isSvgPlayIcon,
+  isSvgPauseIcon,
+} from '../features/assets/content/icons';
 import {
   createControlPanel,
   removeControlPanel,

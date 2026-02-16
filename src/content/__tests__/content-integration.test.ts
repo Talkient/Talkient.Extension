@@ -2,7 +2,7 @@
 /// <reference types="chrome" />
 
 import { highlightText } from '../content-lib';
-import { getSvgIcon, isSvgPlayIcon } from '../icons';
+import { getSvgIcon, isSvgPlayIcon } from '../../features/assets/content/icons';
 
 // Mock chrome runtime
 const mockChrome = {

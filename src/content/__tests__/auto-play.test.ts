@@ -8,7 +8,7 @@ import {
   clearHighlight,
 } from '../content-lib';
 
-import { getSvgIcon } from '../icons';
+import { getSvgIcon } from '../../features/assets/content/icons';
 
 // Mock chrome runtime
 const mockChrome = {
