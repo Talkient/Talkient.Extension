@@ -24,7 +24,7 @@ import {
 
 import { getSvgIcon, isSvgPlayIcon } from './icons';
 import { safeSendMessage } from './runtime-utils';
-import type { ContentScriptMessage } from '../types/messages';
+import type { ContentScriptMessage } from '../shared/types/messages';
 
 // Type guard for content script messages
 function isContentScriptMessage(

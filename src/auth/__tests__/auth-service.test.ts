@@ -180,6 +180,7 @@ describe('auth-service', () => {
       const result = await signOut();
 
       // Should still be successful since local state is cleared
+      expect(result.success).toBe(true);
       expect(authStorage.clearAuthState).toHaveBeenCalled();
     });
 

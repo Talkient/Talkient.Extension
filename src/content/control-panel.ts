@@ -2,7 +2,7 @@
 /// <reference types="chrome" />
 
 import { safeSendMessage } from './runtime-utils';
-import type { MessageResponse } from '../types/messages';
+import type { MessageResponse } from '../shared/types/messages';
 
 /**
  * Control Panel Module
