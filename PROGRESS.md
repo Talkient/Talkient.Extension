@@ -69,25 +69,55 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 **Files Modified**:
 
-- (To be listed after completion)
+- Import path updates (not listed individually)
 
 ---
 
-### ⏳ Phase 2: Extract Assets Feature (PENDING)
+### ✅ Phase 2: Extract Assets Feature (COMPLETED)
 
 **Goal**: Extract icons.ts to features/assets/ - smallest, zero-dependency slice
 
 **Tasks**:
 
-- [ ] Create `src/features/assets/content/` structure
-- [ ] Move `src/content/icons.ts` → `src/features/assets/content/icons.ts`
-- [ ] Extract caching logic to `src/features/assets/content/icon-cache.ts`
-- [ ] Create `src/features/assets/types.ts`
-- [ ] Move tests to `src/features/assets/__tests__/`
-- [ ] Update imports in all files using icons.ts
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 2: Extract assets feature"
+- [x] Create `src/features/assets/content/` structure
+- [x] Move `src/content/icons.ts` → `src/features/assets/content/icons.ts`
+- [x] Keep caching logic inline (decision: no separate icon-cache.ts needed)
+- [x] Create `src/features/assets/types.ts` with IconName type
+- [x] Create `src/features/assets/__tests__/icons.test.ts` with dedicated tests
+- [x] Update imports in all files using icons.ts (7 files)
+- [x] Run `pnpm build` (successful)
+- [x] Run `pnpm test` (23 suites, 371 tests passed)
+- [x] Commit: "Phase 2: Extract assets feature"
+
+**Files Created**:
+
+- `src/features/assets/types.ts` - IconName type definition
+- `src/features/assets/content/icons.ts` - SVG icon utilities (moved from src/content/)
+- `src/features/assets/__tests__/icons.test.ts` - Dedicated icon tests (9 tests)
+
+**Files Moved**:
+
+- `src/content/icons.ts` → `src/features/assets/content/icons.ts`
+
+**Files Modified** (import path updates):
+
+- `src/content/content.ts`
+- `src/content/content-lib.ts`
+- `src/content/control-panel.ts`
+- `src/content/__tests__/content.test.ts`
+- `src/content/__tests__/content-integration.test.ts`
+- `src/content/__tests__/integration.test.ts`
+- `src/content/__tests__/auto-play.test.ts`
+
+**Files Deleted**:
+
+- `src/content/icons.ts` (moved to features/assets/)
+
+**Test Results**:
+
+- 23 test suites passed (was 22 in Phase 1)
+- 371 tests passed (was 362 in Phase 1)
+- New test suite: `src/features/assets/__tests__/icons.test.ts` with 9 tests
 
 ---
 

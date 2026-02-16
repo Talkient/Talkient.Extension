@@ -22,7 +22,7 @@ import {
   initPanelHideDuration,
 } from './content-lib';
 
-import { getSvgIcon, isSvgPlayIcon } from './icons';
+import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from './runtime-utils';
 import type { ContentScriptMessage } from '../shared/types/messages';
 

@@ -1,10 +1,12 @@
 // This file contains utility functions for working with SVG icons
 
+import type { IconName } from '../types';
+
 // Cache for SVG content to avoid repeated fetches
 const svgCache: Record<string, string> = {};
 
 // Fallback SVG content in case loading fails
-const fallbackSvg = {
+const fallbackSvg: Record<IconName, string> = {
   play: `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z"/>
         </svg>`,
@@ -14,7 +16,7 @@ const fallbackSvg = {
 };
 
 // Function to get the SVG content as a string
-export function getSvgIcon(iconName: 'play' | 'pause'): string {
+export function getSvgIcon(iconName: IconName): string {
   // Return cached content if available
   if (svgCache[iconName]) {
     return svgCache[iconName];
