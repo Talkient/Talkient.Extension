@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
-import { highlightText } from '../content-lib';
+import { highlightText } from '../../features/highlighting/content/highlighter';
 import { getSvgIcon, isSvgPlayIcon } from '../../features/assets/content/icons';
 
 // Mock chrome runtime

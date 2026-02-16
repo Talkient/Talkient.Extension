@@ -1,12 +1,11 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
+import { findNextTextElement, autoPlayNextText } from '../content-lib';
 import {
-  findNextTextElement,
-  autoPlayNextText,
   highlightText,
   clearHighlight,
-} from '../content-lib';
+} from '../../features/highlighting/content/highlighter';
 
 import { getSvgIcon } from '../../features/assets/content/icons';
 

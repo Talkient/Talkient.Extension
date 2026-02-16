@@ -2,15 +2,17 @@ import {
   createPlayButton,
   shouldProcessNode,
   processTextElements,
-  highlightText,
-  clearHighlight,
-  getCurrentHighlightedElement,
   loadMinimumWordsFromStorage,
   loadMaxNodesFromStorage,
   loadButtonPositionFromStorage,
   getButtonPosition,
   setButtonPosition,
 } from '../content-lib';
+import {
+  highlightText,
+  clearHighlight,
+  getCurrentHighlightedElement,
+} from '../../features/highlighting/content/highlighter';
 
 import {
   getSvgIcon,
@@ -532,7 +534,10 @@ describe('Content Script Message Handling', () => {
     // Need to mock the getCurrentHighlightedElement function
     // since it's not actually changing the highlight in the test environment
     jest
-      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .spyOn(
+        require('../../features/highlighting/content/highlighter'),
+        'getCurrentHighlightedElement',
+      )
       .mockReturnValue(null);
 
     // Simulate SPEECH_CANCELLED message
@@ -565,7 +570,10 @@ describe('Content Script Message Handling', () => {
     // Need to mock the getCurrentHighlightedElement function
     // since it's not actually changing the highlight in the test environment
     jest
-      .spyOn(require('../highlight'), 'getCurrentHighlightedElement')
+      .spyOn(
+        require('../../features/highlighting/content/highlighter'),
+        'getCurrentHighlightedElement',
+      )
       .mockReturnValue(null);
 
     // Get the registered message listener

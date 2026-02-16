@@ -429,9 +429,11 @@ function setupMainControlButton(panel: HTMLElement): void {
             mainButton.innerHTML = getSvgIcon('play');
 
             // Import and use the clearHighlight function
-            void import('./highlight').then(({ clearHighlight }) => {
-              clearHighlight();
-            });
+            void import('../features/highlighting/content/highlighter').then(
+              ({ clearHighlight }) => {
+                clearHighlight();
+              },
+            );
           });
         } else {
           // Currently, we can't play from the control panel because we don't have a text selection

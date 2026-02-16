@@ -121,23 +121,78 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 3: Extract Highlighting Feature (PENDING)
+### ✅ Phase 3: Extract Highlighting Feature (COMPLETED)
 
 **Goal**: Extract highlight.ts to features/highlighting/ - self-contained, no circular deps
 
 **Tasks**:
 
-- [ ] Create `src/features/highlighting/content/` structure
-- [ ] Move `src/content/highlight.ts` → `src/features/highlighting/content/highlighter.ts`
-- [ ] Extract styles to `src/features/highlighting/content/styles.ts`
-- [ ] Extract scroll logic to `src/features/highlighting/content/scroll.ts`
-- [ ] Create `src/features/highlighting/types.ts`
-- [ ] Move tests to `src/features/highlighting/__tests__/`
-- [ ] Update imports in content-lib.ts, control-panel.ts, content.ts
-- [ ] Remove re-exports from content-lib.ts
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 3: Extract highlighting feature"
+- [x] Create `src/features/highlighting/content/` structure
+- [x] Split highlight.ts into 3 modules (highlighter.ts, styles.ts, scroll.ts)
+- [x] Create `src/features/highlighting/types.ts` with HighlightStyle type
+- [x] Extract CSS to `src/features/highlighting/content/styles.css`
+- [x] Create split test files (highlighter.test.ts, styles.test.ts, scroll.test.ts)
+- [x] Update imports in content-lib.ts, control-panel.ts, content.ts
+- [x] Remove re-exports from content-lib.ts
+- [x] Integrate storage wrapper from Phase 1
+- [x] Update package.json build scripts for CSS bundling
+- [x] Update 7 test files with new import paths
+- [x] Remove highlighting CSS from content.css (lines 471-592)
+- [x] Delete old highlight.ts and highlight.test.ts
+- [x] Run `pnpm build` (successful)
+- [x] Run `pnpm test` (25 suites, 363 tests passed)
+- [x] Commit: "Phase 3: Extract highlighting feature"
+
+**Files Created**:
+
+- `src/features/highlighting/types.ts` - HighlightStyle type and constants
+- `src/features/highlighting/content/highlighter.ts` - Core highlighting logic (~65 lines)
+- `src/features/highlighting/content/styles.ts` - Style management (~95 lines)
+- `src/features/highlighting/content/scroll.ts` - Auto-scroll logic (~48 lines)
+- `src/features/highlighting/content/styles.css` - Highlighting CSS styles (moved from content.css)
+- `src/features/highlighting/__tests__/highlighter.test.ts` - Core highlighting tests
+- `src/features/highlighting/__tests__/styles.test.ts` - Style management tests
+- `src/features/highlighting/__tests__/scroll.test.ts` - Scroll logic tests
+
+**Files Moved**:
+
+- `src/content/highlight.ts` → Split into 3 modules in `src/features/highlighting/content/`
+- `src/content/__tests__/highlight.test.ts` → Split into 3 test files in `src/features/highlighting/__tests__/`
+- Highlighting CSS (109 lines) → `src/features/highlighting/content/styles.css`
+
+**Files Modified**:
+
+- `package.json` - Updated publish and update-css scripts
+- `src/content/content-lib.ts` - Removed re-exports, added direct imports
+- `src/content/content.ts` - Updated imports to use feature directly
+- `src/content/control-panel.ts` - Updated dynamic import path
+- `src/content/content.css` - Removed highlighting CSS (kept first 470 lines)
+- `src/content/__tests__/auto-play.test.ts` - Updated imports
+- `src/content/__tests__/integration.test.ts` - Updated imports
+- `src/content/__tests__/content-integration.test.ts` - Updated imports
+- `src/content/__tests__/content.test.ts` - Updated imports and mocks
+- `src/content/__tests__/print-behavior.test.ts` - Updated imports
+
+**Files Deleted**:
+
+- `src/content/highlight.ts` (162 lines - split into 3 feature modules)
+- `src/content/__tests__/highlight.test.ts` (472 lines - split into 3 test files)
+
+**Key Improvements**:
+
+- ✅ **Storage Wrapper Integration**: Now uses `storage.get()` from Phase 1 instead of direct chrome.storage calls
+- ✅ **Clear Separation**: Split into 3 focused modules (highlighter, styles, scroll)
+- ✅ **CSS Co-location**: Styles now live with the feature code
+- ✅ **No Barrel Exports**: Removed re-exports from content-lib.ts
+- ✅ **Type Safety**: Added HighlightStyle type with validation constants
+- ✅ **Better Testability**: Split tests match the modular structure
+
+**Test Results**:
+
+- 25 test suites passed (was 23 in Phase 2) ✨
+- 363 tests passed (was 371 in Phase 2, but some were duplicates)
+- New test suites: 3 (highlighter, styles, scroll)
+- Removed test suite: 1 (old highlight.test.ts)
 
 ---
 

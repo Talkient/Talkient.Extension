@@ -9,11 +9,11 @@ import { createControlPanel, isControlPanelVisible } from '../control-panel';
 
 import {
   processTextElements,
-  clearHighlight,
   setButtonPosition,
   setMinimumWords,
   setMaxNodesProcessed,
 } from '../content-lib';
+import { clearHighlight } from '../../features/highlighting/content/highlighter';
 
 // Mock runtime-utils
 const mockSafeSendMessage = jest.fn((message, callback) => {

@@ -3,10 +3,6 @@
 
 import {
   processTextElements,
-  clearHighlight,
-  loadHighlightStyleFromStorage,
-  setHighlightingStyle,
-  getCurrentHighlightedElement,
   findNextTextElement,
   safeClickButton,
   createControlPanel,
@@ -18,11 +14,17 @@ import {
   setMaxNodesProcessed,
   loadButtonPositionFromStorage,
   setButtonPosition,
-  scrollToHighlightedElement,
   initPanelHideDuration,
 } from './content-lib';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
+import {
+  clearHighlight,
+  loadHighlightStyleFromStorage,
+  setHighlightingStyle,
+  getCurrentHighlightedElement,
+  scrollToHighlightedElement,
+} from '../features/highlighting/content/highlighter';
 import { safeSendMessage } from './runtime-utils';
 import type { ContentScriptMessage } from '../shared/types/messages';
 
@@ -271,7 +273,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       if (followHighlight && getCurrentHighlightedElement()) {
         const currentHighlighted = getCurrentHighlightedElement();
         if (currentHighlighted) {
-          scrollToHighlightedElement(currentHighlighted);
+          void scrollToHighlightedElement(currentHighlighted);
         }
       }
     }

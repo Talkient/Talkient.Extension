@@ -2,21 +2,16 @@
 /// <reference types="chrome" />
 
 import {
-  highlightText,
-  clearHighlight,
-  getHighlightingStyle,
-  setHighlightingStyle,
-  getCurrentHighlightedElement,
-  testHighlightingStyle,
-  loadHighlightStyleFromStorage,
-  scrollToHighlightedElement,
-} from './highlight';
-
-import {
   getSvgIcon,
   isSvgPlayIcon,
   isSvgPauseIcon,
 } from '../features/assets/content/icons';
+import {
+  highlightText,
+  clearHighlight,
+  getHighlightingStyle,
+  getCurrentHighlightedElement,
+} from '../features/highlighting/content/highlighter';
 import {
   createControlPanel,
   removeControlPanel,
@@ -26,18 +21,6 @@ import {
   getPanelHideDuration,
 } from './control-panel';
 import { safeSendMessage } from './runtime-utils';
-
-// Re-export highlighting functions for backward compatibility
-export {
-  highlightText,
-  clearHighlight,
-  getHighlightingStyle,
-  setHighlightingStyle,
-  getCurrentHighlightedElement,
-  testHighlightingStyle,
-  loadHighlightStyleFromStorage,
-  scrollToHighlightedElement,
-};
 
 // Re-export control panel functions
 export {

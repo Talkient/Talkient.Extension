@@ -1,11 +1,11 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
+import { processTextElements } from '../content-lib';
 import {
-  processTextElements,
   clearHighlight,
   getCurrentHighlightedElement,
-} from '../content-lib';
+} from '../../features/highlighting/content/highlighter';
 import {
   isSvgPlayIcon,
   isSvgPauseIcon,
