@@ -4,18 +4,18 @@ import {
   signOut,
   getCurrentUser,
   isAuthenticated,
-} from '../auth-service';
-import type { GoogleUser } from '../auth-types';
+} from '../background/auth-service';
+import type { GoogleUser } from '../types';
 
 // Mock storage functions
-jest.mock('../auth-storage', () => ({
+jest.mock('../background/auth-storage', () => ({
   getStoredUser: jest.fn(),
   isStoredAuthenticated: jest.fn(),
   saveUser: jest.fn(),
   clearAuthState: jest.fn(),
 }));
 
-import * as authStorage from '../auth-storage';
+import * as authStorage from '../background/auth-storage';
 
 const mockUser: GoogleUser = {
   id: '123456789',
