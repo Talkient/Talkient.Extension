@@ -1,7 +1,7 @@
 /// <reference types="chrome" />
 
-import type { StorageSchema } from '../types/storage';
-import { DEFAULT_SETTINGS } from '../types/storage';
+import type { StorageSchema } from '../../features/settings/storage-schema';
+import { DEFAULT_SETTINGS } from '../../features/settings/storage-schema';
 import type { Callback } from '../types/common';
 
 /**

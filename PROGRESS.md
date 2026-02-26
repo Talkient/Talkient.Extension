@@ -141,25 +141,53 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 4: Extract Settings Feature (PENDING)
+### ✅ Phase 4: Extract Settings Feature (COMPLETED)
 
 **Goal**: Centralize all settings management in features/settings/
 
 **Tasks**:
 
-- [ ] Create `src/features/settings/options/` structure
-- [ ] Move `src/options/options.ts` → `src/features/settings/options/options-ui.ts`
-- [ ] Move `src/options/*.html` → `src/features/settings/options/`
-- [ ] Move `src/options/*.css` → `src/features/settings/options/`
-- [ ] Create `src/features/settings/storage-schema.ts` with DEFAULT_SETTINGS
-- [ ] Create `src/features/settings/background/settings-sync.ts`
-- [ ] Create `src/features/settings/types.ts`
-- [ ] Move tests to `src/features/settings/__tests__/`
-- [ ] Update imports across codebase
-- [ ] Update `package.json` build scripts (build:options entry point)
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 4: Extract settings feature"
+- [x] Create `src/features/settings/options/` structure
+- [x] Move `src/options/options.ts` → `src/features/settings/options/options-ui.ts`
+- [x] Move `src/options/*.html` → `src/features/settings/options/`
+- [x] Move `src/options/*.css` → `src/features/settings/options/`
+- [x] Create `src/features/settings/storage-schema.ts` with DEFAULT_SETTINGS
+- [x] Create `src/features/settings/background/settings-sync.ts`
+- [x] Create `src/features/settings/types.ts`
+- [x] Move tests to `src/features/settings/__tests__/`
+- [x] Update imports across codebase
+- [x] Update `package.json` build scripts (build:options entry point)
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
+- [x] Commit: "Phase 4: Extract settings feature"
+
+**Files Created**:
+
+- `src/features/settings/storage-schema.ts` - StorageSchema interface and DEFAULT_SETTINGS (moved from shared/types/storage.ts)
+- `src/features/settings/types.ts` - Re-exports HighlightStyle, ButtonPosition, StorageSchema, DEFAULT_SETTINGS
+- `src/features/settings/background/settings-sync.ts` - Background settings initialization utility
+- `src/features/settings/options/options-ui.ts` - Options page UI logic (moved from src/options/options.ts)
+- `src/features/settings/options/options.html` - Options page HTML (moved from src/options/)
+- `src/features/settings/options/options.css` - Options page styles (moved from src/options/)
+
+**Files Moved** (tests):
+
+- `src/options/__tests__/` → `src/features/settings/__tests__/` (all 3 test files + chrome mock)
+
+**Files Deleted**:
+
+- `src/options/` (all files moved to features/settings/options/)
+- `src/shared/types/storage.ts` (moved to features/settings/storage-schema.ts)
+
+**Files Modified** (import/build updates):
+
+- `src/shared/api/storage.ts` - imports from `../../features/settings/storage-schema`
+- `package.json` - build:options, update-htmls, update-css scripts
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 

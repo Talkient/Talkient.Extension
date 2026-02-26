@@ -14,7 +14,7 @@ describe('Minimum words setting', () => {
     // Load the actual options.html content
     const fs = require('fs');
     const path = require('path');
-    const htmlPath = path.join(__dirname, '../options.html');
+    const htmlPath = path.join(__dirname, '../options/options.html');
     const htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
     // Parse the HTML and extract the body content
@@ -81,7 +81,7 @@ describe('Minimum words setting', () => {
   describe('storage restoration for minimum words', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -116,7 +116,7 @@ describe('Minimum words setting', () => {
 
       // Reload the module and trigger DOMContentLoaded
       jest.resetModules();
-      require('../options');
+      require('../options/options-ui');
       const event = new Event('DOMContentLoaded');
       document.dispatchEvent(event);
 
@@ -129,7 +129,7 @@ describe('Minimum words setting', () => {
   describe('save settings behavior for minimum words', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
