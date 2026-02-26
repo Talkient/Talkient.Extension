@@ -240,22 +240,37 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 6: Split Service Worker (PENDING)
+### ✅ Phase 6: Split Service Worker (COMPLETED)
 
 **Goal**: Break down monolithic service-worker.ts into feature handlers
 
 **Tasks**:
 
-- [ ] Create `src/background/tab-manager.ts`
-- [ ] Create `src/features/tts-playback/background/tts-engine.ts` (extract TTS logic)
-- [ ] Create `src/features/tts-playback/background/context-menu.ts` (extract context menu)
-- [ ] Create `src/features/tts-playback/background/message-handler.ts` (extract TTS messages)
-- [ ] Slim down `src/background/service-worker.ts` to orchestrator
-- [ ] Move tests to appropriate feature folders
-- [ ] Update imports
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
+- [x] Create `src/background/tab-manager.ts`
+- [x] Create `src/features/tts-playback/background/tts-engine.ts` (extract TTS logic)
+- [x] Create `src/features/tts-playback/background/context-menu.ts` (extract context menu)
+- [x] Create `src/features/tts-playback/background/message-handler.ts` (extract TTS messages)
+- [x] Slim down `src/background/service-worker.ts` to orchestrator
+- [x] Tests remain in `src/background/__tests__/` (integration tests for the orchestrator)
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
 - [ ] Commit: "Phase 6: Split service worker by responsibility"
+
+**Files Created**:
+
+- `src/features/tts-playback/background/tts-engine.ts` - TTS state management (`isPaused`, `currentText`, `availableVoices`, `ttsAvailable`) and `checkTtsAvailability()`
+- `src/features/tts-playback/background/message-handler.ts` - `handleSpeakText` and `handlePauseSpeech` handlers
+- `src/features/tts-playback/background/context-menu.ts` - `setupContextMenu` and `setupContextMenuClickHandler`
+- `src/background/tab-manager.ts` - `activeTabId` state and `setupTabListeners` (onActivated, onRemoved, onUpdated)
+
+**Files Modified**:
+
+- `src/background/service-worker.ts` - Slimmed to orchestrator: imports handlers and calls setup functions
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 
