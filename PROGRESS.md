@@ -191,24 +191,52 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 5: Extract Auth Feature (PENDING)
+### ✅ Phase 5: Extract Auth Feature (COMPLETED)
 
 **Goal**: Reorganize existing auth/ into features/auth/ with background/popup split
 
 **Tasks**:
 
-- [ ] Create `src/features/auth/` structure
-- [ ] Move `src/auth/auth-types.ts` → `src/features/auth/types.ts`
-- [ ] Move `src/auth/auth-storage.ts` → `src/features/auth/background/auth-storage.ts`
-- [ ] Move `src/auth/auth-service.ts` → `src/features/auth/background/auth-service.ts`
-- [ ] Create `src/features/auth/background/message-handler.ts` (extract from service-worker.ts)
-- [ ] Create `src/features/auth/popup/auth-ui.ts` (extract from popup.ts)
-- [ ] Delete `src/auth/index.ts` (remove barrel exports)
-- [ ] Move tests to `src/features/auth/__tests__/`
-- [ ] Update imports in service-worker.ts, popup.ts
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 5: Extract auth feature"
+- [x] Create `src/features/auth/` structure
+- [x] Move `src/auth/auth-types.ts` → `src/features/auth/types.ts`
+- [x] Move `src/auth/auth-storage.ts` → `src/features/auth/background/auth-storage.ts`
+- [x] Move `src/auth/auth-service.ts` → `src/features/auth/background/auth-service.ts`
+- [x] Create `src/features/auth/background/message-handler.ts` (extract from service-worker.ts)
+- [x] Create `src/features/auth/popup/auth-ui.ts` (extract from popup.ts)
+- [x] Delete `src/auth/index.ts` (remove barrel exports)
+- [x] Move tests to `src/features/auth/__tests__/`
+- [x] Update imports in service-worker.ts, popup.ts
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
+- [x] Commit: "Phase 5: Extract auth feature"
+
+**Files Created**:
+
+- `src/features/auth/types.ts` - Auth types (GoogleUser, AuthState, AuthResult, etc.)
+- `src/features/auth/background/auth-storage.ts` - Chrome storage auth state management
+- `src/features/auth/background/auth-service.ts` - Google OAuth sign-in/sign-out service
+- `src/features/auth/background/message-handler.ts` - Auth message handler helpers (handleSignIn, handleSignOut, handleGetAuthState)
+- `src/features/auth/popup/auth-ui.ts` - Auth UI logic extracted from popup.ts (initAuth)
+
+**Files Moved** (tests):
+
+- `src/auth/__tests__/auth-storage.test.ts` → `src/features/auth/__tests__/auth-storage.test.ts`
+- `src/auth/__tests__/auth-service.test.ts` → `src/features/auth/__tests__/auth-service.test.ts`
+
+**Files Deleted**:
+
+- `src/auth/` (all files moved to features/auth/)
+
+**Files Modified** (import/path updates):
+
+- `src/shared/types/messages.ts` - GoogleUser import from `../../features/auth/types`
+- `src/background/service-worker.ts` - auth import replaced with message-handler helpers
+- `src/popup/popup.ts` - extracted auth logic, now imports `initAuth` from auth-ui
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 

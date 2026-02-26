@@ -1,4 +1,4 @@
-import type { AuthState, GoogleUser } from './auth-types';
+import type { AuthState, GoogleUser } from '../types';
 
 const AUTH_STORAGE_KEY = 'talkient_auth_state';
 

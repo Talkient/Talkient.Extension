@@ -1,8 +1,4 @@
-import type {
-  AuthResult,
-  GoogleUser,
-  GoogleUserInfoResponse,
-} from './auth-types';
+import type { AuthResult, GoogleUser, GoogleUserInfoResponse } from '../types';
 import {
   clearAuthState,
   getStoredUser,

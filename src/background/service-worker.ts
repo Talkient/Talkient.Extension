@@ -8,7 +8,11 @@ import {
   isGetAuthStateMessage,
   type ExtendedServiceWorkerMessage,
 } from '../shared/types/messages';
-import { signInWithGoogle, signOut, getCurrentUser } from '../auth';
+import {
+  handleSignIn,
+  handleSignOut,
+  handleGetAuthState,
+} from '../features/auth/background/message-handler';
 
 console.log('Service Worker for Talkient Extension');
 
@@ -182,41 +186,19 @@ chrome.runtime.onMessage.addListener(
     // Handle authentication messages
     if (isSignInMessage(request)) {
       console.log('[Talkient.SW] Processing sign-in request...');
-      void signInWithGoogle(request.interactive !== false).then((result) => {
-        if (result.success) {
-          sendResponse({ success: true, user: result.user });
-        } else {
-          sendResponse({ success: false, error: result.error });
-        }
-      });
+      void handleSignIn(request.interactive !== false, sendResponse);
       return true; // Keep channel open for async response
     }
 
     if (isSignOutMessage(request)) {
       console.log('[Talkient.SW] Processing sign-out request...');
-      void signOut().then((result) => {
-        sendResponse(result);
-      });
+      void handleSignOut(sendResponse);
       return true;
     }
 
     if (isGetAuthStateMessage(request)) {
       console.log('[Talkient.SW] Getting auth state...');
-      void getCurrentUser()
-        .then((user) => {
-          const authenticated = !!user;
-          sendResponse({
-            success: true,
-            isAuthenticated: authenticated,
-            user: user,
-          });
-        })
-        .catch((error) => {
-          sendResponse({
-            success: false,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        });
+      void handleGetAuthState(sendResponse);
       return true;
     }
 

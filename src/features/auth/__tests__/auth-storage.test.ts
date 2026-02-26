@@ -6,8 +6,8 @@ import {
   clearAuthState,
   getStoredUser,
   isStoredAuthenticated,
-} from '../auth-storage';
-import type { AuthState, GoogleUser } from '../auth-types';
+} from '../background/auth-storage';
+import type { AuthState, GoogleUser } from '../types';
 
 // Mock Chrome storage API
 const mockStorage: Record<string, any> = {};
