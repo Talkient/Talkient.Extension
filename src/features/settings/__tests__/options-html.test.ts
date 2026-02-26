@@ -31,7 +31,7 @@ describe('options.ts - using actual HTML', () => {
     // Load the actual options.html content
     const fs = require('fs');
     const path = require('path');
-    const htmlPath = path.join(__dirname, '../options.html');
+    const htmlPath = path.join(__dirname, '../options/options.html');
     const htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
     // Parse the HTML and extract the body content
@@ -143,7 +143,7 @@ describe('options.ts - using actual HTML', () => {
   describe('storage restoration', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -185,7 +185,7 @@ describe('options.ts - using actual HTML', () => {
 
       // Reload the module and trigger DOMContentLoaded
       jest.resetModules();
-      require('../options');
+      require('../options/options-ui');
       const event = new Event('DOMContentLoaded');
       document.dispatchEvent(event);
 
@@ -201,7 +201,7 @@ describe('options.ts - using actual HTML', () => {
   describe('speech rate functionality with actual HTML ranges', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -260,7 +260,7 @@ describe('options.ts - using actual HTML', () => {
   describe('speech pitch functionality with actual HTML ranges', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -319,7 +319,7 @@ describe('options.ts - using actual HTML', () => {
   describe('voice selection functionality', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -362,7 +362,7 @@ describe('options.ts - using actual HTML', () => {
   describe('extreme values with actual HTML constraints', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -429,7 +429,7 @@ describe('options.ts - using actual HTML', () => {
   describe('auto play next functionality', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -466,7 +466,7 @@ describe('options.ts - using actual HTML', () => {
   describe('follow highlight functionality', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -503,7 +503,7 @@ describe('options.ts - using actual HTML', () => {
   describe('button position functionality', () => {
     beforeEach(() => {
       // Load the options script
-      require('../options');
+      require('../options/options-ui');
 
       // Trigger DOMContentLoaded event
       const event = new Event('DOMContentLoaded');
@@ -538,7 +538,7 @@ describe('options.ts - using actual HTML', () => {
 
       // Reload the module and trigger DOMContentLoaded
       jest.resetModules();
-      require('../options');
+      require('../options/options-ui');
       const event = new Event('DOMContentLoaded');
       document.dispatchEvent(event);
 

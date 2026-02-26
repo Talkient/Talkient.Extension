@@ -1,13 +1,37 @@
 {
   "permissions": {
     "allow": [
+      "Bash(ls)",
+      "Bash(pwd)",
+      "Bash(cat)",
+      "Bash(grep)",
+      "Bash(find)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Bash(git log)",
+      "Bash(dir)",
       "Bash(pnpm run lint)",
       "Bash(pnpm run lint:fix:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm test:e2e:*)",
       "Bash(pnpm outdated:*)",
       "Bash(pnpm update:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(env)",
+      "Bash(printenv)",
+      "Read(.env*)",
+      "Read(.claude/settings.local.json)",
+      "Read(//etc/passwd)",
+      "Read(~/.ssh/**)",
+      "Write(//etc/**)",
+      "Write(~/.ssh/**)"
     ]
   }
 }
