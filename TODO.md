@@ -1,5 +1,7 @@
 ## Talkient.Extension TO DO list
 
+- Hooks (copilot, claude code and OpenCode)
+  - Lint, tests
 - [ ] Try to Integrate with DevTools MCP
 - [ ] Fix flake tests (e2e)
 - [ ] Lint
