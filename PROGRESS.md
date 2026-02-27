@@ -274,25 +274,60 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 7: Extract Control Panel Feature (PENDING)
+### ✅ Phase 7: Extract Control Panel Feature (COMPLETED)
 
 **Goal**: Move control-panel.ts to features/control-panel/, eliminate dynamic imports
 
 **Tasks**:
 
-- [ ] Create `src/features/control-panel/content/` structure
-- [ ] Split `src/content/control-panel.ts` into:
-  - [ ] `panel-ui.ts` (UI creation)
-  - [ ] `panel-controller.ts` (event handlers, state)
-  - [ ] `panel-visibility.ts` (cookie logic)
-- [ ] Create `src/features/control-panel/types.ts`
-- [ ] Remove dynamic imports, use direct imports
-- [ ] Move tests to `src/features/control-panel/__tests__/`
-- [ ] Update imports from content-lib.ts, content.ts
-- [ ] Remove re-exports from content-lib.ts
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
+- [x] Create `src/features/control-panel/content/` structure
+- [x] Split `src/content/control-panel.ts` into:
+  - [x] `panel-ui.ts` (UI creation)
+  - [x] `panel-controller.ts` (event handlers, state)
+  - [x] `panel-visibility.ts` (cookie logic)
+- [x] Create `src/features/control-panel/types.ts`
+- [x] Remove dynamic imports, use direct imports
+- [x] Move tests to `src/features/control-panel/__tests__/`
+- [x] Update imports from content-lib.ts, content.ts
+- [x] Remove re-exports from content-lib.ts
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
 - [ ] Commit: "Phase 7: Extract control panel feature"
+
+**Files Created**:
+
+- `src/features/control-panel/content/panel-visibility.ts` - Cookie-based panel hiding and hide duration settings
+- `src/features/control-panel/content/panel-controller.ts` - Event handlers (close, toggle, settings, script controls, speech rate, drag); direct imports replacing dynamic imports
+- `src/features/control-panel/content/panel-ui.ts` - Panel DOM creation, `createControlPanel`, `removeControlPanel`, `isControlPanelVisible`, `toggleControlPanel`
+- `src/features/control-panel/types.ts` - `PanelState` type
+
+**Files Moved** (tests):
+
+- `src/content/__tests__/control-panel.test.ts` → `src/features/control-panel/__tests__/control-panel.test.ts`
+- `src/content/__tests__/script-controls.test.ts` → `src/features/control-panel/__tests__/script-controls.test.ts`
+- `src/content/__tests__/script-controls-integration.test.ts` → `src/features/control-panel/__tests__/script-controls-integration.test.ts`
+
+**Files Deleted**:
+
+- `src/content/control-panel.ts` (split into 3 feature files)
+
+**Files Modified** (import/path updates):
+
+- `src/content/content-lib.ts` - removed control-panel import and re-exports
+- `src/content/content.ts` - imports `createControlPanel` from `features/control-panel/content/panel-ui`, `initPanelHideDuration` from `features/control-panel/content/panel-visibility`
+- `src/content/__tests__/print-behavior.test.ts` - updated import path + added icons mock
+- `src/content/__tests__/remove-play-buttons.test.ts` - updated import path + added icons mock
+
+**Dynamic Imports Eliminated**:
+
+- `import('./content-lib').then(({ setSpeechRate }) => ...)` → direct `import { setSpeechRate }`
+- `import('../features/assets/content/icons').then(...)` → direct `import { getSvgIcon, isSvgPauseIcon }`
+- `import('./highlight').then(({ clearHighlight }) => ...)` → direct `import { clearHighlight }`
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 

@@ -17,14 +17,6 @@ import {
   isSvgPlayIcon,
   isSvgPauseIcon,
 } from '../features/assets/content/icons';
-import {
-  createControlPanel,
-  removeControlPanel,
-  isControlPanelVisible,
-  toggleControlPanel,
-  initPanelHideDuration,
-  getPanelHideDuration,
-} from './control-panel';
 import { safeSendMessage } from './runtime-utils';
 
 // Re-export highlighting functions for backward compatibility
@@ -37,16 +29,6 @@ export {
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
   scrollToHighlightedElement,
-};
-
-// Re-export control panel functions
-export {
-  createControlPanel,
-  removeControlPanel,
-  isControlPanelVisible,
-  toggleControlPanel,
-  initPanelHideDuration,
-  getPanelHideDuration,
 };
 
 // Utility function to safely click on elements without triggering parent events (like link navigation)

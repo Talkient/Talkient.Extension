@@ -3,8 +3,15 @@
 // Import removeAllPlayButtons from control-panel
 // Since it's not exported directly, we'll test it through the control panel
 
-import { createControlPanel } from '../control-panel';
+import { createControlPanel } from '../../features/control-panel/content/panel-ui';
 import { processTextElements } from '../content-lib';
+
+// Mock icons (used by panel-controller)
+jest.mock('../../features/assets/content/icons', () => ({
+  getSvgIcon: jest.fn((name: string) => `<svg data-icon="${name}"></svg>`),
+  isSvgPlayIcon: jest.fn(() => false),
+  isSvgPauseIcon: jest.fn(() => false),
+}));
 
 // Mock runtime-utils before importing control-panel
 jest.mock('../runtime-utils', () => ({

@@ -5,7 +5,10 @@
  * when the user opens the print dialog and restored after closing it.
  */
 
-import { createControlPanel, isControlPanelVisible } from '../control-panel';
+import {
+  createControlPanel,
+  isControlPanelVisible,
+} from '../../features/control-panel/content/panel-ui';
 
 import {
   processTextElements,
@@ -14,6 +17,13 @@ import {
   setMinimumWords,
   setMaxNodesProcessed,
 } from '../content-lib';
+
+// Mock icons (used by panel-controller)
+jest.mock('../../features/assets/content/icons', () => ({
+  getSvgIcon: jest.fn((name: string) => `<svg data-icon="${name}"></svg>`),
+  isSvgPlayIcon: jest.fn(() => false),
+  isSvgPauseIcon: jest.fn(() => false),
+}));
 
 // Mock runtime-utils
 const mockSafeSendMessage = jest.fn((message, callback) => {
