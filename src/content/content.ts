@@ -9,7 +9,6 @@ import {
   getCurrentHighlightedElement,
   findNextTextElement,
   safeClickButton,
-  createControlPanel,
   loadMinimumWordsFromStorage,
   setMinimumWords,
   loadSpeechRateFromStorage,
@@ -19,8 +18,9 @@ import {
   loadButtonPositionFromStorage,
   setButtonPosition,
   scrollToHighlightedElement,
-  initPanelHideDuration,
 } from './content-lib';
+import { createControlPanel } from '../features/control-panel/content/panel-ui';
+import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from './runtime-utils';

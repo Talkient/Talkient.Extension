@@ -1,10 +1,10 @@
 /// <reference lib="dom" />
 
-import { createControlPanel } from '../control-panel';
-import { processTextElements } from '../content-lib';
+import { createControlPanel } from '../content/panel-ui';
+import { processTextElements } from '../../../content/content-lib';
 
 // Mock runtime-utils before importing control-panel
-jest.mock('../runtime-utils', () => ({
+jest.mock('../../../content/runtime-utils', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,9 +17,16 @@ jest.mock('../runtime-utils', () => ({
   isExtensionContextValid: jest.fn(() => true),
 }));
 
-// Mock processTextElements to actually add play buttons
-jest.mock('../content-lib', () => {
-  const originalModule = jest.requireActual('../content-lib');
+// Mock icons to avoid dynamic import issues in tests
+jest.mock('../../../features/assets/content/icons', () => ({
+  getSvgIcon: jest.fn((name: string) => `<svg data-icon="${name}"></svg>`),
+  isSvgPlayIcon: jest.fn(() => false),
+  isSvgPauseIcon: jest.fn(() => false),
+}));
+
+// Mock content-lib to avoid circular deps
+jest.mock('../../../content/content-lib', () => {
+  const originalModule = jest.requireActual('../../../content/content-lib');
 
   return {
     ...originalModule,
@@ -58,6 +65,11 @@ jest.mock('../content-lib', () => {
     }),
   };
 });
+
+// Mock highlight to avoid DOM deps
+jest.mock('../../../content/highlight', () => ({
+  clearHighlight: jest.fn(),
+}));
 
 // Mock Chrome APIs
 const mockChrome = {

@@ -2,6 +2,7 @@
 
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
+- CI/CD to deploy on Chrome extension
 - [ ] Try to Integrate with DevTools MCP
 - [ ] Fix flake tests (e2e)
 - [ ] Lint

@@ -5,16 +5,18 @@ import {
   removeControlPanel,
   isControlPanelVisible,
   toggleControlPanel,
+} from '../content/panel-ui';
+import {
   getDomainHideCookieName,
   isPanelHiddenForDomain,
   setDomainHideCookie,
   clearDomainHideCookie,
   initPanelHideDuration,
   getPanelHideDuration,
-} from '../control-panel';
+} from '../content/panel-visibility';
 
 // Mock runtime-utils before importing control-panel
-jest.mock('../runtime-utils', () => ({
+jest.mock('../../../content/runtime-utils', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,6 +27,23 @@ jest.mock('../runtime-utils', () => ({
     return true;
   }),
   isExtensionContextValid: jest.fn(() => true),
+}));
+
+// Mock icons to avoid dynamic import issues in tests
+jest.mock('../../../features/assets/content/icons', () => ({
+  getSvgIcon: jest.fn((name: string) => `<svg data-icon="${name}"></svg>`),
+  isSvgPlayIcon: jest.fn(() => false),
+  isSvgPauseIcon: jest.fn(() => false),
+}));
+
+// Mock content-lib to avoid circular deps
+jest.mock('../../../content/content-lib', () => ({
+  setSpeechRate: jest.fn(),
+}));
+
+// Mock highlight to avoid DOM deps
+jest.mock('../../../content/highlight', () => ({
+  clearHighlight: jest.fn(),
 }));
 
 // Mock Chrome APIs
@@ -159,10 +178,10 @@ describe('Control Panel Module', () => {
       expect(toggleSwitch).toBeTruthy();
       expect(toggleInput).toBeTruthy();
 
-      // Check slider
+      // Check slider (enabled synchronously during panel setup)
       const slider = panel?.querySelector('.talkient-rate-slider');
       expect(slider).toBeTruthy();
-      expect((slider as HTMLInputElement)?.disabled).toBe(true);
+      expect((slider as HTMLInputElement)?.disabled).toBe(false);
     });
 
     it('should enable settings button by default', () => {
