@@ -3,10 +3,6 @@
 
 import {
   processTextElements,
-  clearHighlight,
-  loadHighlightStyleFromStorage,
-  setHighlightingStyle,
-  getCurrentHighlightedElement,
   findNextTextElement,
   safeClickButton,
   loadMinimumWordsFromStorage,
@@ -17,8 +13,14 @@ import {
   setMaxNodesProcessed,
   loadButtonPositionFromStorage,
   setButtonPosition,
+} from '../features/tts-playback/content/index';
+import {
+  clearHighlight,
+  loadHighlightStyleFromStorage,
+  setHighlightingStyle,
+  getCurrentHighlightedElement,
   scrollToHighlightedElement,
-} from './content-lib';
+} from './highlight';
 import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
 

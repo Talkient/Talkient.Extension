@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 
 import { createControlPanel } from '../content/panel-ui';
-import { processTextElements } from '../../../content/content-lib';
+import { processTextElements } from '../../tts-playback/content/index';
 
 // Mock runtime-utils before importing control-panel
 jest.mock('../../../content/runtime-utils', () => ({
@@ -25,8 +25,10 @@ jest.mock('../../../features/assets/content/icons', () => ({
 }));
 
 // Mock processTextElements for tracking calls
-jest.mock('../../../content/content-lib', () => {
-  const originalModule = jest.requireActual('../../../content/content-lib');
+jest.mock('../../tts-playback/content/text-processor', () => {
+  const originalModule = jest.requireActual(
+    '../../tts-playback/content/text-processor',
+  );
 
   return {
     ...originalModule,
@@ -63,17 +65,6 @@ jest.mock('../../../content/content-lib', () => {
         }
       });
     }),
-    clearHighlight: jest.fn(),
-    loadHighlightStyleFromStorage: jest.fn(),
-    setHighlightingStyle: jest.fn(),
-    getCurrentHighlightedElement: jest.fn(),
-    findNextTextElement: jest.fn(),
-    safeClickButton: jest.fn(),
-    loadMinimumWordsFromStorage: jest.fn(),
-    setMinimumWords: jest.fn(),
-    loadMaxNodesFromStorage: jest.fn(),
-    setMaxNodesProcessed: jest.fn(),
-    setSpeechRate: jest.fn(),
   };
 });
 

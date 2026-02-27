@@ -2,15 +2,18 @@ import {
   createPlayButton,
   shouldProcessNode,
   processTextElements,
-  highlightText,
-  clearHighlight,
-  getCurrentHighlightedElement,
   loadMinimumWordsFromStorage,
   loadMaxNodesFromStorage,
   loadButtonPositionFromStorage,
   getButtonPosition,
   setButtonPosition,
-} from '../content-lib';
+} from '../../features/tts-playback/content/index';
+
+import {
+  highlightText,
+  clearHighlight,
+  getCurrentHighlightedElement,
+} from '../highlight';
 
 import {
   getSvgIcon,

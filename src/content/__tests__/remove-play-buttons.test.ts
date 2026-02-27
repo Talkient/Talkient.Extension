@@ -4,7 +4,7 @@
 // Since it's not exported directly, we'll test it through the control panel
 
 import { createControlPanel } from '../../features/control-panel/content/panel-ui';
-import { processTextElements } from '../content-lib';
+import { processTextElements } from '../../features/tts-playback/content/index';
 
 // Mock icons (used by panel-controller)
 jest.mock('../../features/assets/content/icons', () => ({
@@ -27,9 +27,11 @@ jest.mock('../runtime-utils', () => ({
   isExtensionContextValid: jest.fn(() => true),
 }));
 
-// Mock the content-lib module
-jest.mock('../content-lib', () => {
-  const originalModule = jest.requireActual('../content-lib');
+// Mock the tts-playback text-processor module
+jest.mock('../../features/tts-playback/content/text-processor', () => {
+  const originalModule = jest.requireActual(
+    '../../features/tts-playback/content/text-processor',
+  );
 
   return {
     ...originalModule,

@@ -4,11 +4,10 @@
 import {
   findNextTextElement,
   autoPlayNextText,
-  highlightText,
-  clearHighlight,
-} from '../content-lib';
+} from '../content/text-processor';
 
-import { getSvgIcon } from '../../features/assets/content/icons';
+import { highlightText, clearHighlight } from '../../../content/highlight';
+import { getSvgIcon } from '../../assets/content/icons';
 
 // Mock chrome runtime
 const mockChrome = {

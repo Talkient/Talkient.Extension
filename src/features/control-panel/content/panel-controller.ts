@@ -5,7 +5,7 @@ import { safeSendMessage } from '../../../content/runtime-utils';
 import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';
-import { setSpeechRate } from '../../../content/content-lib';
+import { setSpeechRate } from '../../tts-playback/content/index';
 import { getPanelHideDuration, setDomainHideCookie } from './panel-visibility';
 
 /**

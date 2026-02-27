@@ -12,11 +12,12 @@ import {
 
 import {
   processTextElements,
-  clearHighlight,
   setButtonPosition,
   setMinimumWords,
   setMaxNodesProcessed,
-} from '../content-lib';
+} from '../../features/tts-playback/content/index';
+
+import { clearHighlight } from '../highlight';
 
 // Mock icons (used by panel-controller)
 jest.mock('../../features/assets/content/icons', () => ({

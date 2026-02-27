@@ -1,18 +1,15 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
+import { processTextElements } from '../content/index';
 import {
-  processTextElements,
   clearHighlight,
   getCurrentHighlightedElement,
-} from '../content-lib';
-import {
-  isSvgPlayIcon,
-  isSvgPauseIcon,
-} from '../../features/assets/content/icons';
+} from '../../../content/highlight';
+import { isSvgPlayIcon, isSvgPauseIcon } from '../../assets/content/icons';
 
-// Mock runtime-utils before importing content-lib
-jest.mock('../runtime-utils', () => ({
+// Mock runtime-utils before importing text-processor
+jest.mock('../../../content/runtime-utils', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
