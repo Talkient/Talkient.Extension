@@ -10,6 +10,11 @@ This is a Web Extension built in Typescript and compiled to run in JavaScript.
 - MUST always use import on typescript files (es2016);
 - MUST avoid change code unless strictly necessary;
 
+## Run commands
+
+- You're using Git Bash.
+- To run commands simply run the command like `pnpm build`. You don't have to use `cd` and/or complex commands
+
 ### Tests
 
 Here are the rules for tests in this project:
