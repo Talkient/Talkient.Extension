@@ -331,22 +331,22 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 8: Extract TTS Playback Feature (PENDING)
+### ✅ Phase 8: Extract TTS Playback Feature (COMPLETED)
 
 **Goal**: Extract core TTS playback logic from content-lib.ts to features/tts-playback/
 
 **Tasks**:
 
-- [ ] Create `src/features/tts-playback/content/` structure
-- [ ] Extract text scanning → `src/features/tts-playback/content/text-processor.ts`
-- [ ] Extract play button logic → `src/features/tts-playback/content/play-button.ts`
-- [ ] Create `src/features/tts-playback/content/index.ts` as facade
-- [ ] Create `src/features/tts-playback/types.ts`
-- [ ] Move tests to `src/features/tts-playback/__tests__/`
-- [ ] Update imports in content.ts
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 8: Extract TTS playback feature"
+- [x] Create `src/features/tts-playback/content/` structure
+- [x] Extract text scanning → `src/features/tts-playback/content/text-processor.ts`
+- [x] Extract play button logic → `src/features/tts-playback/content/play-button.ts`
+- [x] Create `src/features/tts-playback/content/index.ts` as facade
+- [x] Create `src/features/tts-playback/types.ts`
+- [x] Move tests to `src/features/tts-playback/__tests__/`
+- [x] Update imports in content.ts
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
+- [x] Commit: "Phase 8: Extract TTS playback feature"
 
 ---
 

@@ -1,4 +1,4 @@
-import { processTextElements } from '../content-lib';
+import { processTextElements } from '../content/text-processor';
 
 // Mock chrome runtime
 const mockChrome = {

@@ -2,7 +2,10 @@
  * @jest-environment jsdom
  */
 
-import { shouldProcessNode, loadMinimumWordsFromStorage } from '../content-lib';
+import {
+  shouldProcessNode,
+  loadMinimumWordsFromStorage,
+} from '../content/text-processor';
 
 // Mock for minimum words
 let testMinimumWords = 3;

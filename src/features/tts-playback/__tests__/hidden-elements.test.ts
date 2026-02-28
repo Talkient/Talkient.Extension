@@ -7,7 +7,7 @@ import {
   processTextElements,
   loadMinimumWordsFromStorage,
   loadMaxNodesFromStorage,
-} from '../content-lib';
+} from '../content/text-processor';
 
 // Mock chrome runtime
 const mockChrome = {

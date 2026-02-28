@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 
 import { createControlPanel } from '../content/panel-ui';
-import { processTextElements } from '../../../content/content-lib';
+import { processTextElements } from '../../tts-playback/content/index';
 
 // Mock runtime-utils before importing control-panel
 jest.mock('../../../content/runtime-utils', () => ({
@@ -24,9 +24,11 @@ jest.mock('../../../features/assets/content/icons', () => ({
   isSvgPauseIcon: jest.fn(() => false),
 }));
 
-// Mock content-lib to avoid circular deps
-jest.mock('../../../content/content-lib', () => {
-  const originalModule = jest.requireActual('../../../content/content-lib');
+// Mock tts-playback text-processor to control processTextElements behavior
+jest.mock('../../tts-playback/content/text-processor', () => {
+  const originalModule = jest.requireActual(
+    '../../tts-playback/content/text-processor',
+  );
 
   return {
     ...originalModule,

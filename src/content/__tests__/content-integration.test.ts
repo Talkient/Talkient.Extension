@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
-import { highlightText } from '../content-lib';
+import { highlightText } from '../highlight';
 import { getSvgIcon, isSvgPlayIcon } from '../../features/assets/content/icons';
 
 // Mock chrome runtime
@@ -91,7 +91,9 @@ describe('Content Script Element Processing Integration', () => {
     container.appendChild(article);
 
     // Import the processTextElements function and test it
-    const { processTextElements } = require('../content-lib');
+    const {
+      processTextElements,
+    } = require('../../features/tts-playback/content/index');
 
     // Mock requestAnimationFrame for synchronous processing
     const originalRAF = global.requestAnimationFrame;
