@@ -9,7 +9,7 @@ import {
 import { isSvgPlayIcon, isSvgPauseIcon } from '../../assets/content/icons';
 
 // Mock runtime-utils before importing text-processor
-jest.mock('../../../content/runtime-utils', () => ({
+jest.mock('../../../shared/api/messaging', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

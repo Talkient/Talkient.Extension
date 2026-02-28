@@ -350,20 +350,48 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 9: Clean Up Entry Points (PENDING)
+### ✅ Phase 9: Clean Up Entry Points (COMPLETED)
 
 **Goal**: Simplify entry point files, remove content-lib.ts
 
 **Tasks**:
 
-- [ ] Refactor `src/content/content.ts` to import from feature slices
-- [ ] Delete `src/content/content-lib.ts` (if fully extracted)
-- [ ] Refactor `src/popup/popup.ts` to import from features/auth/popup/
-- [ ] Move `src/content/runtime-utils.ts` to `src/shared/api/messaging.ts` (if not done in Phase 1)
-- [ ] Update all remaining imports
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm test`
-- [ ] Commit: "Phase 9: Clean up entry points"
+- [x] Refactor `src/content/content.ts` to import from feature slices
+- [x] Delete `src/content/content-lib.ts` (if fully extracted)
+- [x] Refactor `src/popup/popup.ts` to import from features/auth/popup/ (already done in Phase 5)
+- [x] Move `src/content/runtime-utils.ts` to `src/shared/api/messaging.ts` (if not done in Phase 1)
+- [x] Update all remaining imports
+- [x] Run `pnpm build`
+- [x] Run `pnpm test`
+- [x] Commit: "Phase 9: Clean up entry points"
+
+**Files Deleted**:
+
+- `src/content/content-lib.ts` (re-exported highlight functions, nothing imported it)
+- `src/content/runtime-utils.ts` (functionality already in shared/api/messaging.ts)
+- `src/content/__tests__/runtime-utils.test.ts` (moved to shared/)
+
+**Files Created**:
+
+- `src/shared/__tests__/messaging.test.ts` - Moved from content/__tests__/runtime-utils.test.ts, updated import paths
+
+**Files Modified** (import/mock path updates):
+
+- `src/content/content.ts` - `'./runtime-utils'` → `'../shared/api/messaging'`
+- `src/features/tts-playback/content/text-processor.ts` - `'../../../content/runtime-utils'` → `'../../../shared/api/messaging'`
+- `src/features/control-panel/content/panel-controller.ts` - `'../../../content/runtime-utils'` → `'../../../shared/api/messaging'`
+- `src/content/__tests__/content.test.ts` - Updated jest.mock path
+- `src/content/__tests__/print-behavior.test.ts` - Updated jest.mock path
+- `src/content/__tests__/remove-play-buttons.test.ts` - Updated jest.mock path
+- `src/features/control-panel/__tests__/control-panel.test.ts` - Updated jest.mock paths (runtime-utils + content-lib)
+- `src/features/control-panel/__tests__/script-controls.test.ts` - Updated jest.mock path
+- `src/features/control-panel/__tests__/script-controls-integration.test.ts` - Updated jest.mock path
+- `src/features/tts-playback/__tests__/integration.test.ts` - Updated jest.mock path
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 

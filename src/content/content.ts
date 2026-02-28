@@ -25,7 +25,7 @@ import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
-import { safeSendMessage } from './runtime-utils';
+import { safeSendMessage } from '../shared/api/messaging';
 import type { ContentScriptMessage } from '../shared/types/messages';
 
 // Type guard for content script messages

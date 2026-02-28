@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference types="chrome" />
 
-import { safeSendMessage } from '../../../content/runtime-utils';
+import { safeSendMessage } from '../../../shared/api/messaging';
 import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';

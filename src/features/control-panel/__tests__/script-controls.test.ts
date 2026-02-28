@@ -4,7 +4,7 @@ import { createControlPanel } from '../content/panel-ui';
 import { processTextElements } from '../../tts-playback/content/index';
 
 // Mock runtime-utils before importing control-panel
-jest.mock('../../../content/runtime-utils', () => ({
+jest.mock('../../../shared/api/messaging', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

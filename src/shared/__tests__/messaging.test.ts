@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 
-import { isExtensionContextValid, safeSendMessage } from '../runtime-utils';
-import type { ServiceWorkerMessage } from '../../shared/types/messages';
+import { isExtensionContextValid, safeSendMessage } from '../api/messaging';
+import type { ServiceWorkerMessage } from '../types/messages';
 
 // Mock chrome runtime
 const mockChrome = {

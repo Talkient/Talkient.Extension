@@ -22,7 +22,7 @@ import {
 } from '../../features/assets/content/icons';
 
 // Mock runtime-utils before importing content-lib
-jest.mock('../runtime-utils', () => ({
+jest.mock('../../shared/api/messaging', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
