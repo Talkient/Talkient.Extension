@@ -16,7 +16,7 @@ import {
 } from '../content/panel-visibility';
 
 // Mock runtime-utils before importing control-panel
-jest.mock('../../../content/runtime-utils', () => ({
+jest.mock('../../../shared/api/messaging', () => ({
   safeSendMessage: jest.fn((message, callback) => {
     // Call the mocked chrome.runtime.sendMessage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,8 +36,8 @@ jest.mock('../../../features/assets/content/icons', () => ({
   isSvgPauseIcon: jest.fn(() => false),
 }));
 
-// Mock content-lib to avoid circular deps
-jest.mock('../../../content/content-lib', () => ({
+// Mock tts-playback to avoid DOM deps (panel-controller uses setSpeechRate)
+jest.mock('../../tts-playback/content/index', () => ({
   setSpeechRate: jest.fn(),
 }));
 

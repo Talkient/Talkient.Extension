@@ -7,7 +7,7 @@ import {
   isSvgPlayIcon,
   isSvgPauseIcon,
 } from '../../assets/content/icons';
-import { safeSendMessage } from '../../../content/runtime-utils';
+import { safeSendMessage } from '../../../shared/api/messaging';
 import {
   highlightText,
   clearHighlight,

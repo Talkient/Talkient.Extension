@@ -18,8 +18,8 @@
       "Bash(pnpm update:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm build)",
-      "Bash(powershell -Command \"Set-Location ''d:\\\\Repositories\\\\talkient-workdir\\\\Talkient.Extension''; & pnpm build 2>&1\")",
-      "Bash(powershell -Command \"Set-Location ''d:\\\\Repositories\\\\talkient-workdir\\\\Talkient.Extension''; & pnpm test 2>&1\")"
+      "Bash(git rm *)",
+      "Bash(git add *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

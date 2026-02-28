@@ -34,7 +34,7 @@ const mockSafeSendMessage = jest.fn((message, callback) => {
   return true;
 });
 
-jest.mock('../runtime-utils', () => ({
+jest.mock('../../shared/api/messaging', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safeSendMessage: (message: any, callback?: any) =>
     mockSafeSendMessage(message, callback),
