@@ -8,7 +8,7 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"e2e/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"e2e/**/*.ts\"",
-    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -f dist/content/content-lib.js dist/content/control-panel.js dist/content/highlight.js dist/content/icons.js dist/content/runtime-utils.js && rm -rf dist/auth && rm -rf dist/types && rm -f dist/tsconfig.tsbuildinfo",
+    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -rf dist/features && rm -rf dist/shared && rm -f dist/background/tab-manager.js && rm -f dist/content/highlight.js && rm -f dist/tsconfig.tsbuildinfo",
     "build": "tsc --build && pnpm build:content && pnpm build:popup && pnpm build:sw && pnpm build:options",
     "update-manifest": "cp manifest.json dist/",
     "update-assets": "cp assets/ dist/ -r",

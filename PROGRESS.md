@@ -395,22 +395,40 @@ Migrating Talkient Extension to Feature-based Slice Architecture to improve main
 
 ---
 
-### ⏳ Phase 10: Update Build Configuration (PENDING)
+### ✅ Phase 10: Update Build Configuration (COMPLETED)
 
 **Goal**: Verify all build scripts and manifest work with new structure
 
 **Tasks**:
 
-- [ ] Verify esbuild entry points:
-  - [ ] `pnpm build:content` (src/content/content.ts)
-  - [ ] `pnpm build:popup` (src/popup/popup.ts)
-  - [ ] `pnpm build:sw` (src/background/service-worker.ts)
-  - [ ] `pnpm build:options` (src/features/settings/options/options-ui.ts)
-- [ ] Update `package.json` scripts if needed
-- [ ] Update `manifest.json` if paths changed
-- [ ] Test full build: `pnpm run publish`
-- [ ] Verify dist/ output structure
-- [ ] Commit: "Phase 10: Update build configuration"
+- [x] Verify esbuild entry points:
+  - [x] `pnpm build:content` (src/content/content.ts) → dist/content/content.js (35.8kb)
+  - [x] `pnpm build:popup` (src/popup/popup.ts) → dist/popup/popup.js (3.8kb)
+  - [x] `pnpm build:sw` (src/background/service-worker.ts) → dist/background/service-worker.js (21.4kb)
+  - [x] `pnpm build:options` (src/features/settings/options/options-ui.ts) → dist/options/options.js (10.6kb)
+- [x] Update `package.json` publish script - replaced stale rm-f entries with new structure
+- [x] `manifest.json` paths verified correct, no changes needed
+- [x] Test full build: `pnpm run publish` - succeeded
+- [x] Verify dist/ output structure - clean, only 10 needed files
+- [x] Commit: "Phase 10: Update build configuration"
+
+**Files Modified**:
+
+- `package.json` - publish script updated: removed stale `dist/content/content-lib.js`, `dist/content/control-panel.js`, `dist/content/icons.js`, `dist/content/runtime-utils.js`, `dist/auth/`, `dist/types/`; added `dist/features/`, `dist/shared/`, `dist/background/tab-manager.js`
+
+**Dist Output** (clean, 10 files):
+
+- `dist/background/service-worker.js` (21.4kb)
+- `dist/content/content.js` (35.8kb) + `dist/content/content.css`
+- `dist/options/options.js` (10.6kb) + `dist/options/options.html` + `dist/options/options.css`
+- `dist/popup/popup.js` (3.8kb) + `dist/popup/popup.html` + `dist/popup/popup.css`
+- `dist/manifest.json`
+- `dist/assets/svg/*.svg`
+
+**Test Results**:
+
+- 23 test suites passed
+- 371 tests passed
 
 ---
 
