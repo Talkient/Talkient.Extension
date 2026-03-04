@@ -6,7 +6,7 @@
     "48": "assets/png/text-to-speech.png",
     "128": "assets/png/text-to-speech.png"
   },
-  "version": "0.0.16",
+  "version": "0.0.17",
   "permissions": ["tts", "storage", "contextMenus", "identity"],
   "oauth2": {
     "client_id": "487597228651-n6g0bj7j2t6ugk8bqe0d1d05b764pmcn.apps.googleusercontent.com",
