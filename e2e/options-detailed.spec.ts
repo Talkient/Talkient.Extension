@@ -226,7 +226,7 @@ test.describe('Talkient Extension Options Page - Detailed Tests', () => {
         .inputValue();
 
       // More robust validation that handles different browser behaviors
-      expect(Number.isInteger(parseFloat(valueAfterFloat))).toBe(true);
+      expect(Number.isInteger(Number.parseFloat(valueAfterFloat))).toBe(true);
     });
 
     // Take a screenshot for verification
