@@ -40,6 +40,7 @@
 - [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
 - [ ] Add support for `"file:///*"` like PDF
 - [ ] Add content script for "run_at=document_idle"
+- Keyboard Shortcuts
 - [ ] E2E tests
   - Play/Pause
   - Ask LLMs to find test-gaps
