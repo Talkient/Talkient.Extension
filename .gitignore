@@ -8,9 +8,6 @@
 # TypeScript build artifacts
 tsconfig.tsbuildinfo
 
-# Local AI tool configurations (may contain machine-specific settings)
-.claude/settings.local.json
-
 # START Ruler Generated Files
 /.agent/rules/ruler.md
 /.agent/rules/ruler.md.bak
