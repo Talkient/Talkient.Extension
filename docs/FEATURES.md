@@ -8,7 +8,7 @@
 
 - Sign In with Google
 - Settings button
-- "Report an issue" button (talkient-public)
+- "Report an issue" button (Talkient.Extension)
 
 ## Options (settings)
 

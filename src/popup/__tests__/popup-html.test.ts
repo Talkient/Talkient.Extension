@@ -118,7 +118,7 @@ describe('popup.ts - using actual HTML', () => {
 
       // Verify that chrome.tabs.create was called with the correct URL
       expect(chrome.tabs.create).toHaveBeenCalledWith({
-        url: 'https://github.com/Talkient/talkient-public/issues/new',
+        url: 'https://github.com/Talkient/Talkient.Extension/issues/new',
       });
     });
 

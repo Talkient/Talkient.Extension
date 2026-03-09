@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       // Open the GitHub issues page in a new tab
       void chrome.tabs.create({
-        url: 'https://github.com/Talkient/talkient-public/issues/new',
+        url: 'https://github.com/Talkient/Talkient.Extension/issues/new',
       });
     });
   }
