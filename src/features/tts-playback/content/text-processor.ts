@@ -21,6 +21,29 @@ let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 
+// Reading time estimate counters
+let totalProcessedChars = 0;
+let spokenChars = 0;
+let currentPlayingChars = 0;
+
+export function getTotalProcessedChars(): number {
+  return totalProcessedChars;
+}
+export function getSpokenChars(): number {
+  return spokenChars;
+}
+export function addSpokenChars(n: number): void {
+  spokenChars += n;
+}
+export function getCurrentPlayingChars(): number {
+  return currentPlayingChars;
+}
+export function resetEstimateCounters(): void {
+  totalProcessedChars = 0;
+  spokenChars = 0;
+  currentPlayingChars = 0;
+}
+
 // Load minimum words setting from storage
 export function loadMinimumWordsFromStorage(): Promise<number> {
   return new Promise((resolve) => {
@@ -259,7 +282,7 @@ export function autoPlayNextText(): void {
 }
 
 // Function to process text nodes and add play buttons
-export function processTextElements(): void {
+export function processTextElements(onComplete?: () => void): void {
   console.log('[Talkient] Processing the text elements...');
 
   // Get all text nodes in the document
@@ -374,6 +397,7 @@ export function processTextElements(): void {
           const textElement = wrapper.querySelector('span') || wrapper;
           highlightText(textElement as HTMLElement, highlightStyle);
 
+          currentPlayingChars = (textNode.textContent ?? '').trim().length;
           safeSendMessage(
             {
               type: 'SPEAK_TEXT',
@@ -406,6 +430,7 @@ export function processTextElements(): void {
         continue;
       }
 
+      totalProcessedChars += (textNode.textContent ?? '').trim().length;
       processedNodes.add(textNode);
       batchCount++;
       processedCount++;
@@ -419,6 +444,7 @@ export function processTextElements(): void {
       console.log(
         `[Talkient] Elements processed. Total nodes processed: ${processedCount}`,
       );
+      onComplete?.();
     }
   }
 
