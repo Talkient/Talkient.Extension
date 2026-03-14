@@ -25,6 +25,11 @@ let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 let totalProcessedChars = 0;
 let remainingChars = -1; // -1 = playback not started; ≥0 = chars left from current position
 let currentPlayingChars = 0;
+let onPlayStartCallback: (() => void) | undefined;
+
+export function setOnPlayStartCallback(cb: () => void): void {
+  onPlayStartCallback = cb;
+}
 
 export function getTotalProcessedChars(): number {
   return totalProcessedChars;
@@ -418,6 +423,8 @@ export function processTextElements(onComplete?: () => void): void {
             (_response) => {
               // Set pause icon
               playButton.innerHTML = getSvgIcon('pause');
+              // Update remaining time now that playback has started
+              onPlayStartCallback?.();
             },
           );
         }

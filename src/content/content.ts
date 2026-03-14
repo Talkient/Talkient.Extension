@@ -19,6 +19,7 @@ import {
   subtractRemainingChars,
   getCurrentPlayingChars,
   resetEstimateCounters,
+  setOnPlayStartCallback,
 } from '../features/tts-playback/content/index';
 import {
   clearHighlight,
@@ -181,6 +182,9 @@ chrome.runtime.onMessage.addListener(
     return true; // Keep the message channel open for async responses
   },
 );
+
+// Update remaining time display whenever a play button is clicked manually
+setOnPlayStartCallback(() => updateRemainingTimeDisplay());
 
 // Load highlight style from storage
 void loadHighlightStyleFromStorage();
