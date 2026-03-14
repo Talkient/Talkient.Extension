@@ -15,8 +15,8 @@ import {
   loadButtonPositionFromStorage,
   setButtonPosition,
   getTotalProcessedChars,
-  getSpokenChars,
-  addSpokenChars,
+  getRemainingChars,
+  subtractRemainingChars,
   getCurrentPlayingChars,
   resetEstimateCounters,
 } from '../features/tts-playback/content/index';
@@ -43,15 +43,20 @@ function updateRemainingTimeDisplay(): void {
   ) as HTMLSpanElement | null;
   if (!el) return;
 
-  const total = getTotalProcessedChars();
-  if (total === 0) {
+  const raw = getRemainingChars();
+  // Before any playback starts, fall back to total estimate
+  const charsForCalc = raw < 0 ? getTotalProcessedChars() : raw;
+  if (charsForCalc === 0) {
+    el.textContent = '0:00';
+    return;
+  }
+  if (getTotalProcessedChars() === 0) {
     el.textContent = '—';
     return;
   }
 
-  const remaining = Math.max(0, total - getSpokenChars());
   const seconds = Math.floor(
-    remaining / (CHARS_PER_SECOND_AT_1X * getSpeechRate()),
+    charsForCalc / (CHARS_PER_SECOND_AT_1X * getSpeechRate()),
   );
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -103,7 +108,7 @@ chrome.runtime.onMessage.addListener(
       });
 
       // Update reading time countdown
-      addSpokenChars(getCurrentPlayingChars());
+      subtractRemainingChars(getCurrentPlayingChars());
       updateRemainingTimeDisplay();
 
       // Clear text highlighting

@@ -23,24 +23,27 @@ let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
-let spokenChars = 0;
+let remainingChars = -1; // -1 = playback not started; ≥0 = chars left from current position
 let currentPlayingChars = 0;
 
 export function getTotalProcessedChars(): number {
   return totalProcessedChars;
 }
-export function getSpokenChars(): number {
-  return spokenChars;
+export function getRemainingChars(): number {
+  return remainingChars;
 }
-export function addSpokenChars(n: number): void {
-  spokenChars += n;
+export function setRemainingChars(n: number): void {
+  remainingChars = n;
+}
+export function subtractRemainingChars(n: number): void {
+  if (remainingChars >= 0) remainingChars = Math.max(0, remainingChars - n);
 }
 export function getCurrentPlayingChars(): number {
   return currentPlayingChars;
 }
 export function resetEstimateCounters(): void {
   totalProcessedChars = 0;
-  spokenChars = 0;
+  remainingChars = -1;
   currentPlayingChars = 0;
 }
 
@@ -397,7 +400,16 @@ export function processTextElements(onComplete?: () => void): void {
           const textElement = wrapper.querySelector('span') || wrapper;
           highlightText(textElement as HTMLElement, highlightStyle);
 
+          // Compute remaining chars from this node to the end of all processed nodes
           currentPlayingChars = (textNode.textContent ?? '').trim().length;
+          const allProcessed = Array.from(
+            document.querySelectorAll('.talkient-processed'),
+          );
+          const currentIndex = allProcessed.indexOf(wrapper);
+          remainingChars = allProcessed
+            .slice(currentIndex >= 0 ? currentIndex : 0)
+            .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
+
           safeSendMessage(
             {
               type: 'SPEAK_TEXT',
