@@ -45,14 +45,17 @@ function updateRemainingTimeDisplay(): void {
   if (!el) return;
 
   const raw = getRemainingChars();
-  // Before any playback starts, fall back to total estimate
-  const charsForCalc = raw < 0 ? getTotalProcessedChars() : raw;
-  if (charsForCalc === 0) {
-    el.textContent = '0:00';
+  const total = getTotalProcessedChars();
+
+  // Show dash only when no processing has happened and no playback started
+  if (raw < 0 && total === 0) {
+    el.textContent = '—';
     return;
   }
-  if (getTotalProcessedChars() === 0) {
-    el.textContent = '—';
+
+  const charsForCalc = raw < 0 ? total : raw;
+  if (charsForCalc === 0) {
+    el.textContent = '0:00';
     return;
   }
 
