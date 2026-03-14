@@ -21,6 +21,37 @@ let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 
+// Reading time estimate counters
+let totalProcessedChars = 0;
+let remainingChars = -1; // -1 = playback not started; ≥0 = chars left from current position
+let currentPlayingChars = 0;
+let onPlayStartCallback: (() => void) | undefined;
+
+export function setOnPlayStartCallback(cb: () => void): void {
+  onPlayStartCallback = cb;
+}
+
+export function getTotalProcessedChars(): number {
+  return totalProcessedChars;
+}
+export function getRemainingChars(): number {
+  return remainingChars;
+}
+export function setRemainingChars(n: number): void {
+  remainingChars = n;
+}
+export function subtractRemainingChars(n: number): void {
+  if (remainingChars >= 0) remainingChars = Math.max(0, remainingChars - n);
+}
+export function getCurrentPlayingChars(): number {
+  return currentPlayingChars;
+}
+export function resetEstimateCounters(): void {
+  totalProcessedChars = 0;
+  remainingChars = -1;
+  currentPlayingChars = 0;
+}
+
 // Load minimum words setting from storage
 export function loadMinimumWordsFromStorage(): Promise<number> {
   return new Promise((resolve) => {
@@ -259,7 +290,7 @@ export function autoPlayNextText(): void {
 }
 
 // Function to process text nodes and add play buttons
-export function processTextElements(): void {
+export function processTextElements(onComplete?: () => void): void {
   console.log('[Talkient] Processing the text elements...');
 
   // Get all text nodes in the document
@@ -374,6 +405,16 @@ export function processTextElements(): void {
           const textElement = wrapper.querySelector('span') || wrapper;
           highlightText(textElement as HTMLElement, highlightStyle);
 
+          // Compute remaining chars from this node to the end of all processed nodes
+          currentPlayingChars = (textNode.textContent ?? '').trim().length;
+          const allProcessed = Array.from(
+            document.querySelectorAll('.talkient-processed'),
+          );
+          const currentIndex = allProcessed.indexOf(wrapper);
+          remainingChars = allProcessed
+            .slice(currentIndex >= 0 ? currentIndex : 0)
+            .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
+
           safeSendMessage(
             {
               type: 'SPEAK_TEXT',
@@ -382,6 +423,8 @@ export function processTextElements(): void {
             (_response) => {
               // Set pause icon
               playButton.innerHTML = getSvgIcon('pause');
+              // Update remaining time now that playback has started
+              onPlayStartCallback?.();
             },
           );
         }
@@ -406,6 +449,7 @@ export function processTextElements(): void {
         continue;
       }
 
+      totalProcessedChars += (textNode.textContent ?? '').trim().length;
       processedNodes.add(textNode);
       batchCount++;
       processedCount++;
@@ -419,6 +463,7 @@ export function processTextElements(): void {
       console.log(
         `[Talkient] Elements processed. Total nodes processed: ${processedCount}`,
       );
+      onComplete?.();
     }
   }
 

@@ -4,11 +4,6 @@
   - Lint, tests
 - CI/CD to deploy on Chrome extension
 - [ ] Try to Integrate with DevTools MCP
-- [ ] Fix flake tests (e2e)
-- [ ] Lint
-- [ ] Open Source
-  - [ ] Refactor for maintanability
-  - [ ] Security analysis
 - [ ] Authentication
 - [ ] Summary by AI
 - [ ] Add a docs folder (or similar), one .md file for each feature like: highlight, followHighlight, control panel
@@ -22,8 +17,8 @@
 - [ ] play button for a tags
 - [ ] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
-- [ ] Estimate time in minutes
 - [ ] Highlight chunks
+- [ ] Keep control panel's state expanded/collapsed after a refresh page
 - [ ] Ignore domains or urls list (user)
 - [ ] Control panel including play/pause, rate, voice
 - [ ] Restart the current audio
@@ -49,6 +44,9 @@
   - Mock fixed HTML instead of navigating to external pages
   - Make sure everything done via control panel reflect on options page and vice-versa
   - Complex flows: play/pause directly and via control panel, alternatively
+  - Edge cases
+  - Playwright + Playwright CLI
 - Github Actions
   - [ ] E2E tests
   - [ ] Submit a new version on Chrome Web Store
+- [ ] Add OIDC (stashed changes) to enable JIT Registration flow
