@@ -1,7 +1,18 @@
 import { test, expect } from './extension-test';
+import type { Page } from '@playwright/test';
 import * as path from 'path';
 
 const TEST_PAGE_URL = `file://${path.resolve(__dirname, 'test-pages/reading-time-test.html').replace(/\\/g, '/')}`;
+
+async function waitForFormattedRemaining(page: Page) {
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.talkient-remaining-value');
+    if (!el) return false;
+    return /^\d+:\d{2}$/.test(el.textContent ?? '');
+  });
+
+  return page.locator('.talkient-remaining-value').textContent();
+}
 
 test.describe('Reading Time Estimate', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,9 +26,7 @@ test.describe('Reading Time Estimate', () => {
     await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       if (panel?.classList.contains('talkient-collapsed')) {
-        const toggle = panel.querySelector(
-          '.talkient-panel-toggle',
-        );
+        const toggle = panel.querySelector('.talkient-panel-toggle');
         toggle?.click();
       }
     });
@@ -63,11 +72,7 @@ test.describe('Reading Time Estimate', () => {
     await page.evaluate(() => {
       const panel = document.getElementById('talkient-control-panel');
       if (panel?.classList.contains('talkient-collapsed')) {
-        (
-          panel.querySelector(
-            '.talkient-panel-toggle',
-          )
-        )?.click();
+        panel.querySelector('.talkient-panel-toggle')?.click();
       }
     });
 
@@ -87,9 +92,7 @@ test.describe('Reading Time Estimate', () => {
     // Wait for play buttons — signals processing has finished
     await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
 
-    const remaining = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const remaining = await waitForFormattedRemaining(page);
 
     // Must match M:SS pattern (e.g. "0:45", "1:30", "10:00")
     expect(remaining).toMatch(/^\d+:\d{2}$/);
@@ -100,9 +103,7 @@ test.describe('Reading Time Estimate', () => {
   }) => {
     await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
 
-    const remaining = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const remaining = await waitForFormattedRemaining(page);
 
     // Parse and verify it represents more than 0 seconds
     const match = remaining?.match(/^(\d+):(\d{2})$/);
@@ -120,9 +121,7 @@ test.describe('Reading Time Estimate', () => {
     await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
 
     // Read estimate at default speed (1.0x)
-    const beforeText = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const beforeText = await waitForFormattedRemaining(page);
     const beforeMatch = beforeText?.match(/^(\d+):(\d{2})$/);
     expect(beforeMatch).not.toBeNull();
     const beforeSeconds =
@@ -137,16 +136,7 @@ test.describe('Reading Time Estimate', () => {
       });
 
     // Wait for display to update
-    await page.waitForFunction(() => {
-      const el = document.querySelector('.talkient-remaining-value');
-      if (!el) return false;
-      const text = el.textContent ?? '';
-      return /^\d+:\d{2}$/.test(text);
-    });
-
-    const afterText = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const afterText = await waitForFormattedRemaining(page);
     const afterMatch = afterText?.match(/^(\d+):(\d{2})$/);
     expect(afterMatch).not.toBeNull();
     const afterSeconds =
@@ -161,9 +151,7 @@ test.describe('Reading Time Estimate', () => {
   }) => {
     await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
 
-    const beforeText = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const beforeText = await waitForFormattedRemaining(page);
     const beforeMatch = beforeText?.match(/^(\d+):(\d{2})$/);
     expect(beforeMatch).not.toBeNull();
     const beforeSeconds =
@@ -177,14 +165,7 @@ test.describe('Reading Time Estimate', () => {
         el.dispatchEvent(new Event('input', { bubbles: true }));
       });
 
-    await page.waitForFunction(() => {
-      const el = document.querySelector('.talkient-remaining-value');
-      return el && /^\d+:\d{2}$/.test(el.textContent ?? '');
-    });
-
-    const afterText = await page
-      .locator('.talkient-remaining-value')
-      .textContent();
+    const afterText = await waitForFormattedRemaining(page);
     const afterMatch = afterText?.match(/^(\d+):(\d{2})$/);
     expect(afterMatch).not.toBeNull();
     const afterSeconds =

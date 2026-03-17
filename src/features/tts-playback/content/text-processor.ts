@@ -25,6 +25,9 @@ let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 let totalProcessedChars = 0;
 let remainingChars = -1; // -1 = playback not started; ≥0 = chars left from current position
 let currentPlayingChars = 0;
+// Number of chars before the node that started playback, captured at click time.
+// Used to correct `remainingChars` after async processing batches finish.
+let playbackCharsBeforeCurrentNode: number | null = null;
 let onPlayStartCallback: (() => void) | undefined;
 
 export function setOnPlayStartCallback(cb: () => void): void {
@@ -50,6 +53,7 @@ export function resetEstimateCounters(): void {
   totalProcessedChars = 0;
   remainingChars = -1;
   currentPlayingChars = 0;
+  playbackCharsBeforeCurrentNode = null;
 }
 
 // Load minimum words setting from storage
@@ -405,14 +409,23 @@ export function processTextElements(onComplete?: () => void): void {
           const textElement = wrapper.querySelector('span') || wrapper;
           highlightText(textElement as HTMLElement, highlightStyle);
 
-          // Compute remaining chars from this node to the end of all processed nodes
+          // Compute playback offsets based on currently processed nodes.
           currentPlayingChars = (textNode.textContent ?? '').trim().length;
           const allProcessed = Array.from(
             document.querySelectorAll('.talkient-processed'),
           );
           const currentIndex = allProcessed.indexOf(wrapper);
+          const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+
+          // Chars before the clicked node. This remains stable as more nodes are
+          // processed and is later used with final `totalProcessedChars`.
+          playbackCharsBeforeCurrentNode = allProcessed
+            .slice(0, safeIndex)
+            .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
+
+          // Provisional remaining chars from this node through processed end.
           remainingChars = allProcessed
-            .slice(currentIndex >= 0 ? currentIndex : 0)
+            .slice(safeIndex)
             .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
 
           safeSendMessage(
@@ -463,6 +476,17 @@ export function processTextElements(onComplete?: () => void): void {
       console.log(
         `[Talkient] Elements processed. Total nodes processed: ${processedCount}`,
       );
+
+      // After all batches complete, fix early-click undercount using final total.
+      if (playbackCharsBeforeCurrentNode !== null) {
+        const recomputedRemaining =
+          totalProcessedChars - playbackCharsBeforeCurrentNode;
+        if (recomputedRemaining > remainingChars) {
+          remainingChars = recomputedRemaining;
+        }
+        playbackCharsBeforeCurrentNode = null;
+      }
+
       onComplete?.();
     }
   }

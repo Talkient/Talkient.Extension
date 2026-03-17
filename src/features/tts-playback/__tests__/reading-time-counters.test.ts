@@ -51,6 +51,12 @@ const mockChrome = {
 });
 
 describe('Reading Time Counters', () => {
+  function processTextElementsAndWaitForComplete(): Promise<void> {
+    return new Promise((resolve) => {
+      processTextElements(() => resolve());
+    });
+  }
+
   beforeEach(() => {
     resetEstimateCounters();
     jest.clearAllMocks();
@@ -172,8 +178,12 @@ describe('Reading Time Counters', () => {
       });
 
       const onComplete = jest.fn();
-      processTextElements(onComplete);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        processTextElements(() => {
+          onComplete();
+          resolve();
+        });
+      });
 
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
@@ -185,8 +195,12 @@ describe('Reading Time Counters', () => {
       });
 
       const onComplete = jest.fn();
-      processTextElements(onComplete);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        processTextElements(() => {
+          onComplete();
+          resolve();
+        });
+      });
 
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
@@ -205,8 +219,7 @@ describe('Reading Time Counters', () => {
         currentNode: textNode,
       });
 
-      processTextElements();
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await processTextElementsAndWaitForComplete();
 
       expect(getTotalProcessedChars()).toBe(text.trim().length);
     });
@@ -244,8 +257,7 @@ describe('Reading Time Counters', () => {
       };
       document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
 
-      processTextElements();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await processTextElementsAndWaitForComplete();
 
       expect(getTotalProcessedChars()).toBe(
         text1.trim().length + text2.trim().length,
@@ -269,8 +281,12 @@ describe('Reading Time Counters', () => {
         expect(getTotalProcessedChars()).toBeGreaterThan(0);
       });
 
-      processTextElements(onComplete);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        processTextElements(() => {
+          onComplete();
+          resolve();
+        });
+      });
 
       expect(onComplete).toHaveBeenCalled();
     });
@@ -310,8 +326,7 @@ describe('Reading Time Counters', () => {
         currentNode: textNode,
       });
 
-      processTextElements();
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await processTextElementsAndWaitForComplete();
 
       return container.querySelector(
         '.talkient-play-button',
@@ -378,8 +393,7 @@ describe('Reading Time Counters', () => {
       };
       document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
 
-      processTextElements();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await processTextElementsAndWaitForComplete();
 
       const playButtons = container.querySelectorAll<HTMLButtonElement>(
         '.talkient-play-button',
