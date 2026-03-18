@@ -49,6 +49,11 @@ const mockChrome = {
   return 1;
 });
 
+Object.defineProperty(window, 'scrollTo', {
+  value: jest.fn(),
+  writable: true,
+});
+
 // Average chars per second constant (mirrors content.ts)
 const CHARS_PER_SECOND_AT_1X = 14;
 
@@ -73,17 +78,44 @@ function buildPanel() {
  * - storageChangeListener: the chrome.storage.onChanged listener
  * - counters: fresh require of text-processor counters (same module instance as content.ts)
  */
- 
+
 function loadContent(): {
   messageListener: any;
   storageChangeListener: any;
   counters: any;
 } {
-   
   const counters = require('../../features/tts-playback/content/index');
   counters.resetEstimateCounters();
 
   // Load content.ts — it registers listeners against mockChrome
+  require('../content');
+
+  const onMessageCalls = mockChrome.runtime.onMessage.addListener.mock.calls;
+  const messageListener = onMessageCalls[onMessageCalls.length - 1]?.[0];
+  const onChangedCalls = mockChrome.storage.onChanged.addListener.mock.calls;
+  const storageChangeListener = onChangedCalls[onChangedCalls.length - 1]?.[0];
+
+  return { messageListener, storageChangeListener, counters };
+}
+
+function loadContentWithMockedCurrentPlayingChars(playedChars: number): {
+  messageListener: any;
+  storageChangeListener: any;
+  counters: any;
+} {
+  jest.doMock('../../features/tts-playback/content/index', () => {
+    const actual = jest.requireActual(
+      '../../features/tts-playback/content/index',
+    );
+    return {
+      ...actual,
+      getCurrentPlayingChars: jest.fn(() => playedChars),
+    };
+  });
+
+  const counters = require('../../features/tts-playback/content/index');
+  counters.resetEstimateCounters();
+
   require('../content');
 
   const onMessageCalls = mockChrome.runtime.onMessage.addListener.mock.calls;
@@ -115,6 +147,7 @@ describe('updateRemainingTimeDisplay — via content.ts listeners', () => {
 
   afterEach(() => {
     if (panel.parentNode) document.body.removeChild(panel);
+    jest.dontMock('../../features/tts-playback/content/index');
     jest.resetModules();
   });
 
@@ -194,15 +227,11 @@ describe('updateRemainingTimeDisplay — via content.ts listeners', () => {
   // ── SPEECH_ENDED subtracts currentPlayingChars ────────────────────────────
 
   it('subtracts currentPlayingChars from remainingChars on SPEECH_ENDED', () => {
-    const { messageListener, counters } = loadContent();
-
-    counters.setRemainingChars(CHARS_PER_SECOND_AT_1X * 120); // 2 min
-    // Simulate 30 seconds worth of chars playing
     const playedChars = CHARS_PER_SECOND_AT_1X * 30;
-    // currentPlayingChars is private but is used by subtractRemainingChars inside
-    // We can't set it directly — but we can verify remaining decreased after SPEECH_ENDED
-    // We simulate by directly setting it via the module's internal state
-    counters.setRemainingChars(CHARS_PER_SECOND_AT_1X * 120 - playedChars);
+
+    const { messageListener, counters } =
+      loadContentWithMockedCurrentPlayingChars(playedChars);
+    counters.setRemainingChars(CHARS_PER_SECOND_AT_1X * 120);
 
     messageListener({ type: 'SPEECH_ENDED' }, {}, jest.fn());
 
