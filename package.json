@@ -31,6 +31,9 @@
   "keywords": [],
   "author": "Talkient Extension Contributors",
   "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.13.0 <23 || >=24.0.0"
+  },
   "packageManager": "pnpm@10.11.0",
   "lint-staged": {
     "*.ts": [
