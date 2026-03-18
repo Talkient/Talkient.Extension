@@ -10,7 +10,11 @@ pnpm outdated
 
 Review the output and note any major-version bumps (semver `X.0.0`) — these are likely breaking changes.
 
-## 2. Upgrade all packages to latest
+## 2. Update the github actions
+
+Update the workflow actions used in `.github/workflows` to their latest stable major versions.
+
+## 3. Upgrade all packages to latest
 
 ```
 pnpm update --latest
@@ -18,20 +22,21 @@ pnpm update --latest
 
 This updates `package.json` ranges and installs the latest versions.
 
-## 3. Verify the build compiles
+## 4. Verify the build compiles
 
 ```
 pnpm build
 ```
 
 If the build fails, read the compiler errors and fix them:
+
 - Type errors → update typings / adjust code to match new API signatures
 - Missing exports → check the package's changelog/migration guide and update imports
 - Removed APIs → replace with the new equivalent
 
 Repeat until the build passes.
 
-## 4. Run unit tests
+## 5. Run unit tests
 
 ```
 pnpm test
@@ -39,7 +44,7 @@ pnpm test
 
 Fix any failing tests caused by changed behavior or updated mocks. Do not skip tests.
 
-## 5. Run E2E tests
+## 6. Run E2E tests
 
 ```
 pnpm test:e2e
@@ -47,6 +52,6 @@ pnpm test:e2e
 
 Fix any failures. E2E runs `publish` internally (clean dist build) before testing.
 
-## 6. Report results
+## 7. Report results
 
 List all packages that were upgraded (name, old version → new version) and any breaking changes that required code fixes.
