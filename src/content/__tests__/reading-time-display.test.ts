@@ -126,6 +126,38 @@ function loadContentWithMockedCurrentPlayingChars(playedChars: number): {
   return { messageListener, storageChangeListener, counters };
 }
 
+function loadContentWithMockedEstimateState(
+  totalProcessedChars: number,
+  remainingChars: number,
+): {
+  messageListener: any;
+  storageChangeListener: any;
+  counters: any;
+} {
+  jest.doMock('../../features/tts-playback/content/index', () => {
+    const actual = jest.requireActual(
+      '../../features/tts-playback/content/index',
+    );
+    return {
+      ...actual,
+      getTotalProcessedChars: jest.fn(() => totalProcessedChars),
+      getRemainingChars: jest.fn(() => remainingChars),
+    };
+  });
+
+  const counters = require('../../features/tts-playback/content/index');
+  counters.resetEstimateCounters();
+
+  require('../content');
+
+  const onMessageCalls = mockChrome.runtime.onMessage.addListener.mock.calls;
+  const messageListener = onMessageCalls[onMessageCalls.length - 1]?.[0];
+  const onChangedCalls = mockChrome.storage.onChanged.addListener.mock.calls;
+  const storageChangeListener = onChangedCalls[onChangedCalls.length - 1]?.[0];
+
+  return { messageListener, storageChangeListener, counters };
+}
+
 describe('updateRemainingTimeDisplay — via content.ts listeners', () => {
   let panel: HTMLDivElement;
   let el: HTMLSpanElement;
@@ -301,11 +333,11 @@ describe('updateRemainingTimeDisplay — via content.ts listeners', () => {
 
   // ── Before playback: uses totalProcessedChars as fallback ─────────────────
 
-  it('shows total estimate before any playback when totalProcessedChars is known via remainingChars', () => {
-    const { messageListener, counters } = loadContent();
-
-    // Simulate: processing done (set remaining = total, not yet started)
-    counters.setRemainingChars(CHARS_PER_SECOND_AT_1X * 300); // 5 min
+  it('shows total estimate before any playback using totalProcessedChars fallback', () => {
+    const { messageListener } = loadContentWithMockedEstimateState(
+      CHARS_PER_SECOND_AT_1X * 300,
+      -1,
+    );
 
     messageListener({ type: 'SPEECH_ENDED' }, {}, jest.fn());
 
