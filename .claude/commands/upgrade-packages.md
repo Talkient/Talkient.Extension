@@ -36,22 +36,14 @@ If the build fails, read the compiler errors and fix them:
 
 Repeat until the build passes.
 
-## 5. Run unit tests
+## 5. Run all tests
 
 ```
-pnpm test
+pnpm test:all
 ```
 
-Fix any failing tests caused by changed behavior or updated mocks. Do not skip tests.
+Fix any failures. Do not skip tests.
 
-## 6. Run E2E tests
-
-```
-pnpm test:e2e
-```
-
-Fix any failures. E2E runs `publish` internally (clean dist build) before testing.
-
-## 7. Report results
+## 6. Report results
 
 List all packages that were upgraded (name, old version → new version) and any breaking changes that required code fixes.

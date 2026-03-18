@@ -14,6 +14,7 @@
       "Bash(pnpm run lint:fix:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm test:e2e:*)",
+      "Bash(pnpm test:all:*)",
       "Bash(pnpm outdated:*)",
       "Bash(pnpm update:*)",
       "Bash(pnpm lint:*)",

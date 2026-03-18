@@ -18,6 +18,9 @@ This skill creates meaningful tests and ensures test integrity. **NEVER skip, co
 ## Test Commands
 
 ```bash
+# Run all tests (unit 2x + E2E 4x)
+pnpm test:all
+
 # Run unit tests (Jest)
 pnpm test
 
@@ -36,8 +39,8 @@ pnpm test:e2e --ui
 
 ## Mandatory Workflow
 
-1. **After ANY code change**: Run `pnpm test` AND `pnpm test:e2e`
-2. **E2E flakiness**: If E2E tests fail, run them **twice** before investigating (they can be intermittent)
+1. **After ANY code change**: Run `pnpm test:all`
+2. **When E2E fails inside `test:all`**: Treat it as a real failure and investigate root cause
 3. **Never skip tests**: Use `test.skip` or `describe.skip` ONLY temporarily during development, never commit them
 
 ---
@@ -296,7 +299,7 @@ await page.locator(SELECTORS.PLAY_BUTTON).click(); // GOOD
 ## Checklist Before Committing
 
 - [ ] All unit tests pass: `pnpm test`
-- [ ] All E2E tests pass: `pnpm test:e2e` (run twice if intermittent)
+- [ ] All test runs pass: `pnpm test:all`
 - [ ] No skipped or commented tests
 - [ ] New code has corresponding tests
 - [ ] Test names are descriptive

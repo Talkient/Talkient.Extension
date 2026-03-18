@@ -17,6 +17,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:all": "pnpm test && pnpm test && pnpm test:e2e && pnpm test:e2e && pnpm test:e2e && pnpm test:e2e",
     "build:content": "esbuild src/content/content.ts --bundle --outfile=dist/content/content.js --format=iife --platform=browser --target=chrome58",
     "build:popup": "esbuild src/popup/popup.ts --bundle --outfile=dist/popup/popup.js --format=iife --platform=browser --target=chrome58",
     "build:sw": "esbuild src/background/service-worker.ts --bundle --outfile=dist/background/service-worker.js --format=esm --platform=browser --target=chrome58",
