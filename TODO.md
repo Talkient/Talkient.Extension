@@ -50,3 +50,4 @@
   - [ ] E2E tests
   - [ ] Submit a new version on Chrome Web Store
 - [ ] Add OIDC (stashed changes) to enable JIT Registration flow
+- [ ] Design system + skill with [Paper MCP](https://paper.design/docs/mcp)
