@@ -9,10 +9,17 @@ import {
   setMinimumWords,
   loadSpeechRateFromStorage,
   setSpeechRate,
+  getSpeechRate,
   loadMaxNodesFromStorage,
   setMaxNodesProcessed,
   loadButtonPositionFromStorage,
   setButtonPosition,
+  getTotalProcessedChars,
+  getRemainingChars,
+  subtractRemainingChars,
+  getCurrentPlayingChars,
+  resetEstimateCounters,
+  setOnPlayStartCallback,
 } from '../features/tts-playback/content/index';
 import {
   clearHighlight,
@@ -27,6 +34,38 @@ import { initPanelHideDuration } from '../features/control-panel/content/panel-v
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from '../shared/api/messaging';
 import type { ContentScriptMessage } from '../shared/types/messages';
+
+const CHARS_PER_SECOND_AT_1X = 14;
+
+function updateRemainingTimeDisplay(): void {
+  const panel = document.getElementById('talkient-control-panel');
+  const el = panel?.querySelector(
+    '.talkient-remaining-value',
+  ) as HTMLSpanElement | null;
+  if (!el) return;
+
+  const raw = getRemainingChars();
+  const total = getTotalProcessedChars();
+
+  // Show dash only when no processing has happened and no playback started
+  if (raw < 0 && total === 0) {
+    el.textContent = '—';
+    return;
+  }
+
+  const charsForCalc = raw < 0 ? total : raw;
+  if (charsForCalc === 0) {
+    el.textContent = '0:00';
+    return;
+  }
+
+  const seconds = Math.floor(
+    charsForCalc / (CHARS_PER_SECOND_AT_1X * getSpeechRate()),
+  );
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 // Type guard for content script messages
 function isContentScriptMessage(
@@ -71,6 +110,10 @@ chrome.runtime.onMessage.addListener(
           button.innerHTML = getSvgIcon('play');
         }
       });
+
+      // Update reading time countdown
+      subtractRemainingChars(getCurrentPlayingChars());
+      updateRemainingTimeDisplay();
 
       // Clear text highlighting
       clearHighlight();
@@ -124,7 +167,8 @@ chrome.runtime.onMessage.addListener(
 
         if (isEnabled) {
           // Process text elements to re-add play buttons
-          processTextElements();
+          resetEstimateCounters();
+          processTextElements(() => updateRemainingTimeDisplay());
           sendResponse({ success: true });
         } else {
           console.log(
@@ -141,6 +185,9 @@ chrome.runtime.onMessage.addListener(
     return true; // Keep the message channel open for async responses
   },
 );
+
+// Update remaining time display whenever a play button is clicked manually
+setOnPlayStartCallback(() => updateRemainingTimeDisplay());
 
 // Load highlight style from storage
 void loadHighlightStyleFromStorage();
@@ -176,7 +223,8 @@ void loadButtonPositionFromStorage().then(() => {
 
     if (isEnabled) {
       // Initial processing
-      processTextElements();
+      resetEstimateCounters();
+      processTextElements(() => updateRemainingTimeDisplay());
     } else {
       console.log(
         '[Talkient] Play buttons are disabled. Skipping initial processing.',
@@ -206,7 +254,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           `[Talkient] Minimum words setting updated to: ${newMinWords}`,
         );
         // Re-process text elements to apply the new setting
-        processTextElements();
+        resetEstimateCounters();
+        processTextElements(() => updateRemainingTimeDisplay());
       }
     }
 
@@ -216,6 +265,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         // Update the cached value
         setSpeechRate(newRate);
         console.log(`[Talkient] Speech rate updated to: ${newRate}`);
+
+        // Recalculate remaining time with new rate
+        updateRemainingTimeDisplay();
 
         // Update control panel rate slider if it exists
         const panel = document.getElementById('talkient-control-panel');
@@ -246,7 +298,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           `[Talkient] Maximum nodes setting updated to: ${newMaxNodes}`,
         );
         // Re-process text elements to apply the new setting
-        processTextElements();
+        resetEstimateCounters();
+        processTextElements(() => updateRemainingTimeDisplay());
       }
     }
 
@@ -258,7 +311,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
       // If changing from disabled to enabled, process text elements
       if (isEnabled && !changes.playButtonsEnabled.oldValue) {
-        processTextElements();
+        resetEstimateCounters();
+        processTextElements(() => updateRemainingTimeDisplay());
       }
     }
 
@@ -290,7 +344,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           `[Talkient] Button position setting updated to: ${newButtonPosition}`,
         );
         // Re-process text elements to apply the new setting
-        processTextElements();
+        resetEstimateCounters();
+        processTextElements(() => updateRemainingTimeDisplay());
       }
     }
   }
@@ -340,7 +395,8 @@ window.addEventListener('afterprint', () => {
   chrome.storage.local.get(['playButtonsEnabled'], (result) => {
     const isEnabled = result.playButtonsEnabled !== false;
     if (isEnabled) {
-      processTextElements();
+      resetEstimateCounters();
+      processTextElements(() => updateRemainingTimeDisplay());
     }
   });
 });

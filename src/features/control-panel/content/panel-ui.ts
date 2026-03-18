@@ -91,6 +91,15 @@ export function createControlPanel(): void {
           />
         </div>
       </div>
+
+      <div class="talkient-control-section">
+        <div class="talkient-speech-rate">
+          <div class="talkient-rate-display">
+            <span class="talkient-rate-label">Remaining</span>
+            <span class="talkient-remaining-value">—</span>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 
