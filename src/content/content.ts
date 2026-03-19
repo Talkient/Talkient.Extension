@@ -27,6 +27,7 @@ import {
   setHighlightingStyle,
   getCurrentHighlightedElement,
   scrollToHighlightedElement,
+  highlightWordAtIndex,
 } from './highlight';
 import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
@@ -159,6 +160,8 @@ chrome.runtime.onMessage.addListener(
         // Show a small notification about the error (optional)
         console.error('[Talkient] Speech error occurred:', message.error);
       }
+    } else if (message.type === 'WORD_BOUNDARY') {
+      highlightWordAtIndex(message.charIndex, message.length);
     } else if (message.type === 'RELOAD_PLAY_BUTTONS') {
       // Check if play buttons are enabled before processing
       chrome.storage.local.get(['playButtonsEnabled'], (result) => {

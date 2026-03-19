@@ -447,14 +447,15 @@ export function processTextElements(onComplete?: () => void): void {
       const parentNode = textNode.parentNode;
       if (parentNode) {
         parentNode.insertBefore(wrapper, textNode);
-        wrapper.appendChild(textNode);
+        const textSpan = document.createElement('span');
+        textSpan.appendChild(textNode);
 
         // Add button based on position configuration
         if (buttonPositionCache === 'left') {
-          // Insert button before the text node
-          wrapper.insertBefore(playButton, textNode);
+          wrapper.appendChild(playButton);
+          wrapper.appendChild(textSpan);
         } else {
-          // Insert button after the text node (default behavior)
+          wrapper.appendChild(textSpan);
           wrapper.appendChild(playButton);
         }
       } else {

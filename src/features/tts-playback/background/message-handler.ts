@@ -77,10 +77,27 @@ export function handleSpeakText(
         const speechPitch =
           typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
 
+        // If no voice is explicitly selected, prefer a voice that supports
+        // word boundary events (enables word-by-word highlighting).
+        // Google voices don't emit 'word' events; Microsoft voices do.
+        let effectiveVoice = selectedVoice;
+        if (!effectiveVoice) {
+          const wordEventVoice = getAvailableVoices().find((v) =>
+            v.eventTypes?.includes('word'),
+          );
+          if (wordEventVoice) {
+            effectiveVoice = wordEventVoice.voiceName;
+            console.log(
+              '[Talkient.SW] Auto-selected word-event voice:',
+              effectiveVoice,
+            );
+          }
+        }
+
         const ttsOptions: chrome.tts.TtsOptions = {
           rate: speechRate,
           pitch: speechPitch,
-          voiceName: selectedVoice,
+          voiceName: effectiveVoice,
           onEvent: (event) => {
             console.log('[Talkient.SW] tts.speak event: ', event);
 
@@ -141,6 +158,15 @@ export function handleSpeakText(
                 break;
               case 'resume':
                 setIsPaused(false);
+                break;
+              case 'word':
+                if (sender.tab?.id) {
+                  void chrome.tabs.sendMessage(sender.tab.id, {
+                    type: 'WORD_BOUNDARY',
+                    charIndex: event.charIndex ?? 0,
+                    length: event.length ?? 0,
+                  });
+                }
                 break;
               case 'interrupted':
                 chrome.tts.stop();

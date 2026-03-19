@@ -5,6 +5,13 @@
 let currentHighlightedElement: HTMLElement | null = null;
 let currentHighlightingStyle: string = 'default';
 
+// Word-level highlighting state
+let wordSpans: HTMLSpanElement[] = [];
+let originalTextContent: string = '';
+let activeWordSpan: HTMLSpanElement | null = null;
+let wordWrappedElement: HTMLElement | null = null;
+let wordWrappedElementOriginalDisplay: string = '';
+
 // Function to load highlight style from storage
 export function loadHighlightStyleFromStorage(): void {
   chrome.storage.local.get(['highlightStyle'], (result) => {
@@ -32,6 +39,162 @@ export function getHighlightingStyle(): string {
   return currentHighlightingStyle;
 }
 
+// Wrap words in an element with individual spans for word-level highlighting
+export function wrapWordsInElement(element: HTMLElement): HTMLSpanElement[] {
+  const spans: HTMLSpanElement[] = [];
+  let charOffset = 0;
+
+  // Find text nodes (skip button children)
+  const textNodes: Text[] = [];
+  for (const child of Array.from(element.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      textNodes.push(child as Text);
+    }
+  }
+
+  for (const textNode of textNodes) {
+    const text = textNode.textContent || '';
+    originalTextContent = text;
+
+    const fragment = document.createDocumentFragment();
+    const regex = /(\S+)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add whitespace before the word
+      if (match.index > lastIndex) {
+        fragment.appendChild(
+          document.createTextNode(text.slice(lastIndex, match.index)),
+        );
+      }
+
+      const word = match[1];
+      const span = document.createElement('span');
+      span.className = 'talkient-word';
+      span.dataset.charIndex = String(charOffset + match.index);
+      span.textContent = word;
+      fragment.appendChild(span);
+      spans.push(span);
+
+      lastIndex = match.index + word.length;
+    }
+
+    // Add any trailing whitespace
+    if (lastIndex < text.length) {
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    charOffset += text.length;
+    textNode.replaceWith(fragment);
+  }
+
+  wordWrappedElementOriginalDisplay = element.style.display;
+
+  wordSpans = spans;
+  wordWrappedElement = element;
+  return spans;
+}
+
+// Highlight a specific word by character index
+export function highlightWordAtIndex(
+  charIndex: number,
+  _length?: number,
+): void {
+  if (wordSpans.length === 0) {
+    return;
+  }
+
+  // Find the matching span
+  let targetSpan: HTMLSpanElement | null = null;
+  for (const span of wordSpans) {
+    const spanCharIndex = parseInt(span.dataset.charIndex || '0', 10);
+    const spanLength = (span.textContent || '').length;
+    if (charIndex >= spanCharIndex && charIndex < spanCharIndex + spanLength) {
+      targetSpan = span;
+      break;
+    }
+  }
+
+  if (!targetSpan) {
+    return;
+  }
+
+  // Remove previous active word
+  if (activeWordSpan) {
+    activeWordSpan.classList.remove('talkient-active-word');
+  }
+
+  // Activate new word
+  targetSpan.classList.add('talkient-active-word');
+  activeWordSpan = targetSpan;
+
+  // Scroll to the active word
+  scrollToHighlightedElement(targetSpan);
+}
+
+// Clear word-level highlighting and restore original text nodes
+export function clearWordHighlight(): void {
+  if (wordWrappedElement && originalTextContent) {
+    // Remove all word spans and restore original text
+    const existingSpans = wordWrappedElement.querySelectorAll('.talkient-word');
+    if (existingSpans.length > 0) {
+      // Find the first word span to determine insertion point
+      const firstSpan = existingSpans[0];
+      const parent = firstSpan.parentNode;
+
+      if (parent) {
+        // Create a new text node with the original content
+        const restoredText = document.createTextNode(originalTextContent);
+
+        // Remove all word spans and intermediate whitespace text nodes
+        // that were created during wrapping
+        const nodesToRemove: Node[] = [];
+        let foundFirst = false;
+        for (const child of Array.from(parent.childNodes)) {
+          if (child === firstSpan) {
+            foundFirst = true;
+          }
+          if (foundFirst) {
+            if (
+              child instanceof HTMLSpanElement &&
+              child.classList.contains('talkient-word')
+            ) {
+              nodesToRemove.push(child);
+            } else if (
+              child.nodeType === Node.TEXT_NODE &&
+              nodesToRemove.length > 0
+            ) {
+              nodesToRemove.push(child);
+            } else if (nodesToRemove.length > 0) {
+              break;
+            }
+          }
+        }
+
+        // Insert restored text before the first span, then remove the spans
+        parent.insertBefore(restoredText, firstSpan);
+        for (const node of nodesToRemove) {
+          if (node.parentNode) {
+            node.parentNode.removeChild(node);
+          }
+        }
+      }
+    }
+  }
+
+  // Restore original display value
+  if (wordWrappedElement) {
+    wordWrappedElement.style.display = wordWrappedElementOriginalDisplay;
+  }
+
+  wordSpans = [];
+  activeWordSpan = null;
+  originalTextContent = '';
+  wordWrappedElement = null;
+  wordWrappedElementOriginalDisplay = '';
+}
+
 // Function to highlight text being spoken
 export function highlightText(element: HTMLElement, style?: string): void {
   // Remove any existing highlights
@@ -50,12 +213,18 @@ export function highlightText(element: HTMLElement, style?: string): void {
 
   currentHighlightedElement = element;
 
+  // Wrap words for word-level highlighting
+  wrapWordsInElement(element);
+
   // Scroll to the highlighted element if follow highlight is enabled
   scrollToHighlightedElement(element);
 }
 
 // Function to clear text highlighting
 export function clearHighlight(): void {
+  // Clear word-level highlighting first
+  clearWordHighlight();
+
   if (currentHighlightedElement) {
     currentHighlightedElement.classList.remove('talkient-highlighted');
     // Remove style modifiers
@@ -77,6 +246,11 @@ export function clearHighlight(): void {
     const htmlElement = element as HTMLElement;
     htmlElement.style.backgroundColor = '';
     htmlElement.style.transition = '';
+  });
+
+  // Safety net: remove any stray active word highlights
+  document.querySelectorAll('.talkient-active-word').forEach((element) => {
+    element.classList.remove('talkient-active-word');
   });
 }
 

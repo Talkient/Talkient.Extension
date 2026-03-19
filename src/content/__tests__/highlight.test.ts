@@ -10,6 +10,9 @@ import {
   testHighlightingStyle,
   loadHighlightStyleFromStorage,
   scrollToHighlightedElement,
+  wrapWordsInElement,
+  highlightWordAtIndex,
+  clearWordHighlight,
 } from '../highlight';
 
 // Mock scrollTo function
@@ -467,5 +470,246 @@ describe('scrollToHighlightedElement', () => {
 
     // Verify scrollTo was not called since element is already centered
     expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+});
+
+describe('wrapWordsInElement', () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    clearHighlight();
+  });
+
+  test('should wrap plain text into spans with correct data-char-index', () => {
+    const element = document.createElement('span');
+    element.textContent = 'Hello world test';
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(3);
+    expect(spans[0].textContent).toBe('Hello');
+    expect(spans[0].dataset.charIndex).toBe('0');
+    expect(spans[1].textContent).toBe('world');
+    expect(spans[1].dataset.charIndex).toBe('6');
+    expect(spans[2].textContent).toBe('test');
+    expect(spans[2].dataset.charIndex).toBe('12');
+  });
+
+  test('should preserve whitespace between words', () => {
+    const element = document.createElement('span');
+    element.textContent = 'Hello world';
+    container.appendChild(element);
+
+    wrapWordsInElement(element);
+
+    // The text content of the element should still read the same
+    expect(element.textContent).toBe('Hello world');
+  });
+
+  test('should NOT destroy sibling button elements', () => {
+    const element = document.createElement('span');
+    element.classList.add('talkient-processed');
+
+    const button = document.createElement('button');
+    button.classList.add('talkient-play-button');
+    button.textContent = 'Play';
+    element.appendChild(button);
+
+    element.appendChild(document.createTextNode('Hello world'));
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(2);
+    // Button should still be there
+    expect(element.querySelector('.talkient-play-button')).toBeTruthy();
+  });
+
+  test('should return correct array of spans', () => {
+    const element = document.createElement('span');
+    element.textContent = 'One two three four';
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(4);
+    spans.forEach((span) => {
+      expect(span.classList.contains('talkient-word')).toBe(true);
+      expect(span.dataset.charIndex).toBeDefined();
+    });
+  });
+});
+
+describe('highlightWordAtIndex', () => {
+  let container: HTMLDivElement;
+  let element: HTMLSpanElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    element = document.createElement('span');
+    element.textContent = 'Hello world test';
+    container.appendChild(element);
+    document.body.appendChild(container);
+
+    // Mock storage for scrollToHighlightedElement
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys: string[], callback: (result: Record<string, unknown>) => void) => {
+        callback({ followHighlight: false });
+      },
+    );
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    clearHighlight();
+  });
+
+  test('should highlight correct word span for given charIndex', () => {
+    wrapWordsInElement(element);
+
+    highlightWordAtIndex(0); // "Hello"
+    const activeWords = element.querySelectorAll('.talkient-active-word');
+    expect(activeWords).toHaveLength(1);
+    expect(activeWords[0].textContent).toBe('Hello');
+  });
+
+  test('should move highlight between words (only 1 active at a time)', () => {
+    wrapWordsInElement(element);
+
+    highlightWordAtIndex(0); // "Hello"
+    expect(element.querySelectorAll('.talkient-active-word')).toHaveLength(1);
+    expect(element.querySelector('.talkient-active-word')?.textContent).toBe(
+      'Hello',
+    );
+
+    highlightWordAtIndex(6); // "world"
+    expect(element.querySelectorAll('.talkient-active-word')).toHaveLength(1);
+    expect(element.querySelector('.talkient-active-word')?.textContent).toBe(
+      'world',
+    );
+  });
+
+  test('should no-op when wordSpans is empty', () => {
+    // Don't call wrapWordsInElement
+    expect(() => highlightWordAtIndex(0)).not.toThrow();
+    expect(element.querySelectorAll('.talkient-active-word')).toHaveLength(0);
+  });
+
+  test('should call scrollToHighlightedElement with the word span', () => {
+    wrapWordsInElement(element);
+
+    highlightWordAtIndex(6); // "world"
+
+    // scrollToHighlightedElement calls chrome.storage.local.get
+    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
+      ['followHighlight'],
+      expect.any(Function),
+    );
+  });
+});
+
+describe('clearWordHighlight / clearHighlight integration', () => {
+  let container: HTMLDivElement;
+  let element: HTMLSpanElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    element = document.createElement('span');
+    element.textContent = 'Hello world test';
+    container.appendChild(element);
+    document.body.appendChild(container);
+
+    // Mock storage for scrollToHighlightedElement
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys: string[], callback: (result: Record<string, unknown>) => void) => {
+        callback({ followHighlight: false });
+      },
+    );
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    clearHighlight();
+  });
+
+  test('should restore original text content after clearing', () => {
+    highlightText(element);
+    highlightWordAtIndex(0);
+
+    clearHighlight();
+
+    expect(element.textContent).toBe('Hello world test');
+  });
+
+  test('should leave no leftover .talkient-word spans in DOM', () => {
+    highlightText(element);
+    highlightWordAtIndex(6);
+
+    clearHighlight();
+
+    expect(element.querySelectorAll('.talkient-word')).toHaveLength(0);
+  });
+
+  test('should preserve play button siblings', () => {
+    const wrapper = document.createElement('span');
+    wrapper.classList.add('talkient-processed');
+
+    const button = document.createElement('button');
+    button.classList.add('talkient-play-button');
+    button.textContent = 'Play';
+    wrapper.appendChild(button);
+    wrapper.appendChild(document.createTextNode('Hello world'));
+    container.appendChild(wrapper);
+
+    highlightText(wrapper);
+    highlightWordAtIndex(0);
+    clearHighlight();
+
+    expect(wrapper.querySelector('.talkient-play-button')).toBeTruthy();
+  });
+});
+
+describe('fallback behavior', () => {
+  let container: HTMLDivElement;
+  let element: HTMLSpanElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    element = document.createElement('span');
+    element.textContent = 'Test text';
+    container.appendChild(element);
+    document.body.appendChild(container);
+
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys: string[], callback: (result: Record<string, unknown>) => void) => {
+        callback({ followHighlight: false });
+      },
+    );
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    clearHighlight();
+  });
+
+  test('element-level highlight works when no word events fire', () => {
+    highlightText(element);
+
+    // Element should be highlighted even without word events
+    expect(element.classList.contains('talkient-highlighted')).toBe(true);
+  });
+
+  test('highlightWordAtIndex does not throw when not wrapped', () => {
+    // Reset word state by clearing first
+    clearWordHighlight();
+
+    expect(() => highlightWordAtIndex(0)).not.toThrow();
   });
 });

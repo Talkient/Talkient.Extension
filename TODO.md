@@ -3,7 +3,7 @@
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
 - CI/CD to deploy on Chrome extension
-- [ ] Try to Integrate with DevTools MCP
+- [ ] Try to Integrate with DevTools MCP + skill to navigate easily with the extension (options page, etc)
 - [ ] Authentication
 - [ ] Summary by AI
 - [ ] Add a docs folder (or similar), one .md file for each feature like: highlight, followHighlight, control panel
