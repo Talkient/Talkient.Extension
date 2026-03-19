@@ -20,7 +20,13 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm build)",
       "Bash(git rm *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__new_page"
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -36,5 +42,9 @@
       "Write(//etc/**)",
       "Write(~/.ssh/**)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "chrome-devtools"
+  ]
 }
