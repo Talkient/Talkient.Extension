@@ -413,4 +413,133 @@ describe('Reading Time Counters', () => {
       expect(remainingAfterFirst).toBeGreaterThan(remainingAfterSecond);
     });
   });
+
+  describe('early click remaining estimate correction', () => {
+    let container: HTMLDivElement;
+    let originalRaf: typeof requestAnimationFrame;
+    let originalCreateTreeWalker: typeof document.createTreeWalker;
+
+    beforeEach(() => {
+      container = document.createElement('div');
+      document.body.appendChild(container);
+      originalRaf = global.requestAnimationFrame;
+      originalCreateTreeWalker = document.createTreeWalker;
+      document.createTreeWalker = originalCreateTreeWalker;
+    });
+
+    afterEach(() => {
+      document.body.removeChild(container);
+      global.requestAnimationFrame = originalRaf;
+      document.createTreeWalker = originalCreateTreeWalker;
+    });
+
+    function buildArticleWithParagraphs(count: number): Text[] {
+      const article = document.createElement('article');
+      const textNodes: Text[] = [];
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('p');
+        p.textContent = `Paragraph ${i} has enough words for processing and timing coverage.`;
+        textNodes.push(p.firstChild as Text);
+        article.appendChild(p);
+      }
+      container.appendChild(article);
+      return textNodes;
+    }
+
+    function mockTreeWalkerForTextNodes(textNodes: Text[]): void {
+      let idx = -1;
+      const mockWalker = {
+        nextNode: jest.fn(() => {
+          idx += 1;
+          if (idx < textNodes.length) {
+            mockWalker.currentNode = textNodes[idx];
+            return textNodes[idx];
+          }
+          return null;
+        }),
+        currentNode: null as Node | null,
+      };
+
+      document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    }
+
+    async function runRafQueueUntilComplete(
+      onCompletePromise: Promise<void>,
+      queuedCallbacks: Array<(ts: number) => void>,
+    ): Promise<void> {
+      while (queuedCallbacks.length > 0) {
+        const cb = queuedCallbacks.shift();
+        if (cb) cb(0);
+      }
+      await onCompletePromise;
+    }
+
+    it('recomputes remainingChars after async batches when play starts early', async () => {
+      const textNodes = buildArticleWithParagraphs(80); // > 50 so processing happens in multiple batches
+      mockTreeWalkerForTextNodes(textNodes);
+
+      const rafQueue: Array<(ts: number) => void> = [];
+      global.requestAnimationFrame = jest.fn((cb: FrameRequestCallback) => {
+        rafQueue.push(cb as (ts: number) => void);
+        return rafQueue.length;
+      });
+
+      const onCompletePromise = new Promise<void>((resolve) => {
+        processTextElements(() => resolve());
+      });
+
+      // Run first frame (first batch) only
+      const firstFrame = rafQueue.shift();
+      expect(firstFrame).toBeTruthy();
+      firstFrame?.(0);
+
+      const firstPlayButton = container.querySelector<HTMLButtonElement>(
+        '.talkient-play-button',
+      );
+      expect(firstPlayButton).toBeTruthy();
+
+      // Click before remaining batches complete: provisional remaining is undercounted
+      firstPlayButton?.click();
+      const provisionalRemaining = getRemainingChars();
+      expect(provisionalRemaining).toBeGreaterThan(0);
+
+      await runRafQueueUntilComplete(onCompletePromise, rafQueue);
+
+      const finalTotal = getTotalProcessedChars();
+      expect(finalTotal).toBeGreaterThan(provisionalRemaining);
+      // Clicked first node => chars before current node = 0, so corrected remaining == total
+      expect(getRemainingChars()).toBe(finalTotal);
+    });
+
+    it('does not reduce remainingChars when it is already greater than recomputed value', async () => {
+      const textNodes = buildArticleWithParagraphs(80);
+      mockTreeWalkerForTextNodes(textNodes);
+
+      const rafQueue: Array<(ts: number) => void> = [];
+      global.requestAnimationFrame = jest.fn((cb: FrameRequestCallback) => {
+        rafQueue.push(cb as (ts: number) => void);
+        return rafQueue.length;
+      });
+
+      const onCompletePromise = new Promise<void>((resolve) => {
+        processTextElements(() => resolve());
+      });
+
+      const firstFrame = rafQueue.shift();
+      firstFrame?.(0);
+
+      const firstPlayButton = container.querySelector<HTMLButtonElement>(
+        '.talkient-play-button',
+      );
+      expect(firstPlayButton).toBeTruthy();
+      firstPlayButton?.click();
+
+      const artificiallyHighRemaining = getRemainingChars() + 5000;
+      setRemainingChars(artificiallyHighRemaining);
+
+      await runRafQueueUntilComplete(onCompletePromise, rafQueue);
+
+      expect(getRemainingChars()).toBe(artificiallyHighRemaining);
+    });
+  });
 });

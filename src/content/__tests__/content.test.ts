@@ -518,6 +518,44 @@ describe('Content Script Message Handling', () => {
     expect(getCurrentHighlightedElement()).toBe(testElement);
   });
 
+  test('should route WORD_BOUNDARY messages to highlightWordAtIndex', () => {
+    const highlightModule = require('../highlight');
+    const highlightWordSpy = jest
+      .spyOn(highlightModule, 'highlightWordAtIndex')
+      .mockImplementation(() => {});
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      { type: 'WORD_BOUNDARY', charIndex: 7, length: 4 },
+      {},
+      jest.fn(),
+    );
+
+    expect(highlightWordSpy).toHaveBeenCalledWith(7, 4);
+  });
+
+  test('should tolerate malformed WORD_BOUNDARY payloads without throwing', () => {
+    const highlightModule = require('../highlight');
+    const highlightWordSpy = jest
+      .spyOn(highlightModule, 'highlightWordAtIndex')
+      .mockImplementation(() => {});
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    expect(() => {
+      messageListener({ type: 'WORD_BOUNDARY' }, {}, jest.fn());
+    }).not.toThrow();
+
+    expect(highlightWordSpy).toHaveBeenCalledWith(undefined, undefined);
+  });
+
   test('should handle SPEECH_CANCELLED message correctly', () => {
     // Simulate highlighting
     const testElement = document.createElement('span');

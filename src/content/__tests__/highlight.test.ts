@@ -471,6 +471,52 @@ describe('scrollToHighlightedElement', () => {
     // Verify scrollTo was not called since element is already centered
     expect(window.scrollTo).not.toHaveBeenCalled();
   });
+
+  test('should stop scrolling after followHighlight is toggled off via storage change', () => {
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: true });
+      },
+    );
+
+    loadHighlightStyleFromStorage();
+
+    const changeListener =
+      mockChrome.storage.onChanged.addListener.mock.calls[0][0];
+    changeListener(
+      { followHighlight: { oldValue: true, newValue: false } },
+      'local',
+    );
+
+    scrollToHighlightedElement(testElement);
+
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  test('should resume scrolling after followHighlight is toggled on via storage change', () => {
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: false });
+      },
+    );
+
+    loadHighlightStyleFromStorage();
+
+    const changeListener =
+      mockChrome.storage.onChanged.addListener.mock.calls[0][0];
+
+    changeListener(
+      { followHighlight: { oldValue: false, newValue: true } },
+      'local',
+    );
+
+    scrollToHighlightedElement(testElement);
+
+    expect(window.scrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    });
+  });
 });
 
 describe('wrapWordsInElement', () => {
@@ -544,6 +590,23 @@ describe('wrapWordsInElement', () => {
       expect(span.classList.contains('talkient-word')).toBe(true);
       expect(span.dataset.charIndex).toBeDefined();
     });
+  });
+
+  test('should compute char indexes across multiple direct text nodes', () => {
+    const element = document.createElement('span');
+    element.appendChild(document.createTextNode('Hello '));
+    element.appendChild(document.createTextNode('world again'));
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(3);
+    expect(spans[0].textContent).toBe('Hello');
+    expect(spans[0].dataset.charIndex).toBe('0');
+    expect(spans[1].textContent).toBe('world');
+    expect(spans[1].dataset.charIndex).toBe('6');
+    expect(spans[2].textContent).toBe('again');
+    expect(spans[2].dataset.charIndex).toBe('12');
   });
 });
 
@@ -619,6 +682,20 @@ describe('highlightWordAtIndex', () => {
 
     // Verify scrollTo was called with the word span (since cached followHighlight is true)
     expect(window.scrollTo).toHaveBeenCalled();
+  });
+
+  test('should highlight a word located in the second direct text node', () => {
+    element.textContent = '';
+    element.appendChild(document.createTextNode('Hello '));
+    element.appendChild(document.createTextNode('world test'));
+
+    wrapWordsInElement(element);
+
+    highlightWordAtIndex(6); // "world"
+
+    const active = element.querySelector('.talkient-active-word');
+    expect(active).toBeTruthy();
+    expect(active?.textContent).toBe('world');
   });
 });
 
