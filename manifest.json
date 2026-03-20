@@ -6,8 +6,13 @@
     "48": "assets/png/text-to-speech.png",
     "128": "assets/png/text-to-speech.png"
   },
-  "version": "0.0.18",
-  "permissions": ["tts", "storage", "contextMenus", "identity"],
+  "version": "0.0.22",
+  "permissions": [
+    "tts",
+    "storage",
+    "contextMenus",
+    "identity"
+  ],
   "oauth2": {
     "client_id": "487597228651-n6g0bj7j2t6ugk8bqe0d1d05b764pmcn.apps.googleusercontent.com",
     "scopes": [
@@ -25,15 +30,25 @@
   "options_page": "./options/options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "css": ["./content/content.css"],
-      "js": ["./content/content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "css": [
+        "./content/content.css"
+      ],
+      "js": [
+        "./content/content.js"
+      ]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["assets/svg/*.svg"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "assets/svg/*.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
