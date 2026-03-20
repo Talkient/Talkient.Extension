@@ -77,10 +77,31 @@ export function handleSpeakText(
         const speechPitch =
           typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
 
+        // If no voice is explicitly selected, prefer a voice that supports
+        // word boundary events (enables word-by-word highlighting).
+        // Google voices don't emit 'word' events; Microsoft voices do.
+        let effectiveVoice = selectedVoice;
+        const isExplicitlySelected =
+          selectedVoice &&
+          selectedVoice.trim() !== '' &&
+          selectedVoice !== 'default';
+        if (!isExplicitlySelected) {
+          const wordEventVoice = getAvailableVoices().find((v) =>
+            v.eventTypes?.includes('word'),
+          );
+          if (wordEventVoice) {
+            effectiveVoice = wordEventVoice.voiceName;
+            console.log(
+              '[Talkient.SW] Auto-selected word-event voice:',
+              effectiveVoice,
+            );
+          }
+        }
+
         const ttsOptions: chrome.tts.TtsOptions = {
           rate: speechRate,
           pitch: speechPitch,
-          voiceName: selectedVoice,
+          voiceName: effectiveVoice,
           onEvent: (event) => {
             console.log('[Talkient.SW] tts.speak event: ', event);
 
@@ -142,6 +163,23 @@ export function handleSpeakText(
               case 'resume':
                 setIsPaused(false);
                 break;
+              case 'word': {
+                const charIndex = event.charIndex;
+                if (!Number.isFinite(charIndex)) {
+                  break;
+                }
+                const length = event.length;
+                if (sender.tab?.id) {
+                  void chrome.tabs.sendMessage(sender.tab.id, {
+                    type: 'WORD_BOUNDARY',
+                    charIndex: charIndex,
+                    ...(Number.isFinite(length)
+                      ? { length: length as number }
+                      : {}),
+                  });
+                }
+                break;
+              }
               case 'interrupted':
                 chrome.tts.stop();
                 if (chrome.runtime.lastError) {

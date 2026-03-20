@@ -45,11 +45,18 @@ export interface SpeechErrorMessage {
   error: string | chrome.tts.TtsEvent;
 }
 
+export interface WordBoundaryMessage {
+  type: 'WORD_BOUNDARY';
+  charIndex: number;
+  length: number;
+}
+
 // Union type for all messages from service worker
 export type ContentScriptMessage =
   | SpeechEndedMessage
   | SpeechCancelledMessage
   | SpeechErrorMessage
+  | WordBoundaryMessage
   | ReloadPlayButtonsMessage;
 
 // Response types

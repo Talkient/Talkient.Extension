@@ -79,10 +79,22 @@ function buildPanel() {
  * - counters: fresh require of text-processor counters (same module instance as content.ts)
  */
 
+interface Counters {
+  resetEstimateCounters: () => void;
+  setRemainingChars: (n: number) => void;
+  getTotalProcessedChars: () => number;
+  getRemainingChars: () => number;
+  getCurrentPlayingChars: () => number;
+}
+
 function loadContent(): {
-  messageListener: any;
-  storageChangeListener: any;
-  counters: any;
+  messageListener: (
+    message: unknown,
+    sender: unknown,
+    sendResponse: unknown,
+  ) => void;
+  storageChangeListener: (changes: unknown, areaName: unknown) => void;
+  counters: Counters;
 } {
   const counters = require('../../features/tts-playback/content/index');
   counters.resetEstimateCounters();
@@ -99,9 +111,13 @@ function loadContent(): {
 }
 
 function loadContentWithMockedCurrentPlayingChars(playedChars: number): {
-  messageListener: any;
-  storageChangeListener: any;
-  counters: any;
+  messageListener: (
+    message: unknown,
+    sender: unknown,
+    sendResponse: unknown,
+  ) => void;
+  storageChangeListener: (changes: unknown, areaName: unknown) => void;
+  counters: Counters;
 } {
   jest.doMock('../../features/tts-playback/content/index', () => {
     const actual = jest.requireActual(
@@ -130,9 +146,13 @@ function loadContentWithMockedEstimateState(
   totalProcessedChars: number,
   remainingChars: number,
 ): {
-  messageListener: any;
-  storageChangeListener: any;
-  counters: any;
+  messageListener: (
+    message: unknown,
+    sender: unknown,
+    sendResponse: unknown,
+  ) => void;
+  storageChangeListener: (changes: unknown, areaName: unknown) => void;
+  counters: Counters;
 } {
   jest.doMock('../../features/tts-playback/content/index', () => {
     const actual = jest.requireActual(
