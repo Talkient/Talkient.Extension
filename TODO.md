@@ -1,41 +1,26 @@
-## Talkient.Extension TO DO list
+# Talkient.Extension TO DO list
+
+## MVP
 
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
 - CI/CD to deploy on Chrome extension
-- [ ] Try to Integrate with DevTools MCP + skill to navigate easily with the extension (options page, etc)
 - [ ] Authentication
-- [ ] Summary by AI
-- [ ] Add a docs folder (or similar), one .md file for each feature like: highlight, followHighlight, control panel
-- [ ] Verify if is a text page before loading the script and the control panel
-- [ ] Bug: text elements within text elements should consider the father element
-- [ ] Bug: Talkient scripts switch (control panel) is a global config instead of current page config
-- [x] Control panel: Config to keep it off for the next X minutes when click to close
-- [ ] service-worker: isolate functions into new files
-- [ ] Bug: Play text1, then play text2 and try to pause it
-- [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+  - [ ] Add OIDC (stashed changes) to enable JIT Registration flow
+- [ ] Try to Integrate with DevTools MCP + skill to navigate easily with the extension (options page, etc)
 - [ ] play button for a tags
-- [ ] Bug: If you are playing one text and click to play another one, the first is kept in "playing" state
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
-- [ ] Highlight chunks
-- [ ] Keep control panel's state expanded/collapsed after a refresh page
 - [ ] Ignore domains or urls list (user)
 - [ ] Control panel including play/pause, rate, voice
-- [ ] Restart the current audio
-- [ ] Create side_panel (manifest.json)
 - [ ] Popup
   - [ ] Select voice
 - [ ] Options page
   - [ ] Reset default settings
-  - [ ] Skip tags
-  - [ ] Elements to ignore
+  - [ ] Elements to process/ignore
   - [ ] Follow scroll
-  - [x] Configure maximum nodes processed (performance optimization)
-- [ ] Popup page
-- [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
-- [ ] Add support for `"file:///*"` like PDF
-- [ ] Add content script for "run_at=document_idle"
-- Keyboard Shortcuts
+- [ ] Bug: text elements within text elements should consider the father element
+- [ ] Bug: Talkient scripts switch (control panel) is a global config instead of current page config
+- [ ] Bug sometimes the first play stuck in playing state but we got the console error on service-worker (for large paragraphs): Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
 - [ ] E2E tests
   - Play/Pause
   - Ask LLMs to find test-gaps
@@ -46,9 +31,19 @@
   - Complex flows: play/pause directly and via control panel, alternatively
   - Edge cases
   - Playwright + Playwright CLI
-- Github Actions
-  - [ ] E2E tests
-  - [ ] Submit a new version on Chrome Web Store
-- [ ] Add OIDC (stashed changes) to enable JIT Registration flow
-- [ ] Design system + skill with [Paper MCP](https://paper.design/docs/mcp)
+- Design System for Control panel and play button
+
+# V2
+
+- [ ] Summary by AI
+- [ ] Restart the current audio
 - [ ] Translate (free)
+- [ ] Create side_panel (manifest.json)
+- [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
+- [ ] Add support for `"file:///*"` like PDF
+- [ ] Add content script for "run_at=document_idle"
+- Keyboard Shortcuts
+- Github Actions
+  - [ ] Submit a new version on Chrome Web Store
+- [ ] Design system + skill with [Paper MCP](https://paper.design/docs/mcp)
+- Design System for options and popup
