@@ -1,4 +1,4 @@
-name: Build Extension
+name: Generating release + Build Extension
 
 on:
   release:
