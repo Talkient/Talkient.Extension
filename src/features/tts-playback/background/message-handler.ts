@@ -81,7 +81,11 @@ export function handleSpeakText(
         // word boundary events (enables word-by-word highlighting).
         // Google voices don't emit 'word' events; Microsoft voices do.
         let effectiveVoice = selectedVoice;
-        if (!effectiveVoice) {
+        const isExplicitlySelected =
+          selectedVoice &&
+          selectedVoice.trim() !== '' &&
+          selectedVoice !== 'default';
+        if (!isExplicitlySelected) {
           const wordEventVoice = getAvailableVoices().find((v) =>
             v.eventTypes?.includes('word'),
           );
@@ -159,15 +163,23 @@ export function handleSpeakText(
               case 'resume':
                 setIsPaused(false);
                 break;
-              case 'word':
+              case 'word': {
+                const charIndex = event.charIndex;
+                if (!Number.isFinite(charIndex)) {
+                  break;
+                }
+                const length = event.length;
                 if (sender.tab?.id) {
                   void chrome.tabs.sendMessage(sender.tab.id, {
                     type: 'WORD_BOUNDARY',
-                    charIndex: event.charIndex ?? 0,
-                    length: event.length ?? 0,
+                    charIndex: charIndex,
+                    ...(Number.isFinite(length)
+                      ? { length: length as number }
+                      : {}),
                   });
                 }
                 break;
+              }
               case 'interrupted':
                 chrome.tts.stop();
                 if (chrome.runtime.lastError) {

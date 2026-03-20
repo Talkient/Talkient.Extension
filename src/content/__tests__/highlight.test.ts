@@ -299,7 +299,7 @@ describe('loadHighlightStyleFromStorage', () => {
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['highlightStyle'],
+      ['highlightStyle', 'followHighlight'],
       expect.any(Function),
     );
     expect(getHighlightingStyle()).toBe('bold');
@@ -316,7 +316,7 @@ describe('loadHighlightStyleFromStorage', () => {
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['highlightStyle'],
+      ['highlightStyle', 'followHighlight'],
       expect.any(Function),
     );
     expect(getHighlightingStyle()).toBe('default'); // Should remain default
@@ -333,7 +333,7 @@ describe('loadHighlightStyleFromStorage', () => {
     loadHighlightStyleFromStorage();
 
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['highlightStyle'],
+      ['highlightStyle', 'followHighlight'],
       expect.any(Function),
     );
     // Should not change from default since invalid style is passed
@@ -397,40 +397,43 @@ describe('scrollToHighlightedElement', () => {
   });
 
   test('should not scroll when followHighlight is disabled', () => {
-    // Mock the storage to return followHighlight: false
+    // Mock the storage to return followHighlight: false and load the cache
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ followHighlight: false });
       },
     );
 
-    scrollToHighlightedElement(testElement);
+    // Load the cached setting first
+    loadHighlightStyleFromStorage();
 
-    // Verify storage was queried with the right key
-    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['followHighlight'],
-      expect.any(Function),
-    );
+    scrollToHighlightedElement(testElement);
 
     // Verify scrollTo was not called
     expect(window.scrollTo).not.toHaveBeenCalled();
   });
 
   test('should scroll to center element when followHighlight is enabled', () => {
-    // Mock the storage to return followHighlight: true
+    // Reset the mock implementation to ensure our override is applied
+    (mockChrome.storage.local.get as jest.Mock).mockReset();
+
+    // Mock the storage to return both highlightStyle and followHighlight: true
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
-        callback({ followHighlight: true });
+        callback({ highlightStyle: 'default', followHighlight: true });
       },
     );
 
-    scrollToHighlightedElement(testElement);
+    // Load the cached setting first
+    loadHighlightStyleFromStorage();
 
-    // Verify storage was queried
+    // Verify the storage get was called with the expected keys
     expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['followHighlight'],
+      ['highlightStyle', 'followHighlight'],
       expect.any(Function),
     );
+
+    scrollToHighlightedElement(testElement);
 
     // Verify scrollTo was called with correct parameters
     expect(window.scrollTo).toHaveBeenCalledWith({
@@ -453,20 +456,17 @@ describe('scrollToHighlightedElement', () => {
       width: 200,
     });
 
-    // Mock the storage to return followHighlight: true
+    // Mock the storage to return followHighlight: true and load the cache
     (mockChrome.storage.local.get as jest.Mock).mockImplementation(
       (keys, callback) => {
         callback({ followHighlight: true });
       },
     );
 
-    scrollToHighlightedElement(testElement);
+    // Load the cached setting first
+    loadHighlightStyleFromStorage();
 
-    // Verify storage was queried
-    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['followHighlight'],
-      expect.any(Function),
-    );
+    scrollToHighlightedElement(testElement);
 
     // Verify scrollTo was not called since element is already centered
     expect(window.scrollTo).not.toHaveBeenCalled();
@@ -603,15 +603,22 @@ describe('highlightWordAtIndex', () => {
   });
 
   test('should call scrollToHighlightedElement with the word span', () => {
+    // Mock the storage to load the cached setting with followHighlight: true
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: true });
+      },
+    );
+
+    // Load cached setting first
+    loadHighlightStyleFromStorage();
+
     wrapWordsInElement(element);
 
     highlightWordAtIndex(6); // "world"
 
-    // scrollToHighlightedElement calls chrome.storage.local.get
-    expect(mockChrome.storage.local.get).toHaveBeenCalledWith(
-      ['followHighlight'],
-      expect.any(Function),
-    );
+    // Verify scrollTo was called with the word span (since cached followHighlight is true)
+    expect(window.scrollTo).toHaveBeenCalled();
   });
 });
 

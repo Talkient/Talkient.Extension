@@ -7,14 +7,17 @@ let currentHighlightingStyle: string = 'default';
 
 // Word-level highlighting state
 let wordSpans: HTMLSpanElement[] = [];
-let originalTextContent: string = '';
+let originalInnerHTML: string | null = null;
 let activeWordSpan: HTMLSpanElement | null = null;
 let wordWrappedElement: HTMLElement | null = null;
 let wordWrappedElementOriginalDisplay: string = '';
 
+// Cached followHighlight setting to avoid repeated storage reads
+let cachedFollowHighlight: boolean = true;
+
 // Function to load highlight style from storage
 export function loadHighlightStyleFromStorage(): void {
-  chrome.storage.local.get(['highlightStyle'], (result) => {
+  chrome.storage.local.get(['highlightStyle', 'followHighlight'], (result) => {
     if (result.highlightStyle && typeof result.highlightStyle === 'string') {
       const style = result.highlightStyle;
       // Validate that the style is one of the allowed values
@@ -23,6 +26,17 @@ export function loadHighlightStyleFromStorage(): void {
           style as 'default' | 'minimal' | 'bold' | 'elegant',
         );
       }
+    }
+    // Cache followHighlight setting
+    if (typeof result.followHighlight === 'boolean') {
+      cachedFollowHighlight = result.followHighlight;
+    }
+  });
+
+  // Listen for future changes to followHighlight
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && 'followHighlight' in changes) {
+      cachedFollowHighlight = changes.followHighlight.newValue !== false;
     }
   });
 }
@@ -54,7 +68,7 @@ export function wrapWordsInElement(element: HTMLElement): HTMLSpanElement[] {
 
   for (const textNode of textNodes) {
     const text = textNode.textContent || '';
-    originalTextContent = text;
+    originalInnerHTML = element.innerHTML;
 
     const fragment = document.createDocumentFragment();
     const regex = /(\S+)/g;
@@ -135,52 +149,8 @@ export function highlightWordAtIndex(
 
 // Clear word-level highlighting and restore original text nodes
 export function clearWordHighlight(): void {
-  if (wordWrappedElement && originalTextContent) {
-    // Remove all word spans and restore original text
-    const existingSpans = wordWrappedElement.querySelectorAll('.talkient-word');
-    if (existingSpans.length > 0) {
-      // Find the first word span to determine insertion point
-      const firstSpan = existingSpans[0];
-      const parent = firstSpan.parentNode;
-
-      if (parent) {
-        // Create a new text node with the original content
-        const restoredText = document.createTextNode(originalTextContent);
-
-        // Remove all word spans and intermediate whitespace text nodes
-        // that were created during wrapping
-        const nodesToRemove: Node[] = [];
-        let foundFirst = false;
-        for (const child of Array.from(parent.childNodes)) {
-          if (child === firstSpan) {
-            foundFirst = true;
-          }
-          if (foundFirst) {
-            if (
-              child instanceof HTMLSpanElement &&
-              child.classList.contains('talkient-word')
-            ) {
-              nodesToRemove.push(child);
-            } else if (
-              child.nodeType === Node.TEXT_NODE &&
-              nodesToRemove.length > 0
-            ) {
-              nodesToRemove.push(child);
-            } else if (nodesToRemove.length > 0) {
-              break;
-            }
-          }
-        }
-
-        // Insert restored text before the first span, then remove the spans
-        parent.insertBefore(restoredText, firstSpan);
-        for (const node of nodesToRemove) {
-          if (node.parentNode) {
-            node.parentNode.removeChild(node);
-          }
-        }
-      }
-    }
+  if (wordWrappedElement && originalInnerHTML) {
+    wordWrappedElement.innerHTML = originalInnerHTML;
   }
 
   // Restore original display value
@@ -190,7 +160,7 @@ export function clearWordHighlight(): void {
 
   wordSpans = [];
   activeWordSpan = null;
-  originalTextContent = '';
+  originalInnerHTML = null;
   wordWrappedElement = null;
   wordWrappedElementOriginalDisplay = '';
 }
@@ -278,44 +248,33 @@ export function testHighlightingStyle(
 
 // Function to smoothly scroll to highlighted element if followHighlight is enabled
 export function scrollToHighlightedElement(element: HTMLElement): void {
-  // Check if chrome API is available
-  if (
-    typeof chrome === 'undefined' ||
-    !chrome.storage ||
-    !chrome.storage.local
-  ) {
+  // Use cached followHighlight setting to avoid repeated storage reads
+  if (!cachedFollowHighlight || !element) {
     return;
   }
 
-  // Check if followHighlight setting is enabled (defaults to true if not set)
-  chrome.storage.local.get(['followHighlight'], (result) => {
-    const followHighlight = result.followHighlight !== false;
+  const rect = element.getBoundingClientRect();
+  const elementTop = rect.top;
+  const elementBottom = rect.bottom;
+  const viewportHeight = window.innerHeight;
 
-    if (followHighlight && element) {
-      const rect = element.getBoundingClientRect();
-      const elementTop = rect.top;
-      const elementBottom = rect.bottom;
-      const viewportHeight = window.innerHeight;
+  // Only scroll if the element is not fully visible in the viewport
+  // or not close to the vertical center
+  const buffer = viewportHeight * 0.2; // 20% buffer zone
+  const isInCenterArea =
+    elementTop > buffer && elementBottom < viewportHeight - buffer;
 
-      // Only scroll if the element is not fully visible in the viewport
-      // or not close to the vertical center
-      const buffer = viewportHeight * 0.2; // 20% buffer zone
-      const isInCenterArea =
-        elementTop > buffer && elementBottom < viewportHeight - buffer;
+  if (!isInCenterArea) {
+    // Calculate position to center the element in the viewport
+    const scrollTo =
+      window.scrollY + elementTop - viewportHeight / 2 + rect.height / 2;
 
-      if (!isInCenterArea) {
-        // Calculate position to center the element in the viewport
-        const scrollTo =
-          window.scrollY + elementTop - viewportHeight / 2 + rect.height / 2;
-
-        // Smoothly scroll to the position
-        window.scrollTo({
-          top: scrollTo,
-          behavior: 'smooth',
-        });
-      }
-    }
-  });
+    // Smoothly scroll to the position
+    window.scrollTo({
+      top: scrollTo,
+      behavior: 'smooth',
+    });
+  }
 }
 
 // Extend Window interface for Talkient testing functions
