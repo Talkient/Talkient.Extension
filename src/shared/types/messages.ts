@@ -51,12 +51,40 @@ export interface WordBoundaryMessage {
   length: number;
 }
 
+export interface TranslationLoadingMessage {
+  type: 'TRANSLATION_LOADING';
+  originalText: string;
+}
+
+export interface TranslationResultMessage {
+  type: 'TRANSLATION_RESULT';
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  provider: string;
+}
+
+export interface TranslationErrorMessage {
+  type: 'TRANSLATION_ERROR';
+  errorCode:
+    | 'NETWORK_ERROR'
+    | 'TIMEOUT'
+    | 'INVALID_RESPONSE'
+    | 'EMPTY_TEXT'
+    | 'UNKNOWN_ERROR';
+  message: string;
+}
+
 // Union type for all messages from service worker
 export type ContentScriptMessage =
   | SpeechEndedMessage
   | SpeechCancelledMessage
   | SpeechErrorMessage
   | WordBoundaryMessage
+  | TranslationLoadingMessage
+  | TranslationResultMessage
+  | TranslationErrorMessage
   | ReloadPlayButtonsMessage;
 
 // Response types

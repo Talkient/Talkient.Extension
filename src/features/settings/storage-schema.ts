@@ -37,6 +37,9 @@ export interface StorageSchema {
   playButtonsEnabled: boolean;
   panelHideDuration: number;
 
+  // Translation settings
+  translationTargetLanguage: string;
+
   // Auth state (managed by auth feature)
   talkient_auth_state?: {
     isAuthenticated: boolean;
@@ -68,4 +71,7 @@ export const DEFAULT_SETTINGS: StorageSchema = {
   autoPlayNext: true,
   playButtonsEnabled: true,
   panelHideDuration: 30,
+
+  // Translation settings
+  translationTargetLanguage: 'en',
 };

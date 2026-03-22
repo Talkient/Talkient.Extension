@@ -56,6 +56,7 @@
     lastError: undefined as chrome.runtime.LastError | undefined,
   },
   contextMenus: {
+    removeAll: jest.fn((callback) => callback && callback()),
     create: jest.fn(),
     onClicked: {
       addListener: jest.fn(),

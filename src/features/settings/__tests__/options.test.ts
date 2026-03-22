@@ -26,6 +26,7 @@ describe('options.ts', () => {
   let buttonPositionSelect: HTMLSelectElement;
   let minimumWordsInput: HTMLInputElement;
   let panelHideDurationInput: HTMLInputElement;
+  let translationTargetLanguageSelect: HTMLSelectElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -66,6 +67,9 @@ describe('options.ts', () => {
     panelHideDurationInput = document.getElementById(
       'panel-hide-duration-input',
     ) as HTMLInputElement;
+    translationTargetLanguageSelect = document.getElementById(
+      'translation-target-language-select',
+    ) as HTMLSelectElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -134,6 +138,7 @@ describe('options.ts', () => {
       expect(pitchValue).toBeTruthy();
       expect(minimumWordsInput).toBeTruthy();
       expect(panelHideDurationInput).toBeTruthy();
+      expect(translationTargetLanguageSelect).toBeTruthy();
     });
 
     it('should have correct slider attributes from HTML', () => {
@@ -192,6 +197,7 @@ describe('options.ts', () => {
           'minimumWords',
           'maxNodesProcessed',
           'panelHideDuration',
+          'translationTargetLanguage',
         ],
         expect.any(Function),
       );
@@ -224,6 +230,26 @@ describe('options.ts', () => {
       expect(pitchSlider.value).toBe('1');
       expect(pitchValue.textContent).toBe('1.0x');
       expect(highlightStyleSelect.value).toBe('default');
+      expect(translationTargetLanguageSelect.value).toBe('en');
+    });
+
+    it('should fallback translation output language to english for invalid stored value', async () => {
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (keys, callback) => {
+          callback({
+            translationTargetLanguage: 'xx-invalid',
+          });
+        },
+      );
+
+      jest.resetModules();
+      require('../options/options-ui');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(translationTargetLanguageSelect.value).toBe('en');
     });
   });
 
