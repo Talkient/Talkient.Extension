@@ -718,10 +718,109 @@
   }
 }
 
+/* Translation result card */
+#talkient-translation-result.talkient-translation-card {
+  position: fixed !important;
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 999999 !important;
+  width: min(300px, calc(100vw - 32px)) !important;
+  max-width: min(300px, calc(100vw - 32px)) !important;
+  height: auto !important;
+  max-height: min(240px, calc(100vh - 20px)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: #fffaf0 !important;
+  border: 1px solid #f5d08a !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 30px rgba(41, 37, 36, 0.22) !important;
+  color: #2a2117 !important;
+  padding: 10px !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  box-sizing: border-box !important;
+}
+
+.talkient-translation-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 6px !important;
+}
+
+.talkient-translation-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.talkient-translation-title {
+  font-size: 13px !important;
+}
+
+.talkient-translation-settings {
+  border: 1px solid #d3b27a !important;
+  background: #fff !important;
+  color: #6e532f !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  padding: 4px 7px !important;
+}
+
+.talkient-translation-close {
+  border: none !important;
+  background: transparent !important;
+  color: #5c4b37 !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+}
+
+.talkient-translation-meta,
+.talkient-translation-status,
+.talkient-translation-help,
+.talkient-translation-source,
+.talkient-translation-text {
+  margin: 0 0 6px !important;
+  line-height: 1.4 !important;
+}
+
+.talkient-translation-meta {
+  font-size: 11px !important;
+  color: #7a6246 !important;
+}
+
+.talkient-translation-source {
+  font-size: 11px !important;
+  padding: 5px !important;
+  border-radius: 8px !important;
+  background: rgba(201, 163, 102, 0.18) !important;
+}
+
+.talkient-translation-text {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+#talkient-translation-result.talkient-translation-error {
+  border-color: #e88a6f !important;
+  background: #fff3ef !important;
+}
+
+@media (max-width: 640px) {
+  #talkient-translation-result.talkient-translation-card {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: auto !important;
+  }
+}
+
 /* Print styles - hide Talkient UI elements when printing */
 @media print {
   #talkient-control-panel,
   #talkient-container,
+  #talkient-translation-result,
   .talkient-play-button,
   .talkient-highlight {
     display: none !important;

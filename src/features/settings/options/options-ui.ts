@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const panelHideDurationInput = document.getElementById(
     'panel-hide-duration-input',
   ) as HTMLInputElement;
+  const translationTargetLanguageSelect = document.getElementById(
+    'translation-target-language-select',
+  ) as HTMLSelectElement;
 
   if (
     !voiceSelect ||
@@ -42,7 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     !buttonPositionSelect ||
     !minimumWordsInput ||
     !maxNodesInput ||
-    !panelHideDurationInput
+    !panelHideDurationInput ||
+    !translationTargetLanguageSelect
   )
     return;
 
@@ -59,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'minimumWords',
       'maxNodesProcessed',
       'panelHideDuration',
+      'translationTargetLanguage',
     ],
     (result) => {
       const selectedVoice =
@@ -93,6 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.panelHideDuration === 'number'
           ? result.panelHideDuration
           : 30;
+      const translationTargetLanguage =
+        typeof result.translationTargetLanguage === 'string'
+          ? result.translationTargetLanguage
+          : 'en';
 
       populateVoices(selectedVoice);
 
@@ -125,6 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set panel hide duration input
       panelHideDurationInput.value = panelHideDuration.toString();
+
+      // Set translation target language select
+      const hasLanguageOption = Array.from(
+        translationTargetLanguageSelect.options,
+      ).some((option) => option.value === translationTargetLanguage);
+      translationTargetLanguageSelect.value = hasLanguageOption
+        ? translationTargetLanguage
+        : 'en';
     },
   );
 
@@ -205,6 +222,19 @@ document.addEventListener('DOMContentLoaded', () => {
           const newDuration = changes.panelHideDuration.newValue;
           if (typeof newDuration === 'number') {
             panelHideDurationInput.value = newDuration.toString();
+          }
+        }
+
+        // Update translation target language if changed
+        if (changes.translationTargetLanguage) {
+          const newLanguage = changes.translationTargetLanguage.newValue;
+          if (typeof newLanguage === 'string') {
+            const hasLanguageOption = Array.from(
+              translationTargetLanguageSelect.options,
+            ).some((option) => option.value === newLanguage);
+            translationTargetLanguageSelect.value = hasLanguageOption
+              ? newLanguage
+              : 'en';
           }
         }
 
@@ -332,6 +362,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Panel hide duration setting saved!', 'success');
+  });
+
+  // Save translation target language to storage
+  translationTargetLanguageSelect.addEventListener('change', () => {
+    const translationTargetLanguage = translationTargetLanguageSelect.value;
+    void chrome.storage.local.set({ translationTargetLanguage });
+
+    // Show a brief status message
+    showStatus('Translation output language saved!', 'success');
   });
 });
 

@@ -165,6 +165,7 @@ describe('options.ts - using actual HTML', () => {
           'minimumWords',
           'maxNodesProcessed',
           'panelHideDuration',
+          'translationTargetLanguage',
         ],
         expect.any(Function),
       );

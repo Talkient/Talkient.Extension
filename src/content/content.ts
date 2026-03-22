@@ -35,6 +35,11 @@ import { initPanelHideDuration } from '../features/control-panel/content/panel-v
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from '../shared/api/messaging';
 import type { ContentScriptMessage } from '../shared/types/messages';
+import {
+  showTranslationError,
+  showTranslationLoading,
+  showTranslationSuccess,
+} from './translation-result';
 
 const CHARS_PER_SECOND_AT_1X = 14;
 
@@ -162,6 +167,21 @@ chrome.runtime.onMessage.addListener(
       }
     } else if (message.type === 'WORD_BOUNDARY') {
       highlightWordAtIndex(message.charIndex, message.length);
+    } else if (message.type === 'TRANSLATION_LOADING') {
+      showTranslationLoading(message.originalText);
+    } else if (message.type === 'TRANSLATION_RESULT') {
+      showTranslationSuccess({
+        originalText: message.originalText,
+        translatedText: message.translatedText,
+        sourceLanguage: message.sourceLanguage,
+        targetLanguage: message.targetLanguage,
+        provider: message.provider,
+      });
+    } else if (message.type === 'TRANSLATION_ERROR') {
+      showTranslationError({
+        errorCode: message.errorCode,
+        message: message.message,
+      });
     } else if (message.type === 'RELOAD_PLAY_BUTTONS') {
       // Check if play buttons are enabled before processing
       chrome.storage.local.get(['playButtonsEnabled'], (result) => {

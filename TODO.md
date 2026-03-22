@@ -37,7 +37,6 @@
 
 - [ ] Summary by AI
 - [ ] Restart the current audio
-- [ ] Translate (free)
 - [ ] Create side_panel (manifest.json)
 - [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
 - [ ] Add support for `"file:///*"` like PDF
