@@ -212,6 +212,40 @@ test.describe('Selection translation', () => {
     expect(openOptionsCalled).toBe(true);
   });
 
+  test('closes translation modal when clicking outside', async ({
+    page,
+    context,
+  }) => {
+    await page.goto(TEST_PAGE_URL);
+    await page.waitForSelector('#talkient-control-panel');
+
+    await page.locator('article p').first().selectText();
+    const selectedText = await page.evaluate(() => {
+      return window.getSelection()?.toString() ?? '';
+    });
+
+    const serviceWorker = await getServiceWorker(context);
+    await serviceWorker.evaluate(() => {
+      self.fetch = async () => {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            translatedText: 'Bonjour texte selectionne pour la traduction.',
+            detectedLanguage: { language: 'en' },
+          }),
+        } as unknown as Response;
+      };
+    });
+
+    await triggerTranslateMenu(serviceWorker, selectedText);
+    await expect(page.locator('#talkient-translation-result')).toBeVisible();
+
+    await page.mouse.click(4, 4);
+
+    await expect(page.locator('#talkient-translation-result')).toHaveCount(0);
+  });
+
   test('shows translation error UI when providers fail', async ({
     page,
     context,

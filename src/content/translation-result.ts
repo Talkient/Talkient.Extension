@@ -3,6 +3,7 @@ const CARD_WIDTH_PX = 360;
 const VIEWPORT_MARGIN_PX = 12;
 const OFFSET_FROM_SELECTION_PX = 8;
 let lastAnchorRect: DOMRect | null = null;
+let outsideClickHandlerAttached = false;
 
 function getContainer(): HTMLDivElement {
   let container = document.getElementById(
@@ -17,6 +18,37 @@ function getContainer(): HTMLDivElement {
   container.className = 'talkient-translation-card';
   document.body.appendChild(container);
   return container;
+}
+
+function removeContainer(): void {
+  const container = document.getElementById(CONTAINER_ID);
+  container?.remove();
+}
+
+function setupOutsideClickToClose(): void {
+  if (outsideClickHandlerAttached) {
+    return;
+  }
+
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      const container = document.getElementById(CONTAINER_ID);
+      if (!container) {
+        return;
+      }
+
+      const targetNode = event.target;
+      if (targetNode instanceof Node && container.contains(targetNode)) {
+        return;
+      }
+
+      removeContainer();
+    },
+    true,
+  );
+
+  outsideClickHandlerAttached = true;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -125,8 +157,7 @@ function buildHeader(title: string): HTMLDivElement {
   closeButton.type = 'button';
   closeButton.textContent = 'x';
   closeButton.addEventListener('click', () => {
-    const container = document.getElementById(CONTAINER_ID);
-    container?.remove();
+    removeContainer();
   });
 
   actions.append(settingsButton, closeButton);
@@ -136,6 +167,7 @@ function buildHeader(title: string): HTMLDivElement {
 
 export function showTranslationLoading(originalText: string): void {
   const container = getContainer();
+  setupOutsideClickToClose();
   container.replaceChildren();
   container.classList.remove('talkient-translation-error');
 
@@ -161,6 +193,7 @@ export function showTranslationSuccess(payload: {
   provider: string;
 }): void {
   const container = getContainer();
+  setupOutsideClickToClose();
   container.replaceChildren();
   container.classList.remove('talkient-translation-error');
 
@@ -187,6 +220,7 @@ export function showTranslationError(payload: {
   message: string;
 }): void {
   const container = getContainer();
+  setupOutsideClickToClose();
   container.replaceChildren();
   container.classList.add('talkient-translation-error');
 

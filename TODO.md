@@ -32,9 +32,6 @@
   - Edge cases
   - Playwright + Playwright CLI
 - Design System for Control panel and play button
-- Translate (free)
-  - Settings shortcut
-  - The translation result should be showed near the text
 
 # V2
 
