@@ -114,6 +114,7 @@ test.describe('Selection translation', () => {
     await expect(page.locator('.talkient-translation-text')).toContainText(
       'Bonjour texte selectionne',
     );
+    await expect(page.locator('.talkient-translation-settings')).toBeVisible();
   });
 
   test('uses configured target language in translation request', async ({
@@ -159,6 +160,56 @@ test.describe('Selection translation', () => {
     await expect(page.locator('.talkient-translation-meta')).toContainText(
       'en -> pt',
     );
+  });
+
+  test('settings shortcut sends OPEN_OPTIONS message', async ({
+    page,
+    context,
+  }) => {
+    await page.goto(TEST_PAGE_URL);
+    await page.waitForSelector('#talkient-control-panel');
+
+    await page.locator('article p').first().selectText();
+    const selectedText = await page.evaluate(() => {
+      return window.getSelection()?.toString() ?? '';
+    });
+
+    const serviceWorker = await getServiceWorker(context);
+    await serviceWorker.evaluate(() => {
+      self.fetch = async () => {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            translatedText: 'Bonjour texte selectionne pour la traduction.',
+            detectedLanguage: { language: 'en' },
+          }),
+        } as unknown as Response;
+      };
+
+      (
+        self as unknown as { __talkientOpenOptionsCalled?: boolean }
+      ).__talkientOpenOptionsCalled = false;
+
+      chrome.runtime.openOptionsPage = (() => {
+        (
+          self as unknown as { __talkientOpenOptionsCalled?: boolean }
+        ).__talkientOpenOptionsCalled = true;
+      }) as typeof chrome.runtime.openOptionsPage;
+    });
+
+    await triggerTranslateMenu(serviceWorker, selectedText);
+    await expect(page.locator('.talkient-translation-settings')).toBeVisible();
+
+    await page.locator('.talkient-translation-settings').click();
+    await page.waitForTimeout(250);
+
+    const openOptionsCalled = await serviceWorker.evaluate(() => {
+      return (self as unknown as { __talkientOpenOptionsCalled?: boolean })
+        .__talkientOpenOptionsCalled;
+    });
+
+    expect(openOptionsCalled).toBe(true);
   });
 
   test('shows translation error UI when providers fail', async ({

@@ -1,4 +1,8 @@
 const CONTAINER_ID = 'talkient-translation-result';
+const CARD_WIDTH_PX = 360;
+const VIEWPORT_MARGIN_PX = 12;
+const OFFSET_FROM_SELECTION_PX = 8;
+let lastAnchorRect: DOMRect | null = null;
 
 function getContainer(): HTMLDivElement {
   let container = document.getElementById(
@@ -15,6 +19,90 @@ function getContainer(): HTMLDivElement {
   return container;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function captureSelectionRect(): DOMRect | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) {
+    return null;
+  }
+
+  return rect;
+}
+
+function positionContainerNearSelection(container: HTMLDivElement): void {
+  const currentRect = captureSelectionRect();
+  if (currentRect) {
+    lastAnchorRect = currentRect;
+  }
+
+  if (!lastAnchorRect) {
+    container.style.left = 'auto';
+    container.style.top = 'auto';
+    container.style.right = '20px';
+    container.style.bottom = '20px';
+    return;
+  }
+
+  const viewportWidth =
+    window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight =
+    window.innerHeight || document.documentElement.clientHeight;
+
+  const maxLeft = Math.max(
+    VIEWPORT_MARGIN_PX,
+    viewportWidth - CARD_WIDTH_PX - VIEWPORT_MARGIN_PX,
+  );
+  const left = clamp(lastAnchorRect.left, VIEWPORT_MARGIN_PX, maxLeft);
+
+  const containerHeight = Math.max(container.offsetHeight, 120);
+  const maxTop = Math.max(
+    VIEWPORT_MARGIN_PX,
+    viewportHeight - containerHeight - VIEWPORT_MARGIN_PX,
+  );
+
+  let top = lastAnchorRect.bottom + OFFSET_FROM_SELECTION_PX;
+  if (top > maxTop) {
+    top = lastAnchorRect.top - containerHeight - OFFSET_FROM_SELECTION_PX;
+  }
+  top = clamp(top, VIEWPORT_MARGIN_PX, maxTop);
+
+  container.style.left = `${left}px`;
+  container.style.top = `${top}px`;
+  container.style.right = 'auto';
+  container.style.bottom = 'auto';
+}
+
+function openOptionsPage(): void {
+  const runtime = (globalThis as { chrome?: typeof chrome }).chrome?.runtime;
+  if (runtime && typeof runtime.sendMessage === 'function') {
+    runtime.sendMessage({ type: 'OPEN_OPTIONS' }, () => {
+      if (runtime.lastError) {
+        const optionsUrl =
+          typeof runtime.getURL === 'function'
+            ? runtime.getURL('options/options.html')
+            : '/options/options.html';
+        window.open(optionsUrl, '_blank', 'noopener,noreferrer');
+      }
+    });
+    return;
+  }
+
+  const fallbackUrl =
+    runtime && typeof runtime.getURL === 'function'
+      ? runtime.getURL('options/options.html')
+      : '/options/options.html';
+  window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+}
+
 function buildHeader(title: string): HTMLDivElement {
   const header = document.createElement('div');
   header.className = 'talkient-translation-header';
@@ -22,6 +110,15 @@ function buildHeader(title: string): HTMLDivElement {
   const titleEl = document.createElement('strong');
   titleEl.className = 'talkient-translation-title';
   titleEl.textContent = title;
+
+  const actions = document.createElement('div');
+  actions.className = 'talkient-translation-actions';
+
+  const settingsButton = document.createElement('button');
+  settingsButton.className = 'talkient-translation-settings';
+  settingsButton.type = 'button';
+  settingsButton.textContent = 'Settings';
+  settingsButton.addEventListener('click', openOptionsPage);
 
   const closeButton = document.createElement('button');
   closeButton.className = 'talkient-translation-close';
@@ -32,7 +129,8 @@ function buildHeader(title: string): HTMLDivElement {
     container?.remove();
   });
 
-  header.append(titleEl, closeButton);
+  actions.append(settingsButton, closeButton);
+  header.append(titleEl, actions);
   return header;
 }
 
@@ -52,6 +150,7 @@ export function showTranslationLoading(originalText: string): void {
   status.textContent = 'Please wait while we translate your selected text.';
 
   container.append(header, source, status);
+  positionContainerNearSelection(container);
 }
 
 export function showTranslationSuccess(payload: {
@@ -80,6 +179,7 @@ export function showTranslationSuccess(payload: {
   translated.textContent = payload.translatedText;
 
   container.append(header, meta, source, translated);
+  positionContainerNearSelection(container);
 }
 
 export function showTranslationError(payload: {
@@ -105,4 +205,5 @@ export function showTranslationError(payload: {
   help.textContent = 'Try selecting shorter text or retry in a moment.';
 
   container.append(header, message, code, help);
+  positionContainerNearSelection(container);
 }
