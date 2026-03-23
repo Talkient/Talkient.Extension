@@ -8,4 +8,22 @@
   tabs: {
     create: jest.fn(),
   },
+  storage: {
+    local: {
+      get: jest.fn(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      ),
+      set: jest.fn(),
+    },
+  },
+  tts: {
+    getVoices: jest.fn((callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+      callback([]);
+    }),
+  },
 };
