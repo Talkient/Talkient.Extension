@@ -30,7 +30,10 @@
       "mcp__chrome-devtools__select_page",
       "mcp__chrome-devtools__take_screenshot",
       "Bash(gh pr:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(openspec new:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec instructions:*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
