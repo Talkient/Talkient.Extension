@@ -6,6 +6,7 @@
 
 - Text-to-speech conversion for web page content
 - Right-click context menu to play selected text
+- Right-click context menu to translate selected text
 - Customizable speech settings (rate, pitch, voice)
 - Visual highlighting of text being read
 - Multiple highlighting styles
@@ -13,6 +14,15 @@
 - Configurable minimum word count for processing
 - Configurable maximum nodes processed limit for performance optimization
 - Control panel for easy access to common settings
+
+## Translation Configuration Assumptions
+
+- Primary provider endpoint defaults to `https://translate.argosopentech.com/translate`
+- Automatic fallback endpoint uses `https://translate.googleapis.com/translate_a/single`
+- Target language defaults to `en` when no language preference is stored
+- Source language defaults to `auto` when no language preference is stored
+- Output language can be changed in Options (`Translation output language`)
+- Manifest includes host permissions for both translation endpoints
 
 ## Deploy new version
 

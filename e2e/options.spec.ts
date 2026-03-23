@@ -281,6 +281,28 @@ test.describe('Talkient Extension Options Page', () => {
     });
   });
 
+  test('should change translation output language', async ({
+    page,
+    extensionId,
+  }) => {
+    // Navigate to the options page
+    await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+
+    // Change output language
+    await page.selectOption('#translation-target-language-select', 'pt');
+
+    // Verify value changed
+    await expect(
+      page.locator('#translation-target-language-select'),
+    ).toHaveValue('pt');
+
+    // Verify status message appears
+    await expect(page.locator('#status')).toHaveClass(/visible success/);
+    await expect(page.locator('#status')).toContainText(
+      'Translation output language saved!',
+    );
+  });
+
   test('should verify settings persistence', async ({
     page,
     extensionId,
@@ -303,6 +325,9 @@ test.describe('Talkient Extension Options Page', () => {
       .locator('#auto-play-next-toggle')
       .isChecked();
 
+    // Change translation output language
+    await page.selectOption('#translation-target-language-select', 'es');
+
     // Make sure element is visible and use JavaScript click instead of Playwright click
     await page.evaluate(() => {
       const toggle = document.getElementById(
@@ -324,6 +349,9 @@ test.describe('Talkient Extension Options Page', () => {
     await expect(page.locator('#highlight-style-select')).toHaveValue(
       'elegant',
     );
+    await expect(
+      page.locator('#translation-target-language-select'),
+    ).toHaveValue('es');
     await expect(page.locator('#auto-play-next-toggle')).toBeChecked({
       checked: !initialAutoPlayState,
     });

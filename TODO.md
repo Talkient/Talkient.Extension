@@ -4,9 +4,11 @@
 
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
+- Claude Code rules
 - CI/CD to deploy on Chrome extension
 - [ ] Authentication
   - [ ] Add OIDC (stashed changes) to enable JIT Registration flow
+  - [ ] Authenticate with LP (could use the same auth?)
 - [ ] Try to Integrate with DevTools MCP + skill to navigate easily with the extension (options page, etc)
 - [ ] play button for a tags
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
@@ -31,13 +33,13 @@
   - Complex flows: play/pause directly and via control panel, alternatively
   - Edge cases
   - Playwright + Playwright CLI
-- Design System for Control panel and play button
+- Design System for Control panel, translation result and play button
+- Translation: Double left-click
 
 # V2
 
 - [ ] Summary by AI
 - [ ] Restart the current audio
-- [ ] Translate (free)
 - [ ] Create side_panel (manifest.json)
 - [ ] Talkient enable/disable (localStorage `playButtonsEnabled` already being used for reload scripts)
 - [ ] Add support for `"file:///*"` like PDF
