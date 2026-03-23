@@ -145,4 +145,28 @@ describe('context menu translation flow', () => {
       message: 'Translation request timed out. Please try again.',
     });
   });
+
+  it('handles unexpected provider rejection with UNKNOWN_ERROR', async () => {
+    translateMock.mockRejectedValue(
+      new Error('Unexpected translation failure'),
+    );
+
+    setupContextMenuClickHandler();
+    clickHandler?.(
+      {
+        menuItemId: 'talkient-translate-text',
+        selectionText: 'Hello world',
+      } as chrome.contextMenus.OnClickData,
+      { id: 101 } as chrome.tabs.Tab,
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(chrome.tabs.sendMessage).toHaveBeenNthCalledWith(2, 101, {
+      type: 'TRANSLATION_ERROR',
+      errorCode: 'UNKNOWN_ERROR',
+      message: 'Unexpected translation failure',
+    });
+  });
 });

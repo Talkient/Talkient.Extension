@@ -31,7 +31,7 @@
   - Complex flows: play/pause directly and via control panel, alternatively
   - Edge cases
   - Playwright + Playwright CLI
-- Design System for Control panel and play button
+- Design System for Control panel, translation result and play button
 
 # V2
 

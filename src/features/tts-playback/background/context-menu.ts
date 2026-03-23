@@ -7,7 +7,15 @@ import {
   setIsPaused,
 } from './tts-engine';
 import { setActiveTabId } from '../../../background/tab-manager';
-import { defaultTranslationProvider } from '../../translation/background/provider';
+import {
+  defaultTranslationProvider,
+  type TranslationErrorCode,
+  type TranslationResult,
+} from '../../translation/background/provider';
+import type {
+  TranslationErrorMessage,
+  TranslationResultMessage,
+} from '../../../shared/types/messages';
 
 const PLAY_TEXT_MENU_ID = 'talkient-play-text';
 const TRANSLATE_TEXT_MENU_ID = 'talkient-translate-text';
@@ -54,45 +62,43 @@ function sendTranslationLoading(tabId: number, originalText: string): void {
   });
 }
 
-function sendTranslationResult(
-  tabId: number,
-  result:
-    | {
-        ok: true;
-        originalText: string;
-        translatedText: string;
-        sourceLanguage: string;
-        targetLanguage: string;
-        provider: string;
-      }
-    | {
-        ok: false;
-        errorCode:
-          | 'NETWORK_ERROR'
-          | 'TIMEOUT'
-          | 'INVALID_RESPONSE'
-          | 'EMPTY_TEXT'
-          | 'UNKNOWN_ERROR';
-        message: string;
-      },
-): void {
+function sendTranslationResult(tabId: number, result: TranslationResult): void {
   if (result.ok) {
-    void chrome.tabs.sendMessage(tabId, {
+    const message: TranslationResultMessage = {
       type: 'TRANSLATION_RESULT',
       originalText: result.originalText,
       translatedText: result.translatedText,
       sourceLanguage: result.sourceLanguage,
       targetLanguage: result.targetLanguage,
       provider: result.provider,
-    });
+    };
+    void chrome.tabs.sendMessage(tabId, message);
     return;
   }
 
-  void chrome.tabs.sendMessage(tabId, {
+  const message: TranslationErrorMessage = {
     type: 'TRANSLATION_ERROR',
     errorCode: result.errorCode,
     message: result.message,
-  });
+  };
+  void chrome.tabs.sendMessage(tabId, message);
+}
+
+function sendTranslationError(
+  tabId: number,
+  errorCode: TranslationErrorCode,
+  message: string,
+): void {
+  const normalizedMessage = message.trim();
+
+  const translationError: TranslationErrorMessage = {
+    type: 'TRANSLATION_ERROR',
+    errorCode,
+    message:
+      normalizedMessage || 'An unknown error occurred during translation.',
+  };
+
+  void chrome.tabs.sendMessage(tabId, translationError);
 }
 
 function handleTranslateSelection(
@@ -107,11 +113,11 @@ function handleTranslateSelection(
 
   const selectedText = info.selectionText?.trim() ?? '';
   if (!selectedText) {
-    void chrome.tabs.sendMessage(tabId, {
-      type: 'TRANSLATION_ERROR',
-      errorCode: 'EMPTY_TEXT',
-      message: 'Please select text before translating.',
-    });
+    sendTranslationError(
+      tabId,
+      'EMPTY_TEXT',
+      'Please select text before translating.',
+    );
     return;
   }
 
@@ -152,6 +158,17 @@ function handleTranslateSelection(
         })
         .then((translationResult) => {
           sendTranslationResult(tabId, translationResult);
+        })
+        .catch((error: unknown) => {
+          console.error(
+            '[Talkient.SW] Translation request failed with an unknown error',
+            error,
+          );
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'An unknown error occurred during translation.';
+          sendTranslationError(tabId, 'UNKNOWN_ERROR', message);
         });
     },
   );

@@ -721,8 +721,8 @@
 /* Translation result card */
 #talkient-translation-result.talkient-translation-card {
   position: fixed !important;
-  right: 20px !important;
-  bottom: 20px !important;
+  right: 20px;
+  bottom: 20px;
   z-index: 999999 !important;
   width: min(300px, calc(100vw - 32px)) !important;
   max-width: min(300px, calc(100vw - 32px)) !important;
@@ -809,9 +809,9 @@
 
 @media (max-width: 640px) {
   #talkient-translation-result.talkient-translation-card {
-    left: 12px !important;
-    right: 12px !important;
-    bottom: 12px !important;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
     width: auto !important;
   }
 }

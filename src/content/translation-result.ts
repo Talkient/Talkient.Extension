@@ -1,7 +1,7 @@
 const CONTAINER_ID = 'talkient-translation-result';
-const CARD_WIDTH_PX = 360;
 const VIEWPORT_MARGIN_PX = 12;
 const OFFSET_FROM_SELECTION_PX = 8;
+const DEFAULT_CARD_WIDTH_PX = 300;
 let lastAnchorRect: DOMRect | null = null;
 let outsideClickHandlerAttached = false;
 
@@ -88,10 +88,14 @@ function positionContainerNearSelection(container: HTMLDivElement): void {
     window.innerWidth || document.documentElement.clientWidth;
   const viewportHeight =
     window.innerHeight || document.documentElement.clientHeight;
+  const containerWidth =
+    container.offsetWidth ||
+    container.getBoundingClientRect().width ||
+    DEFAULT_CARD_WIDTH_PX;
 
   const maxLeft = Math.max(
     VIEWPORT_MARGIN_PX,
-    viewportWidth - CARD_WIDTH_PX - VIEWPORT_MARGIN_PX,
+    viewportWidth - containerWidth - VIEWPORT_MARGIN_PX,
   );
   const left = clamp(lastAnchorRect.left, VIEWPORT_MARGIN_PX, maxLeft);
 
@@ -156,6 +160,8 @@ function buildHeader(title: string): HTMLDivElement {
   closeButton.className = 'talkient-translation-close';
   closeButton.type = 'button';
   closeButton.textContent = 'x';
+  closeButton.setAttribute('aria-label', 'Close translation');
+  closeButton.title = 'Close translation';
   closeButton.addEventListener('click', () => {
     removeContainer();
   });
