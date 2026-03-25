@@ -20,6 +20,14 @@ let minimumWordsCache = 3; // Default minimum words
 let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
+let processableElementsCache: string[] = [
+  'article',
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'li',
+]; // Default processable elements
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
@@ -152,6 +160,16 @@ export function setButtonPosition(value: 'left' | 'right'): void {
   buttonPositionCache = value;
 }
 
+// Set the processable elements list (used when it changes in storage)
+export function setProcessableElements(tags: string[]): void {
+  processableElementsCache = tags;
+}
+
+// Get the current processable elements list
+export function getProcessableElements(): string[] {
+  return processableElementsCache;
+}
+
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
   // Skip if node is null or not a text node
@@ -231,9 +249,17 @@ export function shouldProcessNode(node: Node): boolean {
   const controlPanel = parent.closest('#talkient-control-panel');
   if (controlPanel) return false;
 
-  // Only process nodes that are within an <article> tag
-  const article = parent.closest('article');
-  if (!article) return false;
+  // Only process nodes within a configured processable element
+  let ancestor: HTMLElement | null = parent;
+  let insideProcessable = false;
+  while (ancestor) {
+    if (processableElementsCache.includes(ancestor.tagName.toLowerCase())) {
+      insideProcessable = true;
+      break;
+    }
+    ancestor = ancestor.parentElement;
+  }
+  if (!insideProcessable) return false;
 
   return true;
 }

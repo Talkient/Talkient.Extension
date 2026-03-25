@@ -121,15 +121,22 @@ test.describe('Article Requirement Tests', () => {
     // Exact count may vary based on how text is split, but it should be > 0 and < total paragraphs
     expect(totalPlayButtons).toBeGreaterThan(0);
 
-    // Test 10: Verify all play buttons are within article tags
-    const allButtonsInArticles = await page.evaluate(() => {
+    // Test 10: Verify all play buttons are within a configured processable element
+    // (article, p, h1, h2, h3, or li by default)
+    const allButtonsInProcessableElements = await page.evaluate(() => {
+      const processableTags = ['article', 'p', 'h1', 'h2', 'h3', 'li'];
       const buttons = document.querySelectorAll('.talkient-play-button');
       return Array.from(buttons).every((button) => {
-        return button.closest('article') !== null;
+        let el: Element | null = button.parentElement;
+        while (el) {
+          if (processableTags.includes(el.tagName.toLowerCase())) return true;
+          el = el.parentElement;
+        }
+        return false;
       });
     });
 
-    expect(allButtonsInArticles).toBe(true);
+    expect(allButtonsInProcessableElements).toBe(true);
 
     // Take a screenshot for manual verification
     await page.screenshot({

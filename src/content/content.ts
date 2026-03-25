@@ -14,6 +14,7 @@ import {
   setMaxNodesProcessed,
   loadButtonPositionFromStorage,
   setButtonPosition,
+  setProcessableElements,
   getTotalProcessedChars,
   getRemainingChars,
   subtractRemainingChars,
@@ -42,6 +43,12 @@ import {
 } from './translation-result';
 
 const CHARS_PER_SECOND_AT_1X = 14;
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+}
 
 function updateRemainingTimeDisplay(): void {
   const panel = document.getElementById('talkient-control-panel');
@@ -236,23 +243,31 @@ void loadButtonPositionFromStorage().then(() => {
     );
   });
 
-  // Create and inject the control panel
-  createControlPanel();
-
-  // Check if play buttons are enabled before initial processing
-  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
-    // Default to true if not set
-    const isEnabled = result.playButtonsEnabled !== false;
-
-    if (isEnabled) {
-      // Initial processing
-      resetEstimateCounters();
-      processTextElements(() => updateRemainingTimeDisplay());
-    } else {
-      console.log(
-        '[Talkient] Play buttons are disabled. Skipping initial processing.',
-      );
+  // Load processable elements before creating the control panel so the panel
+  // visibility check uses the correct (possibly user-configured) tag list.
+  chrome.storage.local.get(['processableElements'], (result) => {
+    if (isStringArray(result.processableElements)) {
+      setProcessableElements(result.processableElements);
     }
+
+    // Create and inject the control panel
+    createControlPanel();
+
+    // Check if play buttons are enabled before initial processing
+    chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+      // Default to true if not set
+      const isEnabled = result.playButtonsEnabled !== false;
+
+      if (isEnabled) {
+        // Initial processing
+        resetEstimateCounters();
+        processTextElements(() => updateRemainingTimeDisplay());
+      } else {
+        console.log(
+          '[Talkient] Play buttons are disabled. Skipping initial processing.',
+        );
+      }
+    });
   });
 });
 
@@ -369,6 +384,16 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         // Re-process text elements to apply the new setting
         resetEstimateCounters();
         processTextElements(() => updateRemainingTimeDisplay());
+      }
+    }
+
+    if (changes.processableElements) {
+      const newElements = changes.processableElements.newValue;
+      if (isStringArray(newElements)) {
+        setProcessableElements(newElements);
+        console.log(
+          `[Talkient] Processable elements updated to: ${newElements.join(', ')}`,
+        );
       }
     }
   }

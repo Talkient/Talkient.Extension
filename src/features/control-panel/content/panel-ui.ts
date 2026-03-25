@@ -3,6 +3,7 @@
 
 import { isPanelHiddenForDomain } from './panel-visibility';
 import { setupControlPanelEventListeners } from './panel-controller';
+import { getProcessableElements } from '../../tts-playback/content/text-processor';
 
 /**
  * Panel UI Module
@@ -24,11 +25,14 @@ export function createControlPanel(): void {
     return;
   }
 
-  // Check if there's an article element in the DOM
-  const articleElement = document.querySelector('article');
-  if (!articleElement) {
+  // Check if the page has any processable elements in the DOM
+  const processableTags = getProcessableElements();
+  const hasProcessableContent = processableTags.some((tag) =>
+    document.querySelector(tag),
+  );
+  if (!hasProcessableContent) {
     console.log(
-      '[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.',
+      '[Talkient.ControlPanel] No processable elements found in DOM. Control panel will not be created.',
     );
     return;
   }

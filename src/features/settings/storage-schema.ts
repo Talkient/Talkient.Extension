@@ -40,6 +40,9 @@ export interface StorageSchema {
   // Translation settings
   translationTargetLanguage: string;
 
+  // Content processing - configurable processable elements
+  processableElements: string[];
+
   // Auth state (managed by auth feature)
   talkient_auth_state?: {
     isAuthenticated: boolean;
@@ -74,4 +77,7 @@ export const DEFAULT_SETTINGS: StorageSchema = {
 
   // Translation settings
   translationTargetLanguage: 'en',
+
+  // Content processing - configurable processable elements
+  processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
 };

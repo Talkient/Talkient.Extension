@@ -1,3 +1,20 @@
+const DEFAULT_PROCESSABLE_ELEMENTS = ['article', 'p', 'h1', 'h2', 'h3', 'li'];
+
+const PROCESSABLE_ELEMENT_IDS: Array<{ id: string; tag: string }> = [
+  { id: 'elem-article', tag: 'article' },
+  { id: 'elem-p', tag: 'p' },
+  { id: 'elem-h1', tag: 'h1' },
+  { id: 'elem-h2', tag: 'h2' },
+  { id: 'elem-h3', tag: 'h3' },
+  { id: 'elem-li', tag: 'li' },
+];
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const voiceSelect = document.getElementById(
     'voice-select',
@@ -33,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     'translation-target-language-select',
   ) as HTMLSelectElement;
 
+  const processableCheckboxes = PROCESSABLE_ELEMENT_IDS.map(({ id, tag }) => ({
+    tag,
+    checkbox: document.getElementById(id) as HTMLInputElement,
+  }));
+
   if (
     !voiceSelect ||
     !rateSlider ||
@@ -64,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'maxNodesProcessed',
       'panelHideDuration',
       'translationTargetLanguage',
+      'processableElements',
     ],
     (result) => {
       const selectedVoice =
@@ -102,6 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.translationTargetLanguage === 'string'
           ? result.translationTargetLanguage
           : 'en';
+      const processableElements: string[] = isStringArray(
+        result.processableElements,
+      )
+        ? result.processableElements
+        : DEFAULT_PROCESSABLE_ELEMENTS;
 
       populateVoices(selectedVoice);
 
@@ -142,6 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
       translationTargetLanguageSelect.value = hasLanguageOption
         ? translationTargetLanguage
         : 'en';
+
+      // Set processable element checkboxes
+      processableCheckboxes.forEach(({ tag, checkbox }) => {
+        if (checkbox) {
+          checkbox.checked = processableElements.includes(tag);
+        }
+      });
     },
   );
 
@@ -243,6 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
           const newVoice = changes.selectedVoice.newValue;
           if (typeof newVoice === 'string') {
             voiceSelect.value = newVoice;
+          }
+        }
+
+        // Update processable element checkboxes if changed
+        if (changes.processableElements) {
+          const newElements = changes.processableElements.newValue;
+          if (Array.isArray(newElements)) {
+            processableCheckboxes.forEach(({ tag, checkbox }) => {
+              if (checkbox) {
+                checkbox.checked = newElements.includes(tag);
+              }
+            });
           }
         }
       }
@@ -371,6 +418,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Translation output language saved!', 'success');
+  });
+
+  // Save processable elements setting when any checkbox changes
+  processableCheckboxes.forEach(({ checkbox }) => {
+    if (checkbox) {
+      checkbox.addEventListener('change', () => {
+        const processableElements = processableCheckboxes
+          .filter(({ checkbox: cb }) => cb?.checked)
+          .map(({ tag }) => tag);
+        void chrome.storage.local.set({ processableElements });
+
+        // Show a brief status message
+        showStatus('Processable elements saved!', 'success');
+      });
+    }
   });
 });
 

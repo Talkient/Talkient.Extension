@@ -404,8 +404,9 @@ describe('Print Behavior', () => {
     });
 
     test('should handle afterprint on page without article element', async () => {
-      // Remove article element
-      document.body.innerHTML = '<div><p>No article here</p></div>';
+      // Remove article element and all other processable elements
+      document.body.innerHTML =
+        '<div><span>No processable elements here</span></div>';
 
       // Should not throw when simulating afterprint
       await expect(simulateAfterPrint()).resolves.not.toThrow();

@@ -218,6 +218,35 @@ kbd {
   color: #ef6c00;
 }
 
+.setting-hint {
+  color: #666;
+  font-size: 13px;
+  margin: 0 0 12px 0;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  font-family: monospace;
+}
+
+.checkbox-item input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #2196f3;
+}
+
 /* Disabled settings styles */
 .disabled-group {
   opacity: 0.6;
