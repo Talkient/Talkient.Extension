@@ -167,6 +167,7 @@ describe('options.ts - using actual HTML', () => {
           'panelHideDuration',
           'translationTargetLanguage',
           'processableElements',
+          'ignoredDomains',
         ],
         expect.any(Function),
       );

@@ -175,6 +175,51 @@
         </div>
       </div>
 
+      <div class="setting-group">
+        <h2>Ignored Domains</h2>
+        <p class="setting-hint">
+          Talkient will stay disabled on these domains and their subdomains.
+        </p>
+        <div class="ignored-domains-controls">
+          <div class="ignored-domains-input-row">
+            <label for="ignored-domain-input" class="sr-only"
+              >Ignored domain input</label
+            >
+            <input
+              type="text"
+              id="ignored-domain-input"
+              class="search-input"
+              placeholder="example.com"
+              autocomplete="off"
+            />
+            <button
+              id="ignored-domain-add-button"
+              class="primary-button"
+              type="button"
+            >
+              Add
+            </button>
+            <button
+              id="ignored-domain-cancel-button"
+              class="secondary-button"
+              type="button"
+              hidden
+            >
+              Cancel
+            </button>
+          </div>
+          <p
+            id="ignored-domains-validation"
+            class="validation-message"
+            aria-live="polite"
+          ></p>
+          <p id="ignored-domains-empty" class="selection-meta">
+            No ignored domains configured.
+          </p>
+          <ul id="ignored-domains-list" class="ignored-domains-list"></ul>
+        </div>
+      </div>
+
       <div class="setting-group disabled-group">
         <h2>Keyboard Shortcuts</h2>
         <div class="setting-row">

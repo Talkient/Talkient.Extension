@@ -1,6 +1,8 @@
 import {
   DEFAULT_PROCESSABLE_ELEMENTS,
   PROCESSABLE_ELEMENTS_CATALOG,
+  normalizeIgnoredDomainEntry,
+  normalizeIgnoredDomains,
   normalizeProcessableElements,
 } from '../storage-schema';
 
@@ -59,6 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const processableElementsSelectedCount = document.getElementById(
     'processable-elements-selected-count',
   ) as HTMLParagraphElement;
+  const ignoredDomainInput = document.getElementById(
+    'ignored-domain-input',
+  ) as HTMLInputElement;
+  const ignoredDomainAddButton = document.getElementById(
+    'ignored-domain-add-button',
+  ) as HTMLButtonElement;
+  const ignoredDomainCancelButton = document.getElementById(
+    'ignored-domain-cancel-button',
+  ) as HTMLButtonElement;
+  const ignoredDomainsValidation = document.getElementById(
+    'ignored-domains-validation',
+  ) as HTMLParagraphElement;
+  const ignoredDomainsEmpty = document.getElementById(
+    'ignored-domains-empty',
+  ) as HTMLParagraphElement;
+  const ignoredDomainsList = document.getElementById(
+    'ignored-domains-list',
+  ) as HTMLUListElement;
 
   if (
     !voiceSelect ||
@@ -76,7 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
     !translationTargetLanguageSelect ||
     !processableElementsSearch ||
     !processableElementsSelect ||
-    !processableElementsSelectedCount
+    !processableElementsSelectedCount ||
+    !ignoredDomainInput ||
+    !ignoredDomainAddButton ||
+    !ignoredDomainCancelButton ||
+    !ignoredDomainsValidation ||
+    !ignoredDomainsEmpty ||
+    !ignoredDomainsList
   )
     return;
 
@@ -96,6 +122,82 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   let processableElementsSet = new Set<string>(DEFAULT_PROCESSABLE_ELEMENTS);
+  let ignoredDomains: string[] = [];
+  let editingIgnoredDomainIndex: number | null = null;
+
+  const clearIgnoredDomainsValidation = (): void => {
+    ignoredDomainsValidation.textContent = '';
+  };
+
+  const setIgnoredDomainsValidation = (message: string): void => {
+    ignoredDomainsValidation.textContent = message;
+  };
+
+  const resetIgnoredDomainEditor = (): void => {
+    editingIgnoredDomainIndex = null;
+    ignoredDomainInput.value = '';
+    ignoredDomainAddButton.textContent = 'Add';
+    ignoredDomainCancelButton.hidden = true;
+  };
+
+  const renderIgnoredDomains = (): void => {
+    ignoredDomainsList.innerHTML = '';
+    ignoredDomainsEmpty.hidden = ignoredDomains.length > 0;
+
+    ignoredDomains.forEach((domain, index) => {
+      const item = document.createElement('li');
+      item.className = 'ignored-domains-item';
+
+      const text = document.createElement('span');
+      text.className = 'ignored-domains-item-text';
+      text.textContent = domain;
+
+      const actions = document.createElement('div');
+      actions.className = 'ignored-domains-item-actions';
+
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'secondary-button';
+      editButton.textContent = 'Edit';
+      editButton.addEventListener('click', () => {
+        editingIgnoredDomainIndex = index;
+        ignoredDomainInput.value = domain;
+        ignoredDomainAddButton.textContent = 'Save';
+        ignoredDomainCancelButton.hidden = false;
+        clearIgnoredDomainsValidation();
+        ignoredDomainInput.focus();
+      });
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'secondary-button danger-button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', () => {
+        ignoredDomains = ignoredDomains.filter(
+          (_, itemIndex) => itemIndex !== index,
+        );
+        if (editingIgnoredDomainIndex === index) {
+          resetIgnoredDomainEditor();
+        } else if (
+          editingIgnoredDomainIndex !== null &&
+          editingIgnoredDomainIndex > index
+        ) {
+          editingIgnoredDomainIndex -= 1;
+        }
+
+        void chrome.storage.local.set({ ignoredDomains });
+        renderIgnoredDomains();
+        clearIgnoredDomainsValidation();
+        showStatus('Ignored domain removed!', 'success');
+      });
+
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+      item.appendChild(text);
+      item.appendChild(actions);
+      ignoredDomainsList.appendChild(item);
+    });
+  };
 
   const updateSelectedCount = (): void => {
     processableElementsSelectedCount.textContent = `${processableElementsSet.size} selected`;
@@ -132,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'panelHideDuration',
       'translationTargetLanguage',
       'processableElements',
+      'ignoredDomains',
     ],
     (result) => {
       const selectedVoice =
@@ -173,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const processableElements = normalizeProcessableElements(
         result.processableElements,
       );
+      ignoredDomains = normalizeIgnoredDomains(result.ignoredDomains);
 
       populateVoices(selectedVoice);
 
@@ -217,6 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Set processable elements multi-select and filtered view
       syncProcessableElementsSelect(processableElements);
       applyProcessableElementsSearchFilter();
+      renderIgnoredDomains();
+      resetIgnoredDomainEditor();
+      clearIgnoredDomainsValidation();
     },
   );
 
@@ -328,6 +435,13 @@ document.addEventListener('DOMContentLoaded', () => {
           );
           syncProcessableElementsSelect(newElements);
           applyProcessableElementsSearchFilter();
+        }
+
+        if (changes.ignoredDomains) {
+          ignoredDomains = normalizeIgnoredDomains(
+            changes.ignoredDomains.newValue,
+          );
+          renderIgnoredDomains();
         }
       }
     });
@@ -476,6 +590,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show a brief status message
     showStatus('Processable elements saved!', 'success');
+  });
+
+  ignoredDomainAddButton.addEventListener('click', () => {
+    const normalizedDomain = normalizeIgnoredDomainEntry(
+      ignoredDomainInput.value,
+    );
+    if (!normalizedDomain) {
+      setIgnoredDomainsValidation(
+        'Please enter a valid domain (e.g., example.com).',
+      );
+      showStatus('Invalid ignored domain.', 'error');
+      return;
+    }
+
+    const duplicateIndex = ignoredDomains.findIndex(
+      (domain) => domain === normalizedDomain,
+    );
+
+    if (
+      duplicateIndex !== -1 &&
+      (editingIgnoredDomainIndex === null ||
+        duplicateIndex !== editingIgnoredDomainIndex)
+    ) {
+      setIgnoredDomainsValidation(
+        'That domain is already in the ignored list.',
+      );
+      showStatus('Duplicate ignored domain.', 'warning');
+      return;
+    }
+
+    if (editingIgnoredDomainIndex === null) {
+      ignoredDomains = [...ignoredDomains, normalizedDomain];
+      showStatus('Ignored domain added!', 'success');
+    } else {
+      ignoredDomains = ignoredDomains.map((domain, index) =>
+        index === editingIgnoredDomainIndex ? normalizedDomain : domain,
+      );
+      showStatus('Ignored domain updated!', 'success');
+    }
+
+    void chrome.storage.local.set({ ignoredDomains });
+    renderIgnoredDomains();
+    resetIgnoredDomainEditor();
+    clearIgnoredDomainsValidation();
+  });
+
+  ignoredDomainCancelButton.addEventListener('click', () => {
+    resetIgnoredDomainEditor();
+    clearIgnoredDomainsValidation();
+  });
+
+  ignoredDomainInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      ignoredDomainAddButton.click();
+    }
   });
 });
 

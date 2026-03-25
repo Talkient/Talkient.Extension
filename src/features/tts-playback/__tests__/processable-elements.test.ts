@@ -3,7 +3,9 @@
  */
 
 import {
+  getIgnoredDomains,
   shouldProcessNode,
+  setIgnoredDomains,
   setProcessableElements,
   loadMinimumWordsFromStorage,
 } from '../content/text-processor';
@@ -41,6 +43,7 @@ describe('processable elements - shouldProcessNode', () => {
 
     // Reset to default processable elements
     setProcessableElements(['article', 'p', 'h1', 'h2', 'h3', 'li']);
+    setIgnoredDomains([]);
 
     // Ensure minimum words is 3
     mockChrome.storage.local.get.mockImplementation(
@@ -189,6 +192,30 @@ describe('processable elements - shouldProcessNode', () => {
       expect(shouldProcessNode(textNode)).toBe(false);
     });
   });
+
+  describe('ignored domains', () => {
+    it('should skip processing on exact ignored domain', () => {
+      setIgnoredDomains([window.location.hostname]);
+
+      const p = document.createElement('p');
+      const textNode = document.createTextNode('This has enough words here');
+      p.appendChild(textNode);
+      container.appendChild(p);
+
+      expect(shouldProcessNode(textNode)).toBe(false);
+    });
+
+    it('should keep processing on non-matching domain', () => {
+      setIgnoredDomains(['example.com']);
+
+      const p = document.createElement('p');
+      const textNode = document.createTextNode('This has enough words here');
+      p.appendChild(textNode);
+      container.appendChild(p);
+
+      expect(shouldProcessNode(textNode)).toBe(true);
+    });
+  });
 });
 
 describe('processable elements - setProcessableElements', () => {
@@ -210,6 +237,7 @@ describe('processable elements - setProcessableElements', () => {
     document.body.removeChild(container);
     // Reset to default after each test
     setProcessableElements(['article', 'p', 'h1', 'h2', 'h3', 'li']);
+    setIgnoredDomains([]);
   });
 
   it('should update which elements are processed after calling setProcessableElements', () => {
@@ -244,5 +272,10 @@ describe('processable elements - setProcessableElements', () => {
 
     setProcessableElements(['article']);
     expect(shouldProcessNode(textNode)).toBe(true);
+  });
+
+  it('should normalize and expose ignored domains through getters/setters', () => {
+    setIgnoredDomains([' Example.com ', 'bad host']);
+    expect(getIgnoredDomains()).toEqual(['example.com']);
   });
 });

@@ -263,6 +263,91 @@ kbd {
   font-size: 13px;
 }
 
+.ignored-domains-controls {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+.ignored-domains-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.primary-button {
+  border: 1px solid #1976d2;
+  background-color: #2196f3;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background-color: #1976d2;
+}
+
+.secondary-button {
+  border: 1px solid #ddd;
+  background-color: #fff;
+  color: #333;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  background-color: #f7f7f7;
+}
+
+.danger-button {
+  border-color: #e57373;
+  color: #c62828;
+}
+
+.danger-button:hover {
+  background-color: #ffebee;
+}
+
+.ignored-domains-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ignored-domains-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.ignored-domains-item-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  color: #2c3e50;
+  overflow-wrap: anywhere;
+}
+
+.ignored-domains-item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.validation-message {
+  margin: 0;
+  color: #c62828;
+  font-size: 13px;
+  min-height: 18px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

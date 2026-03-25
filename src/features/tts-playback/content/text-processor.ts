@@ -16,6 +16,8 @@ import {
 } from '../../../content/highlight';
 import {
   DEFAULT_PROCESSABLE_ELEMENTS,
+  isHostnameIgnored,
+  normalizeIgnoredDomains,
   normalizeProcessableElements,
 } from '../../settings/storage-schema';
 
@@ -25,6 +27,7 @@ let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 let processableElementsCache: string[] = [...DEFAULT_PROCESSABLE_ELEMENTS]; // Default processable elements
+let ignoredDomainsCache: string[] = []; // Default ignored domains list
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
@@ -167,8 +170,22 @@ export function getProcessableElements(): string[] {
   return processableElementsCache;
 }
 
+// Set the ignored domains list (used when it changes in storage)
+export function setIgnoredDomains(domains: string[]): void {
+  ignoredDomainsCache = normalizeIgnoredDomains(domains);
+}
+
+// Get the current ignored domains list
+export function getIgnoredDomains(): string[] {
+  return ignoredDomainsCache;
+}
+
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
+  if (isHostnameIgnored(window.location.hostname, ignoredDomainsCache)) {
+    return false;
+  }
+
   // Skip if node is null or not a text node
   if (!node || node.nodeType !== Node.TEXT_NODE) return false;
 

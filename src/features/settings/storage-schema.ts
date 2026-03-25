@@ -43,6 +43,9 @@ export interface StorageSchema {
   // Content processing - configurable processable elements
   processableElements: string[];
 
+  // Domain-level processing opt-out
+  ignoredDomains: string[];
+
   // Auth state (managed by auth feature)
   talkient_auth_state?: {
     isAuthenticated: boolean;
@@ -117,6 +120,94 @@ export function normalizeProcessableElements(tags: unknown): string[] {
   return normalized;
 }
 
+const DOMAIN_LABEL_PATTERN = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
+const DOMAIN_PATTERN = new RegExp(
+  `^(?:${DOMAIN_LABEL_PATTERN}\\.)+${DOMAIN_LABEL_PATTERN}$`,
+);
+
+export function normalizeIgnoredDomainEntry(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return null;
+  }
+
+  let hostname = trimmed;
+
+  if (trimmed.includes('://')) {
+    try {
+      hostname = new URL(trimmed).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  } else if (
+    trimmed.includes('/') ||
+    trimmed.includes('?') ||
+    trimmed.includes('#')
+  ) {
+    try {
+      hostname = new URL(`https://${trimmed}`).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  }
+
+  hostname = hostname.replace(/\.$/, '');
+
+  if (hostname === 'localhost') {
+    return hostname;
+  }
+
+  if (!hostname.includes('.') || !DOMAIN_PATTERN.test(hostname)) {
+    return null;
+  }
+
+  return hostname;
+}
+
+export function normalizeIgnoredDomains(domains: unknown): string[] {
+  if (!Array.isArray(domains)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const domain of domains) {
+    const normalizedDomain = normalizeIgnoredDomainEntry(domain);
+    if (normalizedDomain && !seen.has(normalizedDomain)) {
+      seen.add(normalizedDomain);
+      normalized.push(normalizedDomain);
+    }
+  }
+
+  return normalized;
+}
+
+export function isHostnameIgnored(
+  hostname: string,
+  ignoredDomains: string[],
+): boolean {
+  const normalizedHostname = normalizeIgnoredDomainEntry(hostname);
+  if (!normalizedHostname) {
+    return false;
+  }
+
+  for (const ignoredDomain of ignoredDomains) {
+    if (
+      normalizedHostname === ignoredDomain ||
+      normalizedHostname.endsWith(`.${ignoredDomain}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /**
  * Default values for all settings
  */
@@ -145,4 +236,7 @@ export const DEFAULT_SETTINGS: StorageSchema = {
 
   // Content processing - configurable processable elements
   processableElements: [...DEFAULT_PROCESSABLE_ELEMENTS],
+
+  // Domain-level processing opt-out
+  ignoredDomains: [],
 };

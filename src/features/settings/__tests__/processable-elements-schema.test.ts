@@ -6,6 +6,9 @@ import {
   DEFAULT_PROCESSABLE_ELEMENTS,
   DEFAULT_SETTINGS,
   PROCESSABLE_ELEMENTS_CATALOG,
+  isHostnameIgnored,
+  normalizeIgnoredDomainEntry,
+  normalizeIgnoredDomains,
   normalizeProcessableElements,
 } from '../storage-schema';
 
@@ -77,5 +80,44 @@ describe('DEFAULT_SETTINGS.processableElements', () => {
 
   it('should keep empty array as empty list', () => {
     expect(normalizeProcessableElements([])).toEqual([]);
+  });
+
+  it('should default ignoredDomains to an empty array', () => {
+    expect(DEFAULT_SETTINGS.ignoredDomains).toEqual([]);
+  });
+
+  it('should normalize a valid ignored domain entry', () => {
+    expect(normalizeIgnoredDomainEntry('  WWW.Example.COM  ')).toBe(
+      'www.example.com',
+    );
+  });
+
+  it('should normalize url-like ignored domain input to hostname', () => {
+    expect(normalizeIgnoredDomainEntry('https://blog.example.com/path')).toBe(
+      'blog.example.com',
+    );
+  });
+
+  it('should reject invalid ignored domain entries', () => {
+    expect(normalizeIgnoredDomainEntry('')).toBeNull();
+    expect(normalizeIgnoredDomainEntry('not a domain')).toBeNull();
+    expect(normalizeIgnoredDomainEntry('example')).toBeNull();
+  });
+
+  it('should normalize ignored domains list and remove duplicates/invalids', () => {
+    expect(
+      normalizeIgnoredDomains([
+        ' Example.com ',
+        'example.com',
+        'bad domain',
+        1,
+      ]),
+    ).toEqual(['example.com']);
+  });
+
+  it('should match ignored hostnames by exact and subdomain', () => {
+    expect(isHostnameIgnored('example.com', ['example.com'])).toBe(true);
+    expect(isHostnameIgnored('www.example.com', ['example.com'])).toBe(true);
+    expect(isHostnameIgnored('example.org', ['example.com'])).toBe(false);
   });
 });

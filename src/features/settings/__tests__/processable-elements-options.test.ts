@@ -36,6 +36,7 @@ describe('Processable elements options UI', () => {
           panelHideDuration: 30,
           translationTargetLanguage: 'en',
           processableElements: [...DEFAULT_PROCESSABLE_ELEMENTS],
+          ignoredDomains: [],
         });
       },
     );
@@ -287,6 +288,145 @@ describe('Processable elements options UI', () => {
       expect(visible).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
       expect(selected).toContain('h4');
       expect(selected).toContain('article');
+    });
+  });
+
+  describe('ignored domains UI behavior', () => {
+    beforeEach(() => {
+      require('../options/options-ui');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should render empty-state when no ignored domains are configured', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const empty = document.getElementById('ignored-domains-empty');
+      const list = document.getElementById('ignored-domains-list');
+
+      expect(empty?.textContent).toContain('No ignored domains configured');
+      expect(empty?.hasAttribute('hidden')).toBe(false);
+      expect(list?.children.length).toBe(0);
+    });
+
+    it('should add a normalized ignored domain', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+
+      input.value = '  WWW.Example.COM  ';
+      addButton.click();
+
+      const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
+      const lastCall = calls[calls.length - 1][0];
+      expect(lastCall.ignoredDomains).toEqual(['www.example.com']);
+
+      const list = document.getElementById('ignored-domains-list');
+      expect(list?.textContent).toContain('www.example.com');
+    });
+
+    it('should reject invalid ignored domain entry and show validation feedback', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+      const validation = document.getElementById('ignored-domains-validation');
+
+      input.value = 'invalid host';
+      addButton.click();
+
+      expect(chrome.storage.local.set).not.toHaveBeenCalledWith(
+        expect.objectContaining({ ignoredDomains: expect.any(Array) }),
+      );
+      expect(validation?.textContent).toContain('Please enter a valid domain');
+    });
+
+    it('should edit an existing ignored domain', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+
+      input.value = 'example.com';
+      addButton.click();
+
+      const list = document.getElementById(
+        'ignored-domains-list',
+      ) as HTMLUListElement;
+      const editButton = list.querySelector('button') as HTMLButtonElement;
+      editButton.click();
+
+      input.value = 'news.example.com';
+      addButton.click();
+
+      const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
+      const lastCall = calls[calls.length - 1][0];
+      expect(lastCall.ignoredDomains).toEqual(['news.example.com']);
+      const domainTexts = Array.from(
+        list.querySelectorAll('.ignored-domains-item-text'),
+      ).map((item) => item.textContent);
+      expect(domainTexts).toEqual(['news.example.com']);
+    });
+
+    it('should delete an ignored domain entry', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+
+      input.value = 'example.com';
+      addButton.click();
+
+      const list = document.getElementById(
+        'ignored-domains-list',
+      ) as HTMLUListElement;
+      const deleteButton = list.querySelectorAll('button')[1];
+      deleteButton.click();
+
+      const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
+      const lastCall = calls[calls.length - 1][0];
+      expect(lastCall.ignoredDomains).toEqual([]);
+      expect(list.children.length).toBe(0);
+    });
+
+    it('should update ignored domains list from external storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const listener = (chrome.storage.onChanged.addListener as jest.Mock).mock
+        .calls[0][0] as (
+        changes: Record<string, { newValue: unknown }>,
+        namespace: string,
+      ) => void;
+
+      listener(
+        {
+          ignoredDomains: {
+            newValue: ['example.com', 'blog.example.org'],
+          },
+        },
+        'local',
+      );
+
+      const list = document.getElementById('ignored-domains-list');
+      expect(list?.textContent).toContain('example.com');
+      expect(list?.textContent).toContain('blog.example.org');
     });
   });
 });

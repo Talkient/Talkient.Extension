@@ -199,6 +199,7 @@ describe('options.ts', () => {
           'panelHideDuration',
           'translationTargetLanguage',
           'processableElements',
+          'ignoredDomains',
         ],
         expect.any(Function),
       );
