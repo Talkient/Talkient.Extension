@@ -52,6 +52,71 @@ export interface StorageSchema {
   };
 }
 
+export const PROCESSABLE_ELEMENTS_CATALOG = [
+  'article',
+  'main',
+  'section',
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'li',
+  'ul',
+  'ol',
+  'blockquote',
+  'pre',
+  'code',
+  'span',
+  'a',
+  'em',
+  'strong',
+  'small',
+  'mark',
+  'cite',
+  'q',
+  'figcaption',
+  'caption',
+  'td',
+  'th',
+  'label',
+  'button',
+] as const;
+
+export const DEFAULT_PROCESSABLE_ELEMENTS = [
+  'article',
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'li',
+] as const;
+
+const PROCESSABLE_ELEMENTS_SET = new Set<string>(PROCESSABLE_ELEMENTS_CATALOG);
+
+export function normalizeProcessableElements(tags: unknown): string[] {
+  if (!Array.isArray(tags)) {
+    return [...DEFAULT_PROCESSABLE_ELEMENTS];
+  }
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const tag of tags) {
+    if (
+      typeof tag === 'string' &&
+      PROCESSABLE_ELEMENTS_SET.has(tag) &&
+      !seen.has(tag)
+    ) {
+      seen.add(tag);
+      normalized.push(tag);
+    }
+  }
+
+  return normalized;
+}
+
 /**
  * Default values for all settings
  */
@@ -79,5 +144,5 @@ export const DEFAULT_SETTINGS: StorageSchema = {
   translationTargetLanguage: 'en',
 
   // Content processing - configurable processable elements
-  processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
+  processableElements: [...DEFAULT_PROCESSABLE_ELEMENTS],
 };

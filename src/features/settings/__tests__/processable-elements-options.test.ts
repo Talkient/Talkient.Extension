@@ -3,17 +3,12 @@
  */
 
 import './mocks/chrome';
+import {
+  DEFAULT_PROCESSABLE_ELEMENTS,
+  PROCESSABLE_ELEMENTS_CATALOG,
+} from '../storage-schema';
 
 describe('Processable elements options UI', () => {
-  const ELEMENT_IDS = [
-    { id: 'elem-article', tag: 'article' },
-    { id: 'elem-p', tag: 'p' },
-    { id: 'elem-h1', tag: 'h1' },
-    { id: 'elem-h2', tag: 'h2' },
-    { id: 'elem-h3', tag: 'h3' },
-    { id: 'elem-li', tag: 'li' },
-  ];
-
   beforeEach(() => {
     document.body.innerHTML = '';
 
@@ -40,13 +35,13 @@ describe('Processable elements options UI', () => {
           maxNodesProcessed: 1000,
           panelHideDuration: 30,
           translationTargetLanguage: 'en',
-          processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
+          processableElements: [...DEFAULT_PROCESSABLE_ELEMENTS],
         });
       },
     );
 
     (chrome.storage.local.set as jest.Mock).mockImplementation(
-      (obj: Record<string, unknown>, callback?: () => void) => {
+      (_obj: Record<string, unknown>, callback?: () => void) => {
         if (callback) callback();
       },
     );
@@ -65,25 +60,18 @@ describe('Processable elements options UI', () => {
   });
 
   describe('HTML structure', () => {
-    it('should have a Processable Elements section', () => {
-      const headings = Array.from(document.querySelectorAll('h2'));
-      const heading = headings.find(
-        (h) => h.textContent === 'Processable Elements',
-      );
-      expect(heading).toBeTruthy();
-    });
+    it('should have processable elements search and multi-select controls', () => {
+      const search = document.getElementById(
+        'processable-elements-search',
+      ) as HTMLInputElement;
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
 
-    it('should have all six checkboxes in the DOM', () => {
-      ELEMENT_IDS.forEach(({ id }) => {
-        const checkbox = document.getElementById(id) as HTMLInputElement;
-        expect(checkbox).toBeTruthy();
-        expect(checkbox.type).toBe('checkbox');
-      });
-    });
-
-    it('should have a checkbox-list container', () => {
-      const list = document.querySelector('.checkbox-list');
-      expect(list).toBeTruthy();
+      expect(search).toBeTruthy();
+      expect(search.type).toBe('search');
+      expect(select).toBeTruthy();
+      expect(select.multiple).toBe(true);
     });
   });
 
@@ -94,7 +82,7 @@ describe('Processable elements options UI', () => {
       document.dispatchEvent(event);
     });
 
-    it('should include processableElements in the storage get call', async () => {
+    it('should include processableElements in storage get call', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(chrome.storage.local.get).toHaveBeenCalledWith(
@@ -103,16 +91,31 @@ describe('Processable elements options UI', () => {
       );
     });
 
-    it('should check all six checkboxes when all elements are in storage', async () => {
+    it('should render expanded options catalog in order', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      ELEMENT_IDS.forEach(({ id }) => {
-        const checkbox = document.getElementById(id) as HTMLInputElement;
-        expect(checkbox.checked).toBe(true);
-      });
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+      const values = Array.from(select.options).map((option) => option.value);
+
+      expect(values).toEqual([...PROCESSABLE_ELEMENTS_CATALOG]);
     });
 
-    it('should only check stored elements when partial list is in storage', async () => {
+    it('should select only default tags by default', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+      const selected = Array.from(select.selectedOptions).map(
+        (option) => option.value,
+      );
+
+      expect(selected).toEqual([...DEFAULT_PROCESSABLE_ELEMENTS]);
+    });
+
+    it('should normalize unknown tags from storage and keep known ones', async () => {
       (chrome.storage.local.get as jest.Mock).mockImplementation(
         (
           keys: string[],
@@ -120,17 +123,9 @@ describe('Processable elements options UI', () => {
         ) => {
           callback({
             selectedVoice: 'default',
-            speechRate: 1.0,
-            speechPitch: 1.0,
-            highlightStyle: 'default',
-            autoPlayNext: true,
-            followHighlight: true,
-            buttonPosition: 'left',
-            minimumWords: 3,
-            maxNodesProcessed: 1000,
-            panelHideDuration: 30,
-            translationTargetLanguage: 'en',
-            processableElements: ['article', 'p'],
+            speechRate: 1,
+            speechPitch: 1,
+            processableElements: ['article', 'unknown', 'h2'],
           });
         },
       );
@@ -142,106 +137,156 @@ describe('Processable elements options UI', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(
-        (document.getElementById('elem-article') as HTMLInputElement).checked,
-      ).toBe(true);
-      expect(
-        (document.getElementById('elem-p') as HTMLInputElement).checked,
-      ).toBe(true);
-      expect(
-        (document.getElementById('elem-h1') as HTMLInputElement).checked,
-      ).toBe(false);
-      expect(
-        (document.getElementById('elem-h2') as HTMLInputElement).checked,
-      ).toBe(false);
-      expect(
-        (document.getElementById('elem-h3') as HTMLInputElement).checked,
-      ).toBe(false);
-      expect(
-        (document.getElementById('elem-li') as HTMLInputElement).checked,
-      ).toBe(false);
-    });
-
-    it('should use default set when processableElements is not in storage', async () => {
-      (chrome.storage.local.get as jest.Mock).mockImplementation(
-        (
-          keys: string[],
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({
-            selectedVoice: 'default',
-            speechRate: 1.0,
-            speechPitch: 1.0,
-          });
-        },
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+      const selected = Array.from(select.selectedOptions).map(
+        (option) => option.value,
       );
 
-      jest.resetModules();
-      require('../options/options-ui');
-      const event = new Event('DOMContentLoaded');
-      document.dispatchEvent(event);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      ELEMENT_IDS.forEach(({ id }) => {
-        const checkbox = document.getElementById(id) as HTMLInputElement;
-        expect(checkbox.checked).toBe(true);
-      });
+      expect(selected).toEqual(['article', 'h2']);
     });
   });
 
-  describe('save on checkbox change', () => {
+  describe('search and save behavior', () => {
     beforeEach(() => {
       require('../options/options-ui');
       const event = new Event('DOMContentLoaded');
       document.dispatchEvent(event);
     });
 
-    it('should save updated array when a checkbox is unchecked', async () => {
+    it('should filter options by case-insensitive substring', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      const h1Checkbox = document.getElementById('elem-h1') as HTMLInputElement;
-      h1Checkbox.checked = false;
-      h1Checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      const search = document.getElementById(
+        'processable-elements-search',
+      ) as HTMLInputElement;
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
 
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        processableElements: expect.not.arrayContaining(['h1']),
-      });
+      search.value = 'head';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const visible = Array.from(select.options)
+        .filter((option) => !option.hidden)
+        .map((option) => option.value);
+
+      expect(visible).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
     });
 
-    it('should include all checked tags in the saved array', async () => {
+    it('should not change selection when only filtering', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Uncheck h1, h2, h3
-      ['elem-h1', 'elem-h2', 'elem-h3'].forEach((id) => {
-        const cb = document.getElementById(id) as HTMLInputElement;
-        cb.checked = false;
-        cb.dispatchEvent(new Event('change', { bubbles: true }));
-      });
+      const search = document.getElementById(
+        'processable-elements-search',
+      ) as HTMLInputElement;
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+
+      const before = Array.from(select.selectedOptions).map((o) => o.value);
+
+      search.value = 'block';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const after = Array.from(select.selectedOptions).map((o) => o.value);
+      expect(after).toEqual(before);
+      expect(chrome.storage.local.set).not.toHaveBeenCalledWith(
+        expect.objectContaining({ processableElements: expect.any(Array) }),
+      );
+    });
+
+    it('should save updated array when selection changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+
+      for (const option of Array.from(select.options)) {
+        option.selected = ['article', 'p', 'blockquote'].includes(option.value);
+      }
+      select.dispatchEvent(new Event('change', { bubbles: true }));
 
       const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
       const lastCall = calls[calls.length - 1][0];
-      expect(lastCall.processableElements).toEqual(
-        expect.arrayContaining(['article', 'p', 'li']),
-      );
-      expect(lastCall.processableElements).not.toContain('h1');
-      expect(lastCall.processableElements).not.toContain('h2');
-      expect(lastCall.processableElements).not.toContain('h3');
-    });
-
-    it('should show status message when a checkbox changes', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(lastCall.processableElements).toEqual([
+        'article',
+        'p',
+        'blockquote',
+      ]);
 
       const statusDiv = document.getElementById('status') as HTMLDivElement;
-      const articleCheckbox = document.getElementById(
-        'elem-article',
-      ) as HTMLInputElement;
-      articleCheckbox.checked = false;
-      articleCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
-
       expect(statusDiv.textContent).toBe('Processable elements saved!');
       expect(statusDiv.classList.contains('visible')).toBe(true);
-      expect(statusDiv.classList.contains('success')).toBe(true);
+    });
+
+    it('should toggle options on click without requiring modifier keys', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+      const h4Option = select.querySelector(
+        'option[value="h4"]',
+      ) as HTMLOptionElement;
+      const articleOption = select.querySelector(
+        'option[value="article"]',
+      ) as HTMLOptionElement;
+
+      expect(h4Option.selected).toBe(false);
+      expect(articleOption.selected).toBe(true);
+
+      h4Option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      articleOption.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true }),
+      );
+
+      const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
+      const lastCall = calls[calls.length - 1][0];
+      expect(lastCall.processableElements).toContain('h4');
+      expect(lastCall.processableElements).not.toContain('article');
+    });
+
+    it('should keep search query while applying external storage updates', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const listener = (chrome.storage.onChanged.addListener as jest.Mock).mock
+        .calls[0][0] as (
+        changes: Record<string, { newValue: unknown }>,
+        namespace: string,
+      ) => void;
+      const search = document.getElementById(
+        'processable-elements-search',
+      ) as HTMLInputElement;
+      const select = document.getElementById(
+        'processable-elements-select',
+      ) as HTMLSelectElement;
+
+      search.value = 'head';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+
+      listener(
+        {
+          processableElements: {
+            newValue: ['article', 'h4'],
+          },
+        },
+        'local',
+      );
+
+      const visible = Array.from(select.options)
+        .filter((option) => !option.hidden)
+        .map((option) => option.value);
+      const selected = Array.from(select.selectedOptions).map(
+        (option) => option.value,
+      );
+
+      expect(search.value).toBe('head');
+      expect(visible).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+      expect(selected).toContain('h4');
+      expect(selected).toContain('article');
     });
   });
 });

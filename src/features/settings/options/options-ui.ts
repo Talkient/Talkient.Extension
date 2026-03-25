@@ -1,18 +1,18 @@
-const DEFAULT_PROCESSABLE_ELEMENTS = ['article', 'p', 'h1', 'h2', 'h3', 'li'];
+import {
+  DEFAULT_PROCESSABLE_ELEMENTS,
+  PROCESSABLE_ELEMENTS_CATALOG,
+  normalizeProcessableElements,
+} from '../storage-schema';
 
-const PROCESSABLE_ELEMENT_IDS: Array<{ id: string; tag: string }> = [
-  { id: 'elem-article', tag: 'article' },
-  { id: 'elem-p', tag: 'p' },
-  { id: 'elem-h1', tag: 'h1' },
-  { id: 'elem-h2', tag: 'h2' },
-  { id: 'elem-h3', tag: 'h3' },
-  { id: 'elem-li', tag: 'li' },
-];
+function formatElementTag(tag: string): string {
+  return `<${tag}>`;
+}
 
-function isStringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
+function getSearchableTagText(tag: string): string {
+  if (/^h[1-6]$/.test(tag)) {
+    return `${tag} heading`;
+  }
+  return tag;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,10 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     'translation-target-language-select',
   ) as HTMLSelectElement;
 
-  const processableCheckboxes = PROCESSABLE_ELEMENT_IDS.map(({ id, tag }) => ({
-    tag,
-    checkbox: document.getElementById(id) as HTMLInputElement,
-  }));
+  const processableElementsSearch = document.getElementById(
+    'processable-elements-search',
+  ) as HTMLInputElement;
+  const processableElementsSelect = document.getElementById(
+    'processable-elements-select',
+  ) as HTMLSelectElement;
+  const processableElementsSelectedCount = document.getElementById(
+    'processable-elements-selected-count',
+  ) as HTMLParagraphElement;
 
   if (
     !voiceSelect ||
@@ -68,9 +73,49 @@ document.addEventListener('DOMContentLoaded', () => {
     !minimumWordsInput ||
     !maxNodesInput ||
     !panelHideDurationInput ||
-    !translationTargetLanguageSelect
+    !translationTargetLanguageSelect ||
+    !processableElementsSearch ||
+    !processableElementsSelect ||
+    !processableElementsSelectedCount
   )
     return;
+
+  processableElementsSelect.innerHTML = '';
+  PROCESSABLE_ELEMENTS_CATALOG.forEach((tag) => {
+    const option = document.createElement('option');
+    option.value = tag;
+    option.textContent = formatElementTag(tag);
+    option.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      option.selected = !option.selected;
+      processableElementsSelect.dispatchEvent(
+        new Event('change', { bubbles: true }),
+      );
+    });
+    processableElementsSelect.appendChild(option);
+  });
+
+  let processableElementsSet = new Set<string>(DEFAULT_PROCESSABLE_ELEMENTS);
+
+  const updateSelectedCount = (): void => {
+    processableElementsSelectedCount.textContent = `${processableElementsSet.size} selected`;
+  };
+
+  const applyProcessableElementsSearchFilter = (): void => {
+    const query = processableElementsSearch.value.trim().toLowerCase();
+    Array.from(processableElementsSelect.options).forEach((option) => {
+      const searchable = getSearchableTagText(option.value).toLowerCase();
+      option.hidden = !searchable.includes(query);
+    });
+  };
+
+  const syncProcessableElementsSelect = (elements: string[]): void => {
+    processableElementsSet = new Set(elements);
+    Array.from(processableElementsSelect.options).forEach((option) => {
+      option.selected = processableElementsSet.has(option.value);
+    });
+    updateSelectedCount();
+  };
 
   // Restore settings from storage
   chrome.storage.local.get(
@@ -125,11 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         typeof result.translationTargetLanguage === 'string'
           ? result.translationTargetLanguage
           : 'en';
-      const processableElements: string[] = isStringArray(
+      const processableElements = normalizeProcessableElements(
         result.processableElements,
-      )
-        ? result.processableElements
-        : DEFAULT_PROCESSABLE_ELEMENTS;
+      );
 
       populateVoices(selectedVoice);
 
@@ -171,12 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ? translationTargetLanguage
         : 'en';
 
-      // Set processable element checkboxes
-      processableCheckboxes.forEach(({ tag, checkbox }) => {
-        if (checkbox) {
-          checkbox.checked = processableElements.includes(tag);
-        }
-      });
+      // Set processable elements multi-select and filtered view
+      syncProcessableElementsSelect(processableElements);
+      applyProcessableElementsSearchFilter();
     },
   );
 
@@ -281,16 +321,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Update processable element checkboxes if changed
+        // Update processable elements multi-select if changed
         if (changes.processableElements) {
-          const newElements = changes.processableElements.newValue;
-          if (Array.isArray(newElements)) {
-            processableCheckboxes.forEach(({ tag, checkbox }) => {
-              if (checkbox) {
-                checkbox.checked = newElements.includes(tag);
-              }
-            });
-          }
+          const newElements = normalizeProcessableElements(
+            changes.processableElements.newValue,
+          );
+          syncProcessableElementsSelect(newElements);
+          applyProcessableElementsSearchFilter();
         }
       }
     });
@@ -420,19 +457,25 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus('Translation output language saved!', 'success');
   });
 
-  // Save processable elements setting when any checkbox changes
-  processableCheckboxes.forEach(({ checkbox }) => {
-    if (checkbox) {
-      checkbox.addEventListener('change', () => {
-        const processableElements = processableCheckboxes
-          .filter(({ checkbox: cb }) => cb?.checked)
-          .map(({ tag }) => tag);
-        void chrome.storage.local.set({ processableElements });
+  processableElementsSearch.addEventListener('input', () => {
+    applyProcessableElementsSearchFilter();
+  });
 
-        // Show a brief status message
-        showStatus('Processable elements saved!', 'success');
-      });
-    }
+  processableElementsSelect.addEventListener('change', () => {
+    const selectedValues = new Set<string>(
+      Array.from(processableElementsSelect.selectedOptions).map(
+        (option) => option.value,
+      ),
+    );
+    const processableElements = PROCESSABLE_ELEMENTS_CATALOG.filter((tag) =>
+      selectedValues.has(tag),
+    );
+
+    syncProcessableElementsSelect(processableElements);
+    void chrome.storage.local.set({ processableElements });
+
+    // Show a brief status message
+    showStatus('Processable elements saved!', 'success');
   });
 });
 

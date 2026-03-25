@@ -224,27 +224,55 @@ kbd {
   margin: 0 0 12px 0;
 }
 
-.checkbox-list {
+.processable-elements-controls {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
+  flex-direction: column;
 }
 
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
   font-size: 14px;
   color: #333;
-  font-family: monospace;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.checkbox-item input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: #2196f3;
+.multi-select-input {
+  width: 100%;
+  min-height: 220px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.multi-select-input option {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 4px 6px;
+}
+
+.selection-meta {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Disabled settings styles */

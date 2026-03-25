@@ -14,20 +14,17 @@ import {
   getHighlightingStyle,
   getCurrentHighlightedElement,
 } from '../../../content/highlight';
+import {
+  DEFAULT_PROCESSABLE_ELEMENTS,
+  normalizeProcessableElements,
+} from '../../settings/storage-schema';
 
 // Cache for settings
 let minimumWordsCache = 3; // Default minimum words
 let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
-let processableElementsCache: string[] = [
-  'article',
-  'p',
-  'h1',
-  'h2',
-  'h3',
-  'li',
-]; // Default processable elements
+let processableElementsCache: string[] = [...DEFAULT_PROCESSABLE_ELEMENTS]; // Default processable elements
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
@@ -162,7 +159,7 @@ export function setButtonPosition(value: 'left' | 'right'): void {
 
 // Set the processable elements list (used when it changes in storage)
 export function setProcessableElements(tags: string[]): void {
-  processableElementsCache = tags;
+  processableElementsCache = normalizeProcessableElements(tags);
 }
 
 // Get the current processable elements list

@@ -150,32 +150,28 @@
 
       <div class="setting-group">
         <h2>Processable Elements</h2>
-        <p class="setting-hint">Select which HTML elements will receive play buttons. Changes apply on next page load.</p>
-        <div class="checkbox-list">
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-article" />
-            <span>&lt;article&gt;</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-p" />
-            <span>&lt;p&gt;</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-h1" />
-            <span>&lt;h1&gt;</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-h2" />
-            <span>&lt;h2&gt;</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-h3" />
-            <span>&lt;h3&gt;</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="elem-li" />
-            <span>&lt;li&gt;</span>
-          </label>
+        <p class="setting-hint">
+          Select which HTML elements will receive play buttons.
+        </p>
+        <div class="processable-elements-controls">
+          <label for="processable-elements-search" class="sr-only"
+            >Search processable elements</label
+          >
+          <input
+            type="search"
+            id="processable-elements-search"
+            class="search-input"
+            placeholder="Search tags (e.g., h, block, section)"
+          />
+          <select
+            id="processable-elements-select"
+            class="multi-select-input"
+            multiple
+            size="10"
+          ></select>
+          <p id="processable-elements-selected-count" class="selection-meta">
+            0 selected
+          </p>
         </div>
       </div>
 

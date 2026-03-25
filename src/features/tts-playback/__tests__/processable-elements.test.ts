@@ -213,19 +213,19 @@ describe('processable elements - setProcessableElements', () => {
   });
 
   it('should update which elements are processed after calling setProcessableElements', () => {
-    const div = document.createElement('div');
+    const section = document.createElement('section');
     const textNode = document.createTextNode('This has enough words here');
-    div.appendChild(textNode);
-    container.appendChild(div);
+    section.appendChild(textNode);
+    container.appendChild(section);
 
-    // Initially div is not processable
+    // Initially section is not processable
     expect(shouldProcessNode(textNode)).toBe(false);
 
-    // Add 'div' to processable elements
-    setProcessableElements(['div', 'p']);
+    // Add 'section' to processable elements
+    setProcessableElements(['section', 'p']);
     expect(shouldProcessNode(textNode)).toBe(true);
 
-    // Remove 'div' again
+    // Remove 'section' again
     setProcessableElements(['p', 'article']);
     expect(shouldProcessNode(textNode)).toBe(false);
   });
