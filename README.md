@@ -37,3 +37,11 @@
 ## TO DO
 
 [Talkient.Extension TO DO list](./TODO.md)
+
+## MCP Settings
+
+- [sonarqube](https://github.com/SonarSource/sonarqube-mcp-server) for Claude code:
+
+```
+source .env && claude mcp add sonarqube --env SONARQUBE_TOKEN=$SONARQUBE_TOKEN --env SONARQUBE_ORG=$SONARQUBE_ORG -- docker run --init --pull=always -i --rm -e SONARQUBE_TOKEN -e SONARQUBE_ORG mcp/sonarqube
+```
