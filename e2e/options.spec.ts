@@ -361,4 +361,43 @@ test.describe('Talkient Extension Options Page', () => {
       path: 'e2e-results/options-persistence-screenshot.png',
     });
   });
+
+  test('should reset settings to defaults after confirmation', async ({
+    page,
+    extensionId,
+  }) => {
+    await page.goto(`chrome-extension://${extensionId}/options/options.html`);
+
+    await page.locator('#minimum-words-input').fill('9');
+    await page.selectOption('#highlight-style-select', 'bold');
+    await page.selectOption('#translation-target-language-select', 'pt');
+
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      await dialog.accept();
+    });
+
+    await page.locator('#reset-default-settings-button').click();
+
+    await expect(page.locator('#minimum-words-input')).toHaveValue('3');
+    await expect(page.locator('#highlight-style-select')).toHaveValue(
+      'default',
+    );
+    await expect(
+      page.locator('#translation-target-language-select'),
+    ).toHaveValue('en');
+    await expect(page.locator('#status')).toContainText(
+      'Settings reset to defaults!',
+    );
+
+    await page.reload();
+
+    await expect(page.locator('#minimum-words-input')).toHaveValue('3');
+    await expect(page.locator('#highlight-style-select')).toHaveValue(
+      'default',
+    );
+    await expect(
+      page.locator('#translation-target-language-select'),
+    ).toHaveValue('en');
+  });
 });

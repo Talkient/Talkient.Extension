@@ -27,6 +27,7 @@ describe('options.ts', () => {
   let minimumWordsInput: HTMLInputElement;
   let panelHideDurationInput: HTMLInputElement;
   let translationTargetLanguageSelect: HTMLSelectElement;
+  let resetDefaultSettingsButton: HTMLButtonElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -70,6 +71,9 @@ describe('options.ts', () => {
     translationTargetLanguageSelect = document.getElementById(
       'translation-target-language-select',
     ) as HTMLSelectElement;
+    resetDefaultSettingsButton = document.getElementById(
+      'reset-default-settings-button',
+    ) as HTMLButtonElement;
 
     // Mock Chrome storage with default values
     (chrome.storage.local.get as jest.Mock).mockImplementation(
@@ -107,6 +111,7 @@ describe('options.ts', () => {
 
     // Clear all mocks before each test
     jest.clearAllMocks();
+    jest.resetModules();
   });
 
   afterEach(() => {
@@ -1164,6 +1169,82 @@ describe('options.ts', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(panelHideDurationInput.value).toBe('30');
+    });
+  });
+
+  describe('reset to default settings', () => {
+    let confirmMock: jest.Mock;
+
+    beforeEach(() => {
+      confirmMock = jest.fn();
+      Object.defineProperty(window, 'confirm', {
+        configurable: true,
+        writable: true,
+        value: confirmMock,
+      });
+
+      require('../options/options-ui');
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should render reset button in options page', () => {
+      expect(resetDefaultSettingsButton).toBeTruthy();
+      expect(resetDefaultSettingsButton.textContent).toContain(
+        'Reset to default settings',
+      );
+    });
+
+    it('should reset settings to defaults when user confirms', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      confirmMock.mockReturnValue(true);
+
+      resetDefaultSettingsButton.click();
+
+      expect(confirmMock).toHaveBeenCalledWith(
+        'Reset all Talkient settings to default values? This cannot be undone.',
+      );
+      expect(chrome.storage.local.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedVoice: 'default',
+          speechRate: 1,
+          speechPitch: 1,
+          highlightStyle: 'default',
+          autoPlayNext: true,
+          followHighlight: true,
+          buttonPosition: 'left',
+          minimumWords: 3,
+          maxNodesProcessed: 1000,
+          panelHideDuration: 30,
+          translationTargetLanguage: 'en',
+          processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
+          ignoredDomains: [],
+        }),
+        expect.any(Function),
+      );
+
+      expect(rateSlider.value).toBe('1');
+      expect(pitchSlider.value).toBe('1');
+      expect(autoPlayNextToggle.checked).toBe(true);
+      expect(translationTargetLanguageSelect.value).toBe('en');
+
+      const status = document.getElementById('status') as HTMLDivElement;
+      expect(status.textContent).toBe('Settings reset to defaults!');
+    });
+
+    it('should not persist changes when reset is canceled', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      confirmMock.mockReturnValue(false);
+
+      resetDefaultSettingsButton.click();
+
+      expect(confirmMock).toHaveBeenCalled();
+      expect(chrome.storage.local.set).not.toHaveBeenCalled();
+
+      const status = document.getElementById('status') as HTMLDivElement;
+      expect(status.textContent).toBe('Reset to default settings canceled.');
     });
   });
 });

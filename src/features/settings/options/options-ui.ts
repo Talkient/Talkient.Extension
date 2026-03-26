@@ -1,10 +1,12 @@
 import {
+  DEFAULT_SETTINGS,
   DEFAULT_PROCESSABLE_ELEMENTS,
   PROCESSABLE_ELEMENTS_CATALOG,
   normalizeIgnoredDomainEntry,
   normalizeIgnoredDomains,
   normalizeProcessableElements,
 } from '../storage-schema';
+import type { StorageSchema } from '../storage-schema';
 
 function formatElementTag(tag: string): string {
   return `<${tag}>`;
@@ -79,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const ignoredDomainsList = document.getElementById(
     'ignored-domains-list',
   ) as HTMLUListElement;
+  const resetDefaultSettingsButton = document.getElementById(
+    'reset-default-settings-button',
+  ) as HTMLButtonElement;
 
   if (
     !voiceSelect ||
@@ -102,7 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
     !ignoredDomainCancelButton ||
     !ignoredDomainsValidation ||
     !ignoredDomainsEmpty ||
-    !ignoredDomainsList
+    !ignoredDomainsList ||
+    !resetDefaultSettingsButton
   )
     return;
 
@@ -219,6 +225,87 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSelectedCount();
   };
 
+  const applySettingsToUi = (result: Partial<StorageSchema>): void => {
+    const selectedVoice =
+      typeof result.selectedVoice === 'string'
+        ? result.selectedVoice
+        : DEFAULT_SETTINGS.selectedVoice;
+    const speechRate =
+      typeof result.speechRate === 'number'
+        ? result.speechRate
+        : DEFAULT_SETTINGS.speechRate;
+    const speechPitch =
+      typeof result.speechPitch === 'number'
+        ? result.speechPitch
+        : DEFAULT_SETTINGS.speechPitch;
+    const highlightStyle =
+      typeof result.highlightStyle === 'string'
+        ? result.highlightStyle
+        : DEFAULT_SETTINGS.highlightStyle;
+    const autoPlayNext =
+      typeof result.autoPlayNext === 'boolean'
+        ? result.autoPlayNext
+        : DEFAULT_SETTINGS.autoPlayNext;
+    const followHighlight =
+      typeof result.followHighlight === 'boolean'
+        ? result.followHighlight
+        : DEFAULT_SETTINGS.followHighlight;
+    const buttonPosition =
+      typeof result.buttonPosition === 'string'
+        ? result.buttonPosition
+        : DEFAULT_SETTINGS.buttonPosition;
+    const minimumWords =
+      typeof result.minimumWords === 'number'
+        ? result.minimumWords
+        : DEFAULT_SETTINGS.minimumWords;
+    const maxNodesProcessed =
+      typeof result.maxNodesProcessed === 'number'
+        ? result.maxNodesProcessed
+        : DEFAULT_SETTINGS.maxNodesProcessed;
+    const panelHideDuration =
+      typeof result.panelHideDuration === 'number'
+        ? result.panelHideDuration
+        : DEFAULT_SETTINGS.panelHideDuration;
+    const translationTargetLanguage =
+      typeof result.translationTargetLanguage === 'string'
+        ? result.translationTargetLanguage
+        : DEFAULT_SETTINGS.translationTargetLanguage;
+    const processableElements = normalizeProcessableElements(
+      result.processableElements,
+    );
+    ignoredDomains = normalizeIgnoredDomains(result.ignoredDomains);
+
+    populateVoices(selectedVoice);
+
+    const roundedRate = Math.round(speechRate * 20) / 20;
+    rateSlider.value = roundedRate.toString();
+    rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+
+    pitchSlider.value = speechPitch.toString();
+    pitchValue.textContent = `${speechPitch.toFixed(1)}x`;
+
+    highlightStyleSelect.value = highlightStyle;
+    autoPlayNextToggle.checked = autoPlayNext;
+    followHighlightToggle.checked = followHighlight;
+    buttonPositionSelect.value = buttonPosition;
+    minimumWordsInput.value = minimumWords.toString();
+    maxNodesInput.value = maxNodesProcessed.toString();
+    panelHideDurationInput.value = panelHideDuration.toString();
+
+    const hasLanguageOption = Array.from(
+      translationTargetLanguageSelect.options,
+    ).some((option) => option.value === translationTargetLanguage);
+    translationTargetLanguageSelect.value = hasLanguageOption
+      ? translationTargetLanguage
+      : DEFAULT_SETTINGS.translationTargetLanguage;
+
+    syncProcessableElementsSelect(processableElements);
+    applyProcessableElementsSearchFilter();
+    renderIgnoredDomains();
+    resetIgnoredDomainEditor();
+    clearIgnoredDomainsValidation();
+  };
+
   // Restore settings from storage
   chrome.storage.local.get(
     [
@@ -237,93 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'ignoredDomains',
     ],
     (result) => {
-      const selectedVoice =
-        typeof result.selectedVoice === 'string'
-          ? result.selectedVoice
-          : 'default';
-      const speechRate =
-        typeof result.speechRate === 'number' ? result.speechRate : 1.0;
-      const speechPitch =
-        typeof result.speechPitch === 'number' ? result.speechPitch : 1.0;
-      const highlightStyle =
-        typeof result.highlightStyle === 'string'
-          ? result.highlightStyle
-          : 'default';
-      const autoPlayNext =
-        typeof result.autoPlayNext === 'boolean' ? result.autoPlayNext : true;
-      const followHighlight =
-        typeof result.followHighlight === 'boolean'
-          ? result.followHighlight
-          : true;
-      const buttonPosition =
-        typeof result.buttonPosition === 'string'
-          ? result.buttonPosition
-          : 'left';
-      const minimumWords =
-        typeof result.minimumWords === 'number' ? result.minimumWords : 3;
-      const maxNodesProcessed =
-        typeof result.maxNodesProcessed === 'number'
-          ? result.maxNodesProcessed
-          : 1000;
-      const panelHideDuration =
-        typeof result.panelHideDuration === 'number'
-          ? result.panelHideDuration
-          : 30;
-      const translationTargetLanguage =
-        typeof result.translationTargetLanguage === 'string'
-          ? result.translationTargetLanguage
-          : 'en';
-      const processableElements = normalizeProcessableElements(
-        result.processableElements,
-      );
-      ignoredDomains = normalizeIgnoredDomains(result.ignoredDomains);
-
-      populateVoices(selectedVoice);
-
-      // Set rate slider and display value (enforce 0.05 step increment)
-      const roundedRate = Math.round(speechRate * 20) / 20;
-      rateSlider.value = roundedRate.toString();
-      rateValue.textContent = `${roundedRate.toFixed(2)}x`;
-
-      // Set pitch slider and display value
-      pitchSlider.value = speechPitch.toString();
-      pitchValue.textContent = `${speechPitch.toFixed(1)}x`;
-
-      // Set highlight style select
-      highlightStyleSelect.value = highlightStyle;
-
-      // Set auto play next toggle
-      autoPlayNextToggle.checked = autoPlayNext;
-
-      // Set follow highlight toggle
-      followHighlightToggle.checked = followHighlight;
-
-      // Set button position select
-      buttonPositionSelect.value = buttonPosition;
-
-      // Set minimum words input
-      minimumWordsInput.value = minimumWords.toString();
-
-      // Set maximum nodes input
-      maxNodesInput.value = maxNodesProcessed.toString();
-
-      // Set panel hide duration input
-      panelHideDurationInput.value = panelHideDuration.toString();
-
-      // Set translation target language select
-      const hasLanguageOption = Array.from(
-        translationTargetLanguageSelect.options,
-      ).some((option) => option.value === translationTargetLanguage);
-      translationTargetLanguageSelect.value = hasLanguageOption
-        ? translationTargetLanguage
-        : 'en';
-
-      // Set processable elements multi-select and filtered view
-      syncProcessableElementsSelect(processableElements);
-      applyProcessableElementsSearchFilter();
-      renderIgnoredDomains();
-      resetIgnoredDomainEditor();
-      clearIgnoredDomainsValidation();
+      applySettingsToUi(result as Partial<StorageSchema>);
     },
   );
 
@@ -646,6 +647,38 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       ignoredDomainAddButton.click();
     }
+  });
+
+  resetDefaultSettingsButton.addEventListener('click', () => {
+    const userConfirmed = window.confirm(
+      'Reset all Talkient settings to default values? This cannot be undone.',
+    );
+
+    if (!userConfirmed) {
+      showStatus('Reset to default settings canceled.', 'warning');
+      return;
+    }
+
+    const resetDefaults: Partial<StorageSchema> = {
+      selectedVoice: DEFAULT_SETTINGS.selectedVoice,
+      speechRate: DEFAULT_SETTINGS.speechRate,
+      speechPitch: DEFAULT_SETTINGS.speechPitch,
+      highlightStyle: DEFAULT_SETTINGS.highlightStyle,
+      autoPlayNext: DEFAULT_SETTINGS.autoPlayNext,
+      followHighlight: DEFAULT_SETTINGS.followHighlight,
+      buttonPosition: DEFAULT_SETTINGS.buttonPosition,
+      minimumWords: DEFAULT_SETTINGS.minimumWords,
+      maxNodesProcessed: DEFAULT_SETTINGS.maxNodesProcessed,
+      panelHideDuration: DEFAULT_SETTINGS.panelHideDuration,
+      translationTargetLanguage: DEFAULT_SETTINGS.translationTargetLanguage,
+      processableElements: [...DEFAULT_SETTINGS.processableElements],
+      ignoredDomains: [...DEFAULT_SETTINGS.ignoredDomains],
+    };
+
+    void chrome.storage.local.set(resetDefaults, () => {
+      applySettingsToUi(resetDefaults);
+      showStatus('Settings reset to defaults!', 'success');
+    });
   });
 });
 
