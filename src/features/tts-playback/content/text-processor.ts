@@ -203,6 +203,13 @@ export function shouldProcessNode(node: Node): boolean {
   const parent = node.parentElement;
   if (!parent) return false;
 
+  // Skip if any ancestor has the talkient-processed class (at any depth)
+  let ancestorCheck: HTMLElement | null = parent;
+  while (ancestorCheck) {
+    if (ancestorCheck.classList.contains('talkient-processed')) return false;
+    ancestorCheck = ancestorCheck.parentElement;
+  }
+
   // Check if the node is within a hidden element
   let current: HTMLElement | null = parent;
   while (current) {
@@ -237,9 +244,6 @@ export function shouldProcessNode(node: Node): boolean {
   ) {
     return false;
   }
-
-  // Skip if parent is already processed
-  if (parent.classList.contains('talkient-processed')) return false;
 
   // Skip if parent's direct children contain a play button for this specific text node
   // But allow other text nodes in the same parent to be processed

@@ -93,7 +93,13 @@ function removeTalkientUiElements(): void {
   });
 
   document.querySelectorAll('.talkient-processed').forEach((el) => {
-    el.classList.remove('talkient-processed');
+    const parent = el.parentNode;
+    if (parent) {
+      while (el.firstChild) {
+        parent.insertBefore(el.firstChild, el);
+      }
+      parent.removeChild(el);
+    }
   });
 
   clearHighlight();

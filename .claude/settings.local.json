@@ -33,7 +33,8 @@
       "Bash(gh api:*)",
       "Bash(openspec new:*)",
       "Bash(openspec status:*)",
-      "Bash(openspec instructions:*)"
+      "Bash(openspec instructions:*)",
+      "Bash(openspec list:*)"
     ],
     "deny": [
       "Bash(rm -rf *)",

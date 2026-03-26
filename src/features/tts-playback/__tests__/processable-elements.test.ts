@@ -193,6 +193,35 @@ describe('processable elements - shouldProcessNode', () => {
     });
   });
 
+  describe('talkient-processed ancestry guard', () => {
+    it('should return false for text node whose immediate parent has talkient-processed', () => {
+      const p = document.createElement('p');
+      const wrapper = document.createElement('span');
+      wrapper.classList.add('talkient-processed');
+      const textNode = document.createTextNode('This has enough words here');
+      wrapper.appendChild(textNode);
+      p.appendChild(wrapper);
+      container.appendChild(p);
+
+      expect(shouldProcessNode(textNode)).toBe(false);
+    });
+
+    it('should return false for text node nested deeper inside a talkient-processed ancestor', () => {
+      const p = document.createElement('p');
+      const wrapper = document.createElement('span');
+      wrapper.classList.add('talkient-processed');
+      const innerSpan = document.createElement('span');
+      const textNode = document.createTextNode('This has enough words here');
+      innerSpan.appendChild(textNode);
+      wrapper.appendChild(innerSpan);
+      p.appendChild(wrapper);
+      container.appendChild(p);
+
+      // immediate parent (innerSpan) does NOT have talkient-processed, but ancestor does
+      expect(shouldProcessNode(textNode)).toBe(false);
+    });
+  });
+
   describe('ignored domains', () => {
     it('should skip processing on exact ignored domain', () => {
       setIgnoredDomains([window.location.hostname]);

@@ -166,7 +166,7 @@ describe('content ignored domains integration', () => {
 
     expect(document.getElementById('talkient-control-panel')).toBeNull();
     expect(document.querySelector('.talkient-play-button')).toBeNull();
-    expect(processed.classList.contains('talkient-processed')).toBe(false);
+    expect(document.querySelector('.talkient-processed')).toBeNull();
     expect(mockClearHighlight).toHaveBeenCalled();
   });
 });
