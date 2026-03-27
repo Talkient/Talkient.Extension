@@ -150,6 +150,22 @@ document.addEventListener('DOMContentLoaded', () => {
     ignoredDomainsList.innerHTML = '';
     ignoredDomainsEmpty.hidden = ignoredDomains.length > 0;
 
+    const handleDelete = async (itemIndex: number): Promise<void> => {
+      ignoredDomains = ignoredDomains.filter((_, i) => i !== itemIndex);
+      if (editingIgnoredDomainIndex === itemIndex) {
+        resetIgnoredDomainEditor();
+      } else if (
+        editingIgnoredDomainIndex !== null &&
+        editingIgnoredDomainIndex > itemIndex
+      ) {
+        editingIgnoredDomainIndex -= 1;
+      }
+      await chrome.storage.local.set({ ignoredDomains });
+      renderIgnoredDomains();
+      clearIgnoredDomainsValidation();
+      showStatus('Ignored domain removed!', 'success');
+    };
+
     ignoredDomains.forEach((domain, index) => {
       const item = document.createElement('li');
       item.className = 'ignored-domains-item';
@@ -179,22 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deleteButton.className = 'secondary-button danger-button';
       deleteButton.textContent = 'Delete';
       deleteButton.addEventListener('click', () => {
-        ignoredDomains = ignoredDomains.filter(
-          (_, itemIndex) => itemIndex !== index,
-        );
-        if (editingIgnoredDomainIndex === index) {
-          resetIgnoredDomainEditor();
-        } else if (
-          editingIgnoredDomainIndex !== null &&
-          editingIgnoredDomainIndex > index
-        ) {
-          editingIgnoredDomainIndex -= 1;
-        }
-
-        void chrome.storage.local.set({ ignoredDomains });
-        renderIgnoredDomains();
-        clearIgnoredDomainsValidation();
-        showStatus('Ignored domain removed!', 'success');
+        void handleDelete(index);
       });
 
       actions.appendChild(editButton);
@@ -577,64 +578,66 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   processableElementsSelect.addEventListener('change', () => {
-    const selectedValues = new Set<string>(
-      Array.from(processableElementsSelect.selectedOptions).map(
-        (option) => option.value,
-      ),
-    );
-    const processableElements = PROCESSABLE_ELEMENTS_CATALOG.filter((tag) =>
-      selectedValues.has(tag),
-    );
+    void (async (): Promise<void> => {
+      const selectedValues = new Set<string>(
+        Array.from(processableElementsSelect.selectedOptions).map(
+          (option) => option.value,
+        ),
+      );
+      const processableElements = PROCESSABLE_ELEMENTS_CATALOG.filter((tag) =>
+        selectedValues.has(tag),
+      );
 
-    syncProcessableElementsSelect(processableElements);
-    void chrome.storage.local.set({ processableElements });
+      syncProcessableElementsSelect(processableElements);
+      await chrome.storage.local.set({ processableElements });
 
-    // Show a brief status message
-    showStatus('Processable elements saved!', 'success');
+      // Show a brief status message
+      showStatus('Processable elements saved!', 'success');
+    })();
   });
 
   ignoredDomainAddButton.addEventListener('click', () => {
-    const normalizedDomain = normalizeIgnoredDomainEntry(
-      ignoredDomainInput.value,
-    );
-    if (!normalizedDomain) {
-      setIgnoredDomainsValidation(
-        'Please enter a valid domain (e.g., example.com).',
+    void (async (): Promise<void> => {
+      const normalizedDomain = normalizeIgnoredDomainEntry(
+        ignoredDomainInput.value,
       );
-      showStatus('Invalid ignored domain.', 'error');
-      return;
-    }
+      if (!normalizedDomain) {
+        setIgnoredDomainsValidation(
+          'Please enter a valid domain (e.g., example.com).',
+        );
+        showStatus('Invalid ignored domain.', 'error');
+        return;
+      }
 
-    const duplicateIndex = ignoredDomains.findIndex(
-      (domain) => domain === normalizedDomain,
-    );
+      const duplicateIndex = ignoredDomains.indexOf(normalizedDomain);
 
-    if (
-      duplicateIndex !== -1 &&
-      (editingIgnoredDomainIndex === null ||
-        duplicateIndex !== editingIgnoredDomainIndex)
-    ) {
-      setIgnoredDomainsValidation(
-        'That domain is already in the ignored list.',
-      );
-      showStatus('Duplicate ignored domain.', 'warning');
-      return;
-    }
+      if (
+        duplicateIndex !== -1 &&
+        (editingIgnoredDomainIndex === null ||
+          duplicateIndex !== editingIgnoredDomainIndex)
+      ) {
+        setIgnoredDomainsValidation(
+          'That domain is already in the ignored list.',
+        );
+        showStatus('Duplicate ignored domain.', 'warning');
+        return;
+      }
 
-    if (editingIgnoredDomainIndex === null) {
-      ignoredDomains = [...ignoredDomains, normalizedDomain];
-      showStatus('Ignored domain added!', 'success');
-    } else {
-      ignoredDomains = ignoredDomains.map((domain, index) =>
-        index === editingIgnoredDomainIndex ? normalizedDomain : domain,
-      );
-      showStatus('Ignored domain updated!', 'success');
-    }
+      if (editingIgnoredDomainIndex === null) {
+        ignoredDomains = [...ignoredDomains, normalizedDomain];
+        showStatus('Ignored domain added!', 'success');
+      } else {
+        ignoredDomains = ignoredDomains.map((domain, index) =>
+          index === editingIgnoredDomainIndex ? normalizedDomain : domain,
+        );
+        showStatus('Ignored domain updated!', 'success');
+      }
 
-    void chrome.storage.local.set({ ignoredDomains });
-    renderIgnoredDomains();
-    resetIgnoredDomainEditor();
-    clearIgnoredDomainsValidation();
+      await chrome.storage.local.set({ ignoredDomains });
+      renderIgnoredDomains();
+      resetIgnoredDomainEditor();
+      clearIgnoredDomainsValidation();
+    })();
   });
 
   ignoredDomainCancelButton.addEventListener('click', () => {
@@ -650,35 +653,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetDefaultSettingsButton.addEventListener('click', () => {
-    const userConfirmed = window.confirm(
-      'Reset all Talkient settings to default values? This cannot be undone.',
-    );
+    void (async (): Promise<void> => {
+      const userConfirmed = window.confirm(
+        'Reset all Talkient settings to default values? This cannot be undone.',
+      );
 
-    if (!userConfirmed) {
-      showStatus('Reset to default settings canceled.', 'warning');
-      return;
-    }
+      if (!userConfirmed) {
+        showStatus('Reset to default settings canceled.', 'warning');
+        return;
+      }
 
-    const resetDefaults: Partial<StorageSchema> = {
-      selectedVoice: DEFAULT_SETTINGS.selectedVoice,
-      speechRate: DEFAULT_SETTINGS.speechRate,
-      speechPitch: DEFAULT_SETTINGS.speechPitch,
-      highlightStyle: DEFAULT_SETTINGS.highlightStyle,
-      autoPlayNext: DEFAULT_SETTINGS.autoPlayNext,
-      followHighlight: DEFAULT_SETTINGS.followHighlight,
-      buttonPosition: DEFAULT_SETTINGS.buttonPosition,
-      minimumWords: DEFAULT_SETTINGS.minimumWords,
-      maxNodesProcessed: DEFAULT_SETTINGS.maxNodesProcessed,
-      panelHideDuration: DEFAULT_SETTINGS.panelHideDuration,
-      translationTargetLanguage: DEFAULT_SETTINGS.translationTargetLanguage,
-      processableElements: [...DEFAULT_SETTINGS.processableElements],
-      ignoredDomains: [...DEFAULT_SETTINGS.ignoredDomains],
-    };
+      const resetDefaults: Partial<StorageSchema> = {
+        selectedVoice: DEFAULT_SETTINGS.selectedVoice,
+        speechRate: DEFAULT_SETTINGS.speechRate,
+        speechPitch: DEFAULT_SETTINGS.speechPitch,
+        highlightStyle: DEFAULT_SETTINGS.highlightStyle,
+        autoPlayNext: DEFAULT_SETTINGS.autoPlayNext,
+        followHighlight: DEFAULT_SETTINGS.followHighlight,
+        buttonPosition: DEFAULT_SETTINGS.buttonPosition,
+        minimumWords: DEFAULT_SETTINGS.minimumWords,
+        maxNodesProcessed: DEFAULT_SETTINGS.maxNodesProcessed,
+        panelHideDuration: DEFAULT_SETTINGS.panelHideDuration,
+        translationTargetLanguage: DEFAULT_SETTINGS.translationTargetLanguage,
+        processableElements: [...DEFAULT_SETTINGS.processableElements],
+        ignoredDomains: [...DEFAULT_SETTINGS.ignoredDomains],
+      };
 
-    void chrome.storage.local.set(resetDefaults, () => {
+      await chrome.storage.local.set(resetDefaults);
       applySettingsToUi(resetDefaults);
       showStatus('Settings reset to defaults!', 'success');
-    });
+    })();
   });
 });
 

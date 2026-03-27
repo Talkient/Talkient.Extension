@@ -1221,9 +1221,9 @@ describe('options.ts', () => {
           processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
           ignoredDomains: [],
         }),
-        expect.any(Function),
       );
 
+      await Promise.resolve();
       expect(rateSlider.value).toBe('1');
       expect(pitchSlider.value).toBe('1');
       expect(autoPlayNextToggle.checked).toBe(true);

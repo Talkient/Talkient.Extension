@@ -12,8 +12,8 @@ describe('Processable elements options UI', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
 
-    const fs = require('fs');
-    const path = require('path');
+    const fs = require('node:fs');
+    const path = require('node:path');
     const htmlPath = path.join(__dirname, '../options/options.html');
     const htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
@@ -25,8 +25,8 @@ describe('Processable elements options UI', () => {
       (keys: string[], callback: (result: Record<string, unknown>) => void) => {
         callback({
           selectedVoice: 'default',
-          speechRate: 1.0,
-          speechPitch: 1.0,
+          speechRate: 1,
+          speechPitch: 1,
           highlightStyle: 'default',
           autoPlayNext: true,
           followHighlight: true,
@@ -209,6 +209,7 @@ describe('Processable elements options UI', () => {
         option.selected = ['article', 'p', 'blockquote'].includes(option.value);
       }
       select.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
 
       const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
       const lastCall = calls[calls.length - 1][0];
@@ -321,6 +322,7 @@ describe('Processable elements options UI', () => {
 
       input.value = '  WWW.Example.COM  ';
       addButton.click();
+      await Promise.resolve();
 
       const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
       const lastCall = calls[calls.length - 1][0];
@@ -362,6 +364,7 @@ describe('Processable elements options UI', () => {
 
       input.value = 'example.com';
       addButton.click();
+      await Promise.resolve();
 
       const list = document.getElementById(
         'ignored-domains-list',
@@ -371,6 +374,7 @@ describe('Processable elements options UI', () => {
 
       input.value = 'news.example.com';
       addButton.click();
+      await Promise.resolve();
 
       const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
       const lastCall = calls[calls.length - 1][0];
@@ -393,12 +397,14 @@ describe('Processable elements options UI', () => {
 
       input.value = 'example.com';
       addButton.click();
+      await Promise.resolve();
 
       const list = document.getElementById(
         'ignored-domains-list',
       ) as HTMLUListElement;
       const deleteButton = list.querySelectorAll('button')[1];
       deleteButton.click();
+      await Promise.resolve();
 
       const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
       const lastCall = calls[calls.length - 1][0];

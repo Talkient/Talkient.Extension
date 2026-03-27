@@ -44,12 +44,12 @@ test.describe('Control Panel - Article Requirement', () => {
 
     // Test 4: Verify all buttons are within a configured processable element
     const allButtonsInProcessable = await page.evaluate(() => {
-      const processableTags = ['article', 'p', 'h1', 'h2', 'h3', 'li'];
+      const processableTags = new Set(['article', 'p', 'h1', 'h2', 'h3', 'li']);
       const buttons = document.querySelectorAll('.talkient-play-button');
       return Array.from(buttons).every((button) => {
         let el: Element | null = button.parentElement;
         while (el) {
-          if (processableTags.includes(el.tagName.toLowerCase())) return true;
+          if (processableTags.has(el.tagName.toLowerCase())) return true;
           el = el.parentElement;
         }
         return false;

@@ -21,8 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     voiceSelect.addEventListener('change', () => {
-      const selectedVoice = voiceSelect.value;
-      void chrome.storage.local.set({ selectedVoice });
+      void chrome.storage.local.set({ selectedVoice: voiceSelect.value });
     });
   }
 

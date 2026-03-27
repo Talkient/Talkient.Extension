@@ -275,8 +275,8 @@ kbd {
 }
 
 .primary-button {
-  border: 1px solid #1976d2;
-  background-color: #2196f3;
+  border: 1px solid #1565c0;
+  background-color: #1565c0;
   color: #fff;
   border-radius: 6px;
   padding: 8px 14px;
@@ -285,7 +285,7 @@ kbd {
 }
 
 .primary-button:hover {
-  background-color: #1976d2;
+  background-color: #0d47a1;
 }
 
 .secondary-button {

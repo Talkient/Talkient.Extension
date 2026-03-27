@@ -122,7 +122,7 @@ export function normalizeProcessableElements(tags: unknown): string[] {
 
 const DOMAIN_LABEL_PATTERN = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
 const DOMAIN_PATTERN = new RegExp(
-  `^(?:${DOMAIN_LABEL_PATTERN}\\.)+${DOMAIN_LABEL_PATTERN}$`,
+  String.raw`^(?:${DOMAIN_LABEL_PATTERN}\.)+${DOMAIN_LABEL_PATTERN}$`,
 );
 
 export function normalizeIgnoredDomainEntry(value: unknown): string | null {

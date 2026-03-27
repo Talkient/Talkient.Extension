@@ -76,7 +76,7 @@ function removeTalkientUiElements(): void {
       while (el.firstChild) {
         parent.insertBefore(el.firstChild, el);
       }
-      parent.removeChild(el);
+      el.remove();
     }
   });
 }

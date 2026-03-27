@@ -180,6 +180,31 @@ export function getIgnoredDomains(): string[] {
   return ignoredDomainsCache;
 }
 
+function isInProcessedAncestor(parent: HTMLElement): boolean {
+  let ancestor: HTMLElement | null = parent;
+  while (ancestor) {
+    if (ancestor.classList.contains('talkient-processed')) return true;
+    ancestor = ancestor.parentElement;
+  }
+  return false;
+}
+
+function isHiddenByStyle(parent: HTMLElement): boolean {
+  let current: HTMLElement | null = parent;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0'
+    ) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
+
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
   if (isHostnameIgnored(window.location.hostname, ignoredDomainsCache)) {
@@ -204,25 +229,10 @@ export function shouldProcessNode(node: Node): boolean {
   if (!parent) return false;
 
   // Skip if any ancestor has the talkient-processed class (at any depth)
-  let ancestorCheck: HTMLElement | null = parent;
-  while (ancestorCheck) {
-    if (ancestorCheck.classList.contains('talkient-processed')) return false;
-    ancestorCheck = ancestorCheck.parentElement;
-  }
+  if (isInProcessedAncestor(parent)) return false;
 
   // Check if the node is within a hidden element
-  let current: HTMLElement | null = parent;
-  while (current) {
-    const style = window.getComputedStyle(current);
-    if (
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      style.opacity === '0'
-    ) {
-      return false;
-    }
-    current = current.parentElement;
-  }
+  if (isHiddenByStyle(parent)) return false;
 
   // Skip if parent is a script, style, or button
   if (

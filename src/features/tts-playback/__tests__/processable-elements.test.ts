@@ -55,7 +55,7 @@ describe('processable elements - shouldProcessNode', () => {
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    container.remove();
   });
 
   describe('text inside a configured element', () => {
@@ -263,7 +263,7 @@ describe('processable elements - setProcessableElements', () => {
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    container.remove();
     // Reset to default after each test
     setProcessableElements(['article', 'p', 'h1', 'h2', 'h3', 'li']);
     setIgnoredDomains([]);
