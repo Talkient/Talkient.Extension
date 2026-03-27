@@ -478,24 +478,9 @@ window.addEventListener('beforeprint', () => {
   // Stop any ongoing speech
   safeSendMessage({ type: 'PAUSE_SPEECH' });
 
-  // Remove control panel
-  const controlPanel = document.getElementById('talkient-control-panel');
-  if (controlPanel) {
-    controlPanel.remove();
-  }
-
-  // Remove all play buttons
-  document.querySelectorAll('.talkient-play-button').forEach((button) => {
-    button.remove();
-  });
-
-  // Remove processed markers so elements can be re-processed after print
-  document.querySelectorAll('.talkient-processed').forEach((el) => {
-    el.classList.remove('talkient-processed');
-  });
-
-  // Clear any highlights
-  clearHighlight();
+  // Fully remove all Talkient UI elements and unwrap processed spans so the
+  // DOM is clean before printing and ready for re-processing after print.
+  removeTalkientUiElements();
 });
 
 // Re-add Talkient UI elements after print dialog is closed
