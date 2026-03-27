@@ -244,6 +244,21 @@ describe('processable elements - shouldProcessNode', () => {
 
       expect(shouldProcessNode(textNode)).toBe(true);
     });
+
+    it('should re-evaluate the cached host flag when setIgnoredDomains is called again', () => {
+      const p = document.createElement('p');
+      const textNode = document.createTextNode('This has enough words here');
+      p.appendChild(textNode);
+      container.appendChild(p);
+
+      // First: current host is ignored
+      setIgnoredDomains([window.location.hostname]);
+      expect(shouldProcessNode(textNode)).toBe(false);
+
+      // Second: clear the list – host is no longer ignored
+      setIgnoredDomains([]);
+      expect(shouldProcessNode(textNode)).toBe(true);
+    });
   });
 });
 

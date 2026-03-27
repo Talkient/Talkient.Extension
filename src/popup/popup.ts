@@ -62,13 +62,14 @@ function populateVoices(
       const option = document.createElement('option');
       option.value = voice.voiceName || '';
       option.textContent = `${voice.voiceName} (${voice.lang})`;
-      if (voice.voiceName === selectedVoice) {
-        option.selected = true;
-      }
       voiceSelect.appendChild(option);
     });
-    if (!voiceSelect.value || voiceSelect.value !== selectedVoice) {
-      voiceSelect.value = selectedVoice || 'default';
-    }
+
+    // Select the stored voice only if an option with that value actually exists;
+    // otherwise fall back to 'default' so the select is never left empty.
+    const optionExists = Array.from(voiceSelect.options).some(
+      (opt) => opt.value === selectedVoice,
+    );
+    voiceSelect.value = optionExists ? selectedVoice : 'default';
   });
 }

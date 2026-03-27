@@ -242,6 +242,30 @@ describe('popup.ts - using actual HTML', () => {
       expect(voiceSelect.value).toBe('default');
     });
 
+    it('should fallback to "default" when saved voice is not in the returned voices list', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([{ voiceName: 'Google US English', lang: 'en-US' }]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ selectedVoice: 'Voice That No Longer Exists' });
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      expect(voiceSelect.value).toBe('default');
+    });
+
     it('should persist voice to storage when selection changes', () => {
       (chrome.tts.getVoices as jest.Mock).mockImplementation(
         (callback: (voices: chrome.tts.TtsVoice[]) => void) => {

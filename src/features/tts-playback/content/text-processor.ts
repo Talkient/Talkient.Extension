@@ -28,6 +28,8 @@ let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
 let processableElementsCache: string[] = [...DEFAULT_PROCESSABLE_ELEMENTS]; // Default processable elements
 let ignoredDomainsCache: string[] = []; // Default ignored domains list
+// Per-page cached result of the hostname check so shouldProcessNode() is O(1)
+let isCurrentHostIgnored = false;
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
@@ -173,6 +175,11 @@ export function getProcessableElements(): string[] {
 // Set the ignored domains list (used when it changes in storage)
 export function setIgnoredDomains(domains: string[]): void {
   ignoredDomainsCache = normalizeIgnoredDomains(domains);
+  // Cache the result for the current page so shouldProcessNode() is O(1)
+  isCurrentHostIgnored = isHostnameIgnored(
+    window.location.hostname,
+    ignoredDomainsCache,
+  );
 }
 
 // Get the current ignored domains list
@@ -207,7 +214,7 @@ function isHiddenByStyle(parent: HTMLElement): boolean {
 
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
-  if (isHostnameIgnored(window.location.hostname, ignoredDomainsCache)) {
+  if (isCurrentHostIgnored) {
     return false;
   }
 
