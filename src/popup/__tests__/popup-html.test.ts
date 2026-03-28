@@ -146,8 +146,9 @@ describe('popup.ts - using actual HTML', () => {
   describe('voice selector', () => {
     beforeEach(() => {
       jest.resetModules();
-      // Re-import mock so jest.fn() instances are fresh after resetModules
-      jest.mock('./mocks/chrome');
+      // Re-require the mock so its side-effect re-runs and global.chrome
+      // gets fresh jest.fn() instances after resetModules.
+      require('./mocks/chrome');
     });
 
     it('should render the voice selector in the DOM', () => {

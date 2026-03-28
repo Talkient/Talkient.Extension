@@ -78,6 +78,24 @@ describe('DEFAULT_SETTINGS.processableElements', () => {
     ).toEqual(['article']);
   });
 
+  it('should normalize upper/mixed-case tags to lowercase', () => {
+    expect(normalizeProcessableElements(['Article', 'P', 'H1'])).toEqual([
+      'article',
+      'p',
+      'h1',
+    ]);
+  });
+
+  it('should trim whitespace around tag names before validating', () => {
+    expect(normalizeProcessableElements(['  p  ', ' article ', 'h2 '])).toEqual(
+      ['p', 'article', 'h2'],
+    );
+  });
+
+  it('should deduplicate case-insensitive duplicates', () => {
+    expect(normalizeProcessableElements(['P', 'p', 'P'])).toEqual(['p']);
+  });
+
   it('should keep empty array as empty list', () => {
     expect(normalizeProcessableElements([])).toEqual([]);
   });

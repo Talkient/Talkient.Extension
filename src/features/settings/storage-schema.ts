@@ -107,13 +107,12 @@ export function normalizeProcessableElements(tags: unknown): string[] {
   const seen = new Set<string>();
   const normalized: string[] = [];
   for (const tag of tags) {
-    if (
-      typeof tag === 'string' &&
-      PROCESSABLE_ELEMENTS_SET.has(tag) &&
-      !seen.has(tag)
-    ) {
-      seen.add(tag);
-      normalized.push(tag);
+    if (typeof tag === 'string') {
+      const norm = tag.trim().toLowerCase();
+      if (PROCESSABLE_ELEMENTS_SET.has(norm) && !seen.has(norm)) {
+        seen.add(norm);
+        normalized.push(norm);
+      }
     }
   }
 
