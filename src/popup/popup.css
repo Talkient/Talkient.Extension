@@ -36,6 +36,44 @@ body {
   margin-top: 2px;
 }
 
+.voice-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.voice-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.voice-select {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.voice-select:hover {
+  border-color: #2196f3;
+}
+
+.voice-select:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15);
+}
+
 .settings-link {
   display: flex;
   align-items: center;

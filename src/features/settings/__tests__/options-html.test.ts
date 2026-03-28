@@ -166,6 +166,8 @@ describe('options.ts - using actual HTML', () => {
           'maxNodesProcessed',
           'panelHideDuration',
           'translationTargetLanguage',
+          'processableElements',
+          'ignoredDomains',
         ],
         expect.any(Function),
       );

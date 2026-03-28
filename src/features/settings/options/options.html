@@ -16,14 +16,14 @@
         <h2>Voice Settings</h2>
         <div class="setting-row">
           <span class="setting-label">Auto play next item</span>
-          <label class="toggle-switch">
+          <label class="toggle-switch" aria-label="Auto play next item">
             <input type="checkbox" id="auto-play-next-toggle" />
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="setting-row">
           <span class="setting-label">Follow highlight</span>
-          <label class="toggle-switch">
+          <label class="toggle-switch" aria-label="Follow highlight">
             <input type="checkbox" id="follow-highlight-toggle" />
             <span class="toggle-slider"></span>
           </label>
@@ -145,6 +145,95 @@
             <option value="el">Greek</option>
             <option value="hi">Hindi</option>
           </select>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h2>Processable Elements</h2>
+        <p class="setting-hint">
+          Select which HTML elements will receive play buttons.
+        </p>
+        <div class="processable-elements-controls">
+          <label for="processable-elements-search" class="sr-only"
+            >Search processable elements</label
+          >
+          <input
+            type="search"
+            id="processable-elements-search"
+            class="search-input"
+            placeholder="Search tags (e.g., h, block, section)"
+          />
+          <select
+            id="processable-elements-select"
+            class="multi-select-input"
+            multiple
+            size="10"
+          ></select>
+          <p id="processable-elements-selected-count" class="selection-meta">
+            0 selected
+          </p>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h2>Ignored Domains</h2>
+        <p class="setting-hint">
+          Talkient will stay disabled on these domains and their subdomains.
+        </p>
+        <div class="ignored-domains-controls">
+          <div class="ignored-domains-input-row">
+            <label for="ignored-domain-input" class="sr-only"
+              >Ignored domain input</label
+            >
+            <input
+              type="text"
+              id="ignored-domain-input"
+              class="search-input"
+              placeholder="example.com"
+              autocomplete="off"
+            />
+            <button
+              id="ignored-domain-add-button"
+              class="primary-button"
+              type="button"
+            >
+              Add
+            </button>
+            <button
+              id="ignored-domain-cancel-button"
+              class="secondary-button"
+              type="button"
+              hidden
+            >
+              Cancel
+            </button>
+          </div>
+          <p
+            id="ignored-domains-validation"
+            class="validation-message"
+            aria-live="polite"
+          ></p>
+          <p id="ignored-domains-empty" class="selection-meta">
+            No ignored domains configured.
+          </p>
+          <ul id="ignored-domains-list" class="ignored-domains-list"></ul>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h2>Reset Settings</h2>
+        <p class="setting-hint">
+          Restore all Talkient settings to their default values.
+        </p>
+        <div class="setting-row">
+          <button
+            id="reset-default-settings-button"
+            class="secondary-button danger-button"
+            type="button"
+            data-testid="reset-default-settings-button"
+          >
+            Reset to default settings
+          </button>
         </div>
       </div>
 

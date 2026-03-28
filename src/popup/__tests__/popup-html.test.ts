@@ -143,6 +143,160 @@ describe('popup.ts - using actual HTML', () => {
     });
   });
 
+  describe('voice selector', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      // Re-require the mock so its side-effect re-runs and global.chrome
+      // gets fresh jest.fn() instances after resetModules.
+      require('./mocks/chrome');
+    });
+
+    it('should render the voice selector in the DOM', () => {
+      const voiceSelect = document.getElementById('voice-select');
+      expect(voiceSelect).toBeTruthy();
+      expect(voiceSelect?.tagName.toLowerCase()).toBe('select');
+    });
+
+    it('should have a voice label', () => {
+      const label = document.querySelector('label[for="voice-select"]');
+      expect(label).toBeTruthy();
+    });
+
+    it('should populate voices from chrome.tts.getVoices on DOMContentLoaded', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([
+            { voiceName: 'Google US English', lang: 'en-US' },
+            { voiceName: 'Google Deutsch', lang: 'de-DE' },
+          ]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      const options = Array.from(voiceSelect.options).map((o) => o.value);
+      expect(options).toContain('default');
+      expect(options).toContain('Google US English');
+      expect(options).toContain('Google Deutsch');
+    });
+
+    it('should pre-select the saved voice from storage', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([
+            { voiceName: 'Google US English', lang: 'en-US' },
+            { voiceName: 'Google Deutsch', lang: 'de-DE' },
+          ]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ selectedVoice: 'Google Deutsch' });
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      expect(voiceSelect.value).toBe('Google Deutsch');
+    });
+
+    it('should select "default" when no voice is saved in storage', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([{ voiceName: 'Google US English', lang: 'en-US' }]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      expect(voiceSelect.value).toBe('default');
+    });
+
+    it('should fallback to "default" when saved voice is not in the returned voices list', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([{ voiceName: 'Google US English', lang: 'en-US' }]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ selectedVoice: 'Voice That No Longer Exists' });
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      expect(voiceSelect.value).toBe('default');
+    });
+
+    it('should persist voice to storage when selection changes', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([{ voiceName: 'Google US English', lang: 'en-US' }]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      voiceSelect.value = 'Google US English';
+      voiceSelect.dispatchEvent(new Event('change'));
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        selectedVoice: 'Google US English',
+      });
+    });
+  });
+
   describe('graceful handling of missing elements', () => {
     beforeEach(() => {
       // Reset modules to clear cached popup script

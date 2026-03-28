@@ -441,7 +441,9 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       } else {
       }
     } else {
-      expect(afterMiddleScrollY).toBeGreaterThan(beforeMiddleScrollY);
+      // The highlighted paragraph may be above or below the current position.
+      // followHighlight should move the viewport toward it in either direction.
+      expect(afterMiddleScrollY).not.toBe(beforeMiddleScrollY);
     }
 
     // Take a screenshot

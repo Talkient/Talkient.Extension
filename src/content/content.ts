@@ -14,6 +14,8 @@ import {
   setMaxNodesProcessed,
   loadButtonPositionFromStorage,
   setButtonPosition,
+  setIgnoredDomains,
+  setProcessableElements,
   getTotalProcessedChars,
   getRemainingChars,
   subtractRemainingChars,
@@ -31,6 +33,7 @@ import {
 } from './highlight';
 import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
+import { isHostnameIgnored } from '../features/settings/storage-schema';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from '../shared/api/messaging';
@@ -42,6 +45,12 @@ import {
 } from './translation-result';
 
 const CHARS_PER_SECOND_AT_1X = 14;
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+}
 
 function updateRemainingTimeDisplay(): void {
   const panel = document.getElementById('talkient-control-panel');
@@ -71,6 +80,29 @@ function updateRemainingTimeDisplay(): void {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function removeTalkientUiElements(): void {
+  const controlPanel = document.getElementById('talkient-control-panel');
+  if (controlPanel) {
+    controlPanel.remove();
+  }
+
+  document.querySelectorAll('.talkient-play-button').forEach((button) => {
+    button.remove();
+  });
+
+  document.querySelectorAll('.talkient-processed').forEach((el) => {
+    const parent = el.parentNode;
+    if (parent) {
+      while (el.firstChild) {
+        parent.insertBefore(el.firstChild, el);
+      }
+      el.remove();
+    }
+  });
+
+  clearHighlight();
 }
 
 // Type guard for content script messages
@@ -236,24 +268,51 @@ void loadButtonPositionFromStorage().then(() => {
     );
   });
 
-  // Create and inject the control panel
-  createControlPanel();
+  // Load processable elements before creating the control panel so the panel
+  // visibility check uses the correct (possibly user-configured) tag list.
+  chrome.storage.local.get(
+    ['processableElements', 'ignoredDomains'],
+    (result) => {
+      if (isStringArray(result.processableElements)) {
+        setProcessableElements(result.processableElements);
+      }
 
-  // Check if play buttons are enabled before initial processing
-  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
-    // Default to true if not set
-    const isEnabled = result.playButtonsEnabled !== false;
+      if (isStringArray(result.ignoredDomains)) {
+        setIgnoredDomains(result.ignoredDomains);
+      }
 
-    if (isEnabled) {
-      // Initial processing
-      resetEstimateCounters();
-      processTextElements(() => updateRemainingTimeDisplay());
-    } else {
-      console.log(
-        '[Talkient] Play buttons are disabled. Skipping initial processing.',
-      );
-    }
-  });
+      const currentIgnoredDomains = isStringArray(result.ignoredDomains)
+        ? result.ignoredDomains
+        : [];
+
+      if (isHostnameIgnored(window.location.hostname, currentIgnoredDomains)) {
+        console.log(
+          '[Talkient] Domain is ignored. Skipping initial UI injection.',
+        );
+        removeTalkientUiElements();
+        return;
+      }
+
+      // Create and inject the control panel
+      createControlPanel();
+
+      // Check if play buttons are enabled before initial processing
+      chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+        // Default to true if not set
+        const isEnabled = result.playButtonsEnabled !== false;
+
+        if (isEnabled) {
+          // Initial processing
+          resetEstimateCounters();
+          processTextElements(() => updateRemainingTimeDisplay());
+        } else {
+          console.log(
+            '[Talkient] Play buttons are disabled. Skipping initial processing.',
+          );
+        }
+      });
+    },
+  );
 });
 
 // Listen for storage changes to update highlight style in real-time
@@ -371,6 +430,38 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         processTextElements(() => updateRemainingTimeDisplay());
       }
     }
+
+    if (changes.processableElements) {
+      const newElements = changes.processableElements.newValue;
+      if (isStringArray(newElements)) {
+        setProcessableElements(newElements);
+        console.log(
+          `[Talkient] Processable elements updated to: ${newElements.join(', ')}`,
+        );
+      }
+    }
+
+    if (changes.ignoredDomains) {
+      const newIgnoredDomains = changes.ignoredDomains.newValue;
+      if (isStringArray(newIgnoredDomains)) {
+        setIgnoredDomains(newIgnoredDomains);
+        const isIgnored = isHostnameIgnored(
+          window.location.hostname,
+          newIgnoredDomains,
+        );
+        console.log(
+          `[Talkient] Ignored domains updated to: ${newIgnoredDomains.join(', ')}`,
+        );
+
+        if (isIgnored) {
+          removeTalkientUiElements();
+        } else {
+          createControlPanel();
+          resetEstimateCounters();
+          processTextElements(() => updateRemainingTimeDisplay());
+        }
+      }
+    }
   }
 });
 
@@ -387,24 +478,9 @@ window.addEventListener('beforeprint', () => {
   // Stop any ongoing speech
   safeSendMessage({ type: 'PAUSE_SPEECH' });
 
-  // Remove control panel
-  const controlPanel = document.getElementById('talkient-control-panel');
-  if (controlPanel) {
-    controlPanel.remove();
-  }
-
-  // Remove all play buttons
-  document.querySelectorAll('.talkient-play-button').forEach((button) => {
-    button.remove();
-  });
-
-  // Remove processed markers so elements can be re-processed after print
-  document.querySelectorAll('.talkient-processed').forEach((el) => {
-    el.classList.remove('talkient-processed');
-  });
-
-  // Clear any highlights
-  clearHighlight();
+  // Fully remove all Talkient UI elements and unwrap processed spans so the
+  // DOM is clean before printing and ready for re-processing after print.
+  removeTalkientUiElements();
 });
 
 // Re-add Talkient UI elements after print dialog is closed

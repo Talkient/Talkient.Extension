@@ -361,7 +361,7 @@ test.describe('Talkient Print Behavior Tests', () => {
     // Get the absolute path to our no-article test page
     const testHtmlPath = path.resolve(
       __dirname,
-      'test-pages/no-article-test.html',
+      'test-pages/no-processable-elements-test.html',
     );
 
     // Convert to file:// URL format

@@ -113,7 +113,7 @@ describe('Control Panel Module', () => {
 
       // Verify the console log message
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[Talkient.ControlPanel] No article element found in DOM. Control panel will not be created.',
+        '[Talkient.ControlPanel] No processable elements found in DOM. Control panel will not be created.',
       );
 
       consoleLogSpy.mockRestore();

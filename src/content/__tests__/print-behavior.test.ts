@@ -103,9 +103,16 @@ function simulateBeforePrint(): void {
     button.remove();
   });
 
-  // Remove processed markers so elements can be re-processed after print
+  // Unwrap .talkient-processed spans so the DOM is fully restored before
+  // printing/re-processing (mirrors removeTalkientUiElements in content.ts)
   document.querySelectorAll('.talkient-processed').forEach((el) => {
-    el.classList.remove('talkient-processed');
+    const parent = el.parentNode;
+    if (parent) {
+      while (el.firstChild) {
+        parent.insertBefore(el.firstChild, el);
+      }
+      el.remove();
+    }
   });
 
   // Clear any highlights
@@ -404,8 +411,9 @@ describe('Print Behavior', () => {
     });
 
     test('should handle afterprint on page without article element', async () => {
-      // Remove article element
-      document.body.innerHTML = '<div><p>No article here</p></div>';
+      // Remove article element and all other processable elements
+      document.body.innerHTML =
+        '<div><span>No processable elements here</span></div>';
 
       // Should not throw when simulating afterprint
       await expect(simulateAfterPrint()).resolves.not.toThrow();

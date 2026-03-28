@@ -14,12 +14,22 @@ import {
   getHighlightingStyle,
   getCurrentHighlightedElement,
 } from '../../../content/highlight';
+import {
+  DEFAULT_PROCESSABLE_ELEMENTS,
+  isHostnameIgnored,
+  normalizeIgnoredDomains,
+  normalizeProcessableElements,
+} from '../../settings/storage-schema';
 
 // Cache for settings
 let minimumWordsCache = 3; // Default minimum words
 let speechRateCache = 1.0; // Default speech rate
 let maxNodesProcessedCache = 1000; // Default maximum nodes processed
 let buttonPositionCache: 'left' | 'right' = 'left'; // Default button position
+let processableElementsCache: string[] = [...DEFAULT_PROCESSABLE_ELEMENTS]; // Default processable elements
+let ignoredDomainsCache: string[] = []; // Default ignored domains list
+// Per-page cached result of the hostname check so shouldProcessNode() is O(1)
+let isCurrentHostIgnored = false;
 
 // Reading time estimate counters
 let totalProcessedChars = 0;
@@ -152,8 +162,62 @@ export function setButtonPosition(value: 'left' | 'right'): void {
   buttonPositionCache = value;
 }
 
+// Set the processable elements list (used when it changes in storage)
+export function setProcessableElements(tags: string[]): void {
+  processableElementsCache = normalizeProcessableElements(tags);
+}
+
+// Get the current processable elements list
+export function getProcessableElements(): string[] {
+  return processableElementsCache;
+}
+
+// Set the ignored domains list (used when it changes in storage)
+export function setIgnoredDomains(domains: string[]): void {
+  ignoredDomainsCache = normalizeIgnoredDomains(domains);
+  // Cache the result for the current page so shouldProcessNode() is O(1)
+  isCurrentHostIgnored = isHostnameIgnored(
+    window.location.hostname,
+    ignoredDomainsCache,
+  );
+}
+
+// Get the current ignored domains list
+export function getIgnoredDomains(): string[] {
+  return ignoredDomainsCache;
+}
+
+function isInProcessedAncestor(parent: HTMLElement): boolean {
+  let ancestor: HTMLElement | null = parent;
+  while (ancestor) {
+    if (ancestor.classList.contains('talkient-processed')) return true;
+    ancestor = ancestor.parentElement;
+  }
+  return false;
+}
+
+function isHiddenByStyle(parent: HTMLElement): boolean {
+  let current: HTMLElement | null = parent;
+  while (current) {
+    const style = window.getComputedStyle(current);
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0'
+    ) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
+
 // Function to check if a node should be processed
 export function shouldProcessNode(node: Node): boolean {
+  if (isCurrentHostIgnored) {
+    return false;
+  }
+
   // Skip if node is null or not a text node
   if (!node || node.nodeType !== Node.TEXT_NODE) return false;
 
@@ -171,19 +235,11 @@ export function shouldProcessNode(node: Node): boolean {
   const parent = node.parentElement;
   if (!parent) return false;
 
+  // Skip if any ancestor has the talkient-processed class (at any depth)
+  if (isInProcessedAncestor(parent)) return false;
+
   // Check if the node is within a hidden element
-  let current: HTMLElement | null = parent;
-  while (current) {
-    const style = window.getComputedStyle(current);
-    if (
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      style.opacity === '0'
-    ) {
-      return false;
-    }
-    current = current.parentElement;
-  }
+  if (isHiddenByStyle(parent)) return false;
 
   // Skip if parent is a script, style, or button
   if (
@@ -205,9 +261,6 @@ export function shouldProcessNode(node: Node): boolean {
   ) {
     return false;
   }
-
-  // Skip if parent is already processed
-  if (parent.classList.contains('talkient-processed')) return false;
 
   // Skip if parent's direct children contain a play button for this specific text node
   // But allow other text nodes in the same parent to be processed
@@ -231,9 +284,17 @@ export function shouldProcessNode(node: Node): boolean {
   const controlPanel = parent.closest('#talkient-control-panel');
   if (controlPanel) return false;
 
-  // Only process nodes that are within an <article> tag
-  const article = parent.closest('article');
-  if (!article) return false;
+  // Only process nodes within a configured processable element
+  let ancestor: HTMLElement | null = parent;
+  let insideProcessable = false;
+  while (ancestor) {
+    if (processableElementsCache.includes(ancestor.tagName.toLowerCase())) {
+      insideProcessable = true;
+      break;
+    }
+    ancestor = ancestor.parentElement;
+  }
+  if (!insideProcessable) return false;
 
   return true;
 }
