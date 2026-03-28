@@ -9,6 +9,10 @@
         "chrome-devtools-mcp@latest",
         "--browser-url=http://127.0.0.1:9222"
       ]
+    },
+    "paper": {
+      "type": "http",
+      "url": "http://127.0.0.1:29979/mcp"
     }
   }
 }
