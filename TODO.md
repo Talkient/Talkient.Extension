@@ -28,6 +28,9 @@
   - Playwright + Playwright CLI
 - Design System for Control panel, translation result and play button
 - Translation: Double left-click
+- Organize the extension page (Chrome Web Store)
+  - Screenshots
+  - Descriptions
 
 # V2
 
@@ -43,3 +46,4 @@
   - [ ] Submit a new version on Chrome Web Store
 - [ ] Design system + skill with [Paper MCP](https://paper.design/docs/mcp)
 - Design System for options and popup
+- White/dark mode
