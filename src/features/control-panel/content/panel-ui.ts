@@ -54,7 +54,7 @@ export function createControlPanel(): void {
     <div class="talkient-panel-content">
       <div class="talkient-control-section">
         <div class="talkient-main-controls">
-          <button class="talkient-control-btn primary" title="Play/Pause" disabled>
+          <button class="talkient-control-btn primary" title="Play/Pause">
             <svg class="talkient-control-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>

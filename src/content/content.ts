@@ -33,6 +33,7 @@ import {
 } from './highlight';
 import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
+import { updatePanelPlayIcon } from '../features/control-panel/content/panel-controller';
 import { isHostnameIgnored } from '../features/settings/storage-schema';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
@@ -153,6 +154,9 @@ chrome.runtime.onMessage.addListener(
       subtractRemainingChars(getCurrentPlayingChars());
       updateRemainingTimeDisplay();
 
+      // Reset panel button to play icon
+      updatePanelPlayIcon('play');
+
       // Clear text highlighting
       clearHighlight();
 
@@ -189,6 +193,9 @@ chrome.runtime.onMessage.addListener(
           button.innerHTML = getSvgIcon('play');
         }
       });
+
+      // Reset panel button to play icon
+      updatePanelPlayIcon('play');
 
       // Clear text highlighting
       clearHighlight();
@@ -242,7 +249,10 @@ chrome.runtime.onMessage.addListener(
 );
 
 // Update remaining time display whenever a play button is clicked manually
-setOnPlayStartCallback(() => updateRemainingTimeDisplay());
+setOnPlayStartCallback(() => {
+  updateRemainingTimeDisplay();
+  updatePanelPlayIcon('pause');
+});
 
 // Load highlight style from storage
 void loadHighlightStyleFromStorage();

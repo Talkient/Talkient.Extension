@@ -405,6 +405,104 @@ test.describe('Talkient Control Panel', () => {
     });
   });
 
+  test('panel play button starts and pauses speech', async ({ page }) => {
+    test.setTimeout(90000);
+
+    // beforeEach already navigated to the semantic-kernel page and expanded the panel.
+    // Wait for at least one play button to be injected by the content script.
+    await page.waitForSelector('.talkient-play-button', { timeout: 15000 });
+
+    // ── Part 1: verify panel button is enabled and shows play icon ──────────
+    const primaryBtn = page.locator(
+      '#talkient-control-panel .talkient-control-btn.primary',
+    );
+    await expect(primaryBtn).toBeEnabled();
+
+    const hasPanelPlayIcon = await page.evaluate(() => {
+      const panel = document.getElementById('talkient-control-panel');
+      const btn = panel?.querySelector('.talkient-control-btn.primary');
+      return btn?.innerHTML.includes('M8 5v14l11-7z') ?? false;
+    });
+    expect(hasPanelPlayIcon).toBe(true);
+
+    // ── Part 2: verify panel play button click-through to first play button ─
+    // Attach a one-time click spy on the first .talkient-play-button from the
+    // main world.  DOM event listeners are world-agnostic in Chrome, so the spy
+    // will fire even when safeClickButton dispatches the event from the isolated
+    // content-script world.
+    await page.evaluate(() => {
+      const btn = document.querySelector(
+        '.talkient-play-button',
+      );
+      (window as unknown as Record<string, unknown>).__talkientPlayBtnClicked =
+        false;
+      if (btn) {
+        btn.addEventListener(
+          'click',
+          () => {
+            (
+              window as unknown as Record<string, unknown>
+            ).__talkientPlayBtnClicked = true;
+          },
+          { once: true },
+        );
+      }
+    });
+
+    // Click the panel play button
+    await primaryBtn.click();
+
+    // Give the click a moment to propagate through the extension messaging
+    await page.waitForTimeout(500);
+
+    // The first .talkient-play-button should have received a click
+    const playBtnWasClicked = await page.evaluate(
+      () =>
+        (window as unknown as Record<string, unknown>)
+          .__talkientPlayBtnClicked ?? false,
+    );
+    expect(playBtnWasClicked).toBe(true);
+
+    // ── Part 3: verify pause → play icon flip when speech is "active" ───────
+    // Simulate the panel icon being in "pause" state (as content.ts would set it
+    // once TTS starts) by directly setting the button innerHTML.  This makes the
+    // pause-→-play branch of the click handler reliably testable without
+    // depending on TTS actually being available in the test environment.
+    await page.evaluate(() => {
+      const panel = document.getElementById('talkient-control-panel');
+      const btn = panel?.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement | null;
+      if (btn) {
+        btn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">' +
+          '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      }
+    });
+
+    const hasPanelPauseIcon = await page.evaluate(() => {
+      const panel = document.getElementById('talkient-control-panel');
+      const btn = panel?.querySelector('.talkient-control-btn.primary');
+      return (
+        btn?.innerHTML.includes('M6 19h4V5H6v14zm8-14v14h4V5h-4z') ?? false
+      );
+    });
+    expect(hasPanelPauseIcon).toBe(true);
+
+    // Click the panel play button — it detects pause icon → sends PAUSE_SPEECH
+    await primaryBtn.click();
+
+    // The PAUSE_SPEECH callback resets the icon to play
+    await page.waitForFunction(
+      () => {
+        const panel = document.getElementById('talkient-control-panel');
+        const btn = panel?.querySelector('.talkient-control-btn.primary');
+        return btn?.innerHTML.includes('M8 5v14l11-7z') ?? false;
+      },
+      { timeout: 10000 },
+    );
+  });
+
   test('should not recreate panel on page reload when cookie is set', async ({
     page,
     context: _context,

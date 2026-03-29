@@ -6,6 +6,7 @@ import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';
 import { setSpeechRate } from '../../tts-playback/content/index';
+import { safeClickButton } from '../../tts-playback/content/play-button';
 import { getPanelHideDuration, setDomainHideCookie } from './panel-visibility';
 
 /**
@@ -145,6 +146,8 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 
   if (!rateSlider || !rateValue) return;
 
+  rateSlider.disabled = false;
+
   // Load the current rate from storage
   chrome.storage.local.get(['speechRate'], (result) => {
     const speechRate =
@@ -163,13 +166,6 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
     rateSlider.value = speechRate.toString();
     rateValue.textContent = `${speechRate.toFixed(2)}x`;
     void chrome.storage.local.set({ speechRate });
-
-    const playButton = panel.querySelector(
-      '.talkient-control-btn.primary',
-    ) as HTMLButtonElement;
-    if (playButton && playButton.disabled) {
-      playButton.disabled = false;
-    }
 
     setSpeechRate(speechRate);
 
@@ -190,14 +186,6 @@ function setupMainControlButton(panel: HTMLElement): void {
   // Set the initial icon to play
   mainButton.innerHTML = getSvgIcon('play');
 
-  // Enable the speech rate slider
-  const rateSlider = panel.querySelector(
-    '.talkient-rate-slider',
-  ) as HTMLInputElement;
-  if (rateSlider) {
-    rateSlider.disabled = false;
-  }
-
   mainButton.addEventListener('click', () => {
     const isPlaying = isSvgPauseIcon(
       mainButton.querySelector('svg') as SVGElement,
@@ -209,11 +197,45 @@ function setupMainControlButton(panel: HTMLElement): void {
         clearHighlight();
       });
     } else {
-      alert(
-        'Please select text on the page to speak, or use the play buttons next to paragraphs.',
-      );
+      // If speech is paused, the paused play button still shows the pause icon.
+      // Find it first so we resume that text instead of starting from the top.
+      const pausedButton = Array.from(
+        document.querySelectorAll('.talkient-play-button'),
+      ).find((btn) =>
+        isSvgPauseIcon(btn.querySelector('svg') as SVGElement),
+      ) as HTMLElement | undefined;
+
+      if (pausedButton) {
+        // Reset to play icon so its click handler sends SPEAK_TEXT (SW resumes)
+        pausedButton.innerHTML = getSvgIcon('play');
+        safeClickButton(pausedButton);
+      } else {
+        const playButton = document.querySelector(
+          '.talkient-play-button',
+        );
+        if (playButton) {
+          safeClickButton(playButton);
+        } else {
+          console.warn(
+            '[Talkient.ControlPanel] No .talkient-play-button found on page.',
+          );
+        }
+      }
     }
   });
+}
+
+/**
+ * Updates the panel primary play/pause button icon.
+ */
+export function updatePanelPlayIcon(state: 'play' | 'pause'): void {
+  const panel = document.getElementById('talkient-control-panel');
+  if (!panel) return;
+  const button = panel.querySelector(
+    '.talkient-control-btn.primary',
+  );
+  if (!button) return;
+  button.innerHTML = getSvgIcon(state);
 }
 
 /**
