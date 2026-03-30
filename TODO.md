@@ -2,7 +2,6 @@
 
 ## MVP
 
-- Remove Ruler?
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
 - Claude Code rules

@@ -9,6 +9,7 @@ This is a Web Extension built in Typescript and compiled to run in JavaScript.
 - MUST always use `pnpm` over `npm` or `yarn`;
 - MUST always use import on typescript files (es2016);
 - MUST avoid change code unless strictly necessary;
+- MUST fix the root cause for failing unit or e2e tests (NEVER skip, comment nor remove the test)
 
 ## Run commands
 
