@@ -4,13 +4,13 @@
 import { isPanelHiddenForDomain } from './panel-visibility';
 import { setupControlPanelEventListeners } from './panel-controller';
 import { getProcessableElements } from '../../tts-playback/content/text-processor';
+import { VOICE_SELECT_ID } from './panel-constants';
 
 /**
  * Panel UI Module
  * Handles creation and lifecycle of the Talkient control panel DOM element
  */
-
-export const VOICE_SELECT_ID = 'talkient-voice-select';
+export { VOICE_SELECT_ID };
 
 // Function to create and inject the control panel
 export function createControlPanel(): void {

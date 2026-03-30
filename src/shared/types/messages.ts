@@ -108,7 +108,10 @@ export interface ErrorResponse {
   disabled?: boolean;
 }
 
-export type MessageResponse = SuccessResponse | ErrorResponse;
+export type MessageResponse =
+  | SuccessResponse
+  | ErrorResponse
+  | GetVoicesResponse;
 
 // Type guard functions
 export function isSpeakTextMessage(

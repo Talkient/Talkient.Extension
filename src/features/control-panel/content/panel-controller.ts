@@ -2,15 +2,13 @@
 /// <reference types="chrome" />
 
 import { safeSendMessage } from '../../../shared/api/messaging';
-import type {
-  MessageResponse,
-  GetVoicesResponse,
-} from '../../../shared/types/messages';
+import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';
 import { setSpeechRate } from '../../tts-playback/content/index';
 import { safeClickButton } from '../../tts-playback/content/play-button';
 import { getPanelHideDuration, setDomainHideCookie } from './panel-visibility';
+import { VOICE_SELECT_ID } from './panel-constants';
 
 /**
  * Sets up all event listeners for the control panel
@@ -180,35 +178,47 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 /**
  * Populates the voice selector with available TTS voices
  */
-function populateVoices(
-  voiceSelect: HTMLSelectElement,
-  selectedVoice: string,
-): void {
+function populateVoices(voiceSelect: HTMLSelectElement): void {
   voiceSelect.innerHTML = '';
   const defaultOption = document.createElement('option');
   defaultOption.value = 'default';
   defaultOption.textContent = 'Default Voice';
   voiceSelect.appendChild(defaultOption);
 
-  safeSendMessage({ type: 'GET_VOICES' }, (response) => {
-    if (!response?.success) return;
-     
-    const voices: chrome.tts.TtsVoice[] = (
-      response as unknown as GetVoicesResponse
-    ).voices;
-    if (!voices) return;
-    voices.forEach((voice) => {
-      const option = document.createElement('option');
-      option.value = voice.voiceName || '';
-      option.textContent = `${voice.voiceName} (${voice.lang})`;
-      voiceSelect.appendChild(option);
-    });
+  safeSendMessage(
+    { type: 'GET_VOICES' },
+    (response: MessageResponse | undefined) => {
+      if (!response?.success) return;
+      if (!('voices' in response)) return;
 
-    const optionExists = Array.from(voiceSelect.options).some(
-      (opt) => opt.value === selectedVoice,
-    );
-    voiceSelect.value = optionExists ? selectedVoice : 'default';
-  });
+      const voices = response.voices ?? [];
+      if (!voices.length) return;
+
+      const usedVoiceNames = new Set<string>();
+      voices.forEach((voice) => {
+        const name = voice.voiceName;
+        if (!name || usedVoiceNames.has(name)) return;
+        usedVoiceNames.add(name);
+
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = `${name} (${voice.lang || 'Unknown language'})`;
+        voiceSelect.appendChild(option);
+      });
+
+      // Re-read selectedVoice from storage to avoid using a stale value
+      chrome.storage.local.get(['selectedVoice'], (result) => {
+        const latestVoice =
+          typeof result.selectedVoice === 'string'
+            ? result.selectedVoice
+            : 'default';
+        const optionExists = Array.from(voiceSelect.options).some(
+          (opt) => opt.value === latestVoice,
+        );
+        voiceSelect.value = optionExists ? latestVoice : 'default';
+      });
+    },
+  );
 }
 
 /**
@@ -216,17 +226,11 @@ function populateVoices(
  */
 function setupVoiceSelector(panel: HTMLElement): void {
   const voiceSelect = panel.querySelector(
-    '#talkient-voice-select',
+    `#${VOICE_SELECT_ID}`,
   ) as HTMLSelectElement;
   if (!voiceSelect) return;
 
-  chrome.storage.local.get(['selectedVoice'], (result) => {
-    const selectedVoice =
-      typeof result.selectedVoice === 'string'
-        ? result.selectedVoice
-        : 'default';
-    populateVoices(voiceSelect, selectedVoice);
-  });
+  populateVoices(voiceSelect);
 
   voiceSelect.addEventListener('change', () => {
     void chrome.storage.local.set({ selectedVoice: voiceSelect.value });
