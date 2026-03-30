@@ -2,6 +2,7 @@
 
 ## MVP
 
+- Remove Ruler?
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
 - Claude Code rules
@@ -10,7 +11,6 @@
   - [ ] Authenticate with LP (could use the same auth?)
 - [ ] Try to Integrate with DevTools MCP + skill to navigate easily with the extension (options page, etc)
 - [ ] Sometimes the extension stuck and the entire browser needs to be reopen
-- [ ] Control panel including play/pause, rate, voice
 - [ ] Options page
   - [ ] Bug: Elements to process/ignore: scroll down, select an item automatically jumps to the top
 - [ ] Bug: text elements within text elements should consider the father element
@@ -43,6 +43,7 @@
 - [ ] Add content script for "run_at=document_idle"
 - Keyboard Shortcuts
 - Github Actions
+  - [ ] Release: The assets should appear on the release page
   - [ ] Submit a new version on Chrome Web Store
 - [ ] Design system + skill with [Paper MCP](https://paper.design/docs/mcp)
 - Design System for options and popup
