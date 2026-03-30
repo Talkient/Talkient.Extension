@@ -6,7 +6,9 @@ import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';
 import { setSpeechRate } from '../../tts-playback/content/index';
+import { safeClickButton } from '../../tts-playback/content/play-button';
 import { getPanelHideDuration, setDomainHideCookie } from './panel-visibility';
+import { VOICE_SELECT_ID } from './panel-constants';
 
 /**
  * Sets up all event listeners for the control panel
@@ -17,6 +19,7 @@ export function setupControlPanelEventListeners(panel: HTMLElement): void {
   setupSettingsButton(panel);
   setupScriptControlButtons(panel);
   setupSpeechRateSlider(panel);
+  setupVoiceSelector(panel);
   setupMainControlButton(panel);
   setupDragFunctionality(panel);
 }
@@ -145,6 +148,8 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 
   if (!rateSlider || !rateValue) return;
 
+  rateSlider.disabled = false;
+
   // Load the current rate from storage
   chrome.storage.local.get(['speechRate'], (result) => {
     const speechRate =
@@ -164,16 +169,80 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
     rateValue.textContent = `${speechRate.toFixed(2)}x`;
     void chrome.storage.local.set({ speechRate });
 
-    const playButton = panel.querySelector(
-      '.talkient-control-btn.primary',
-    ) as HTMLButtonElement;
-    if (playButton && playButton.disabled) {
-      playButton.disabled = false;
-    }
-
     setSpeechRate(speechRate);
 
     console.log('[Talkient.Content] Speech rate updated to:', speechRate);
+  });
+}
+
+/**
+ * Populates the voice selector with available TTS voices
+ */
+function populateVoices(voiceSelect: HTMLSelectElement): void {
+  voiceSelect.innerHTML = '';
+  const defaultOption = document.createElement('option');
+  defaultOption.value = 'default';
+  defaultOption.textContent = 'Default Voice';
+  voiceSelect.appendChild(defaultOption);
+
+  safeSendMessage(
+    { type: 'GET_VOICES' },
+    (response: MessageResponse | undefined) => {
+      if (!response?.success) return;
+      if (!('voices' in response)) return;
+
+      const voices = response.voices ?? [];
+      if (!voices.length) return;
+
+      const usedVoiceNames = new Set<string>();
+      voices.forEach((voice) => {
+        const name = voice.voiceName;
+        if (!name || usedVoiceNames.has(name)) return;
+        usedVoiceNames.add(name);
+
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = `${name} (${voice.lang || 'Unknown language'})`;
+        voiceSelect.appendChild(option);
+      });
+
+      // Re-read selectedVoice from storage to avoid using a stale value
+      chrome.storage.local.get(['selectedVoice'], (result) => {
+        const latestVoice =
+          typeof result.selectedVoice === 'string'
+            ? result.selectedVoice
+            : 'default';
+        const optionExists = Array.from(voiceSelect.options).some(
+          (opt) => opt.value === latestVoice,
+        );
+        voiceSelect.value = optionExists ? latestVoice : 'default';
+      });
+    },
+  );
+}
+
+/**
+ * Sets up the voice selector functionality
+ */
+function setupVoiceSelector(panel: HTMLElement): void {
+  const voiceSelect = panel.querySelector(
+    `#${VOICE_SELECT_ID}`,
+  ) as HTMLSelectElement;
+  if (!voiceSelect) return;
+
+  populateVoices(voiceSelect);
+
+  voiceSelect.addEventListener('change', () => {
+    void chrome.storage.local.set({ selectedVoice: voiceSelect.value });
+  });
+
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace !== 'local' || !('selectedVoice' in changes)) return;
+    const newValue = changes.selectedVoice.newValue as string | undefined;
+    const optionExists = Array.from(voiceSelect.options).some(
+      (opt) => opt.value === newValue,
+    );
+    voiceSelect.value = optionExists && newValue ? newValue : 'default';
   });
 }
 
@@ -190,14 +259,6 @@ function setupMainControlButton(panel: HTMLElement): void {
   // Set the initial icon to play
   mainButton.innerHTML = getSvgIcon('play');
 
-  // Enable the speech rate slider
-  const rateSlider = panel.querySelector(
-    '.talkient-rate-slider',
-  ) as HTMLInputElement;
-  if (rateSlider) {
-    rateSlider.disabled = false;
-  }
-
   mainButton.addEventListener('click', () => {
     const isPlaying = isSvgPauseIcon(
       mainButton.querySelector('svg') as SVGElement,
@@ -209,11 +270,43 @@ function setupMainControlButton(panel: HTMLElement): void {
         clearHighlight();
       });
     } else {
-      alert(
-        'Please select text on the page to speak, or use the play buttons next to paragraphs.',
-      );
+      // If speech is paused, the paused play button still shows the pause icon.
+      // Find it first so we resume that text instead of starting from the top.
+      const pausedButton = Array.from(
+        document.querySelectorAll('.talkient-play-button'),
+      ).find((btn) =>
+        isSvgPauseIcon(btn.querySelector('svg') as SVGElement),
+      ) as HTMLElement | undefined;
+
+      if (pausedButton) {
+        // Reset to play icon so its click handler sends SPEAK_TEXT (SW resumes)
+        pausedButton.innerHTML = getSvgIcon('play');
+        safeClickButton(pausedButton);
+      } else {
+        const playButton = document.querySelector<HTMLElement>(
+          '.talkient-play-button',
+        );
+        if (playButton) {
+          safeClickButton(playButton);
+        } else {
+          console.warn(
+            '[Talkient.ControlPanel] No .talkient-play-button found on page.',
+          );
+        }
+      }
     }
   });
+}
+
+/**
+ * Updates the panel primary play/pause button icon.
+ */
+export function updatePanelPlayIcon(state: 'play' | 'pause'): void {
+  const panel = document.getElementById('talkient-control-panel');
+  if (!panel) return;
+  const button = panel.querySelector('.talkient-control-btn.primary');
+  if (!button) return;
+  button.innerHTML = getSvgIcon(state);
 }
 
 /**

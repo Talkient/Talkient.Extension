@@ -9,14 +9,4 @@
 # TypeScript build artifacts
 tsconfig.tsbuildinfo
 
-# START Ruler Generated Files
-/.agent/rules/ruler.md
-/.agent/rules/ruler.md.bak
-/.github/copilot-instructions.md
-/.github/copilot-instructions.md.bak
-/AGENTS.md
-/AGENTS.md.bak
-/CLAUDE.md
-/CLAUDE.md.bak
-# END Ruler Generated Files
 .gemini/settings.json.orig

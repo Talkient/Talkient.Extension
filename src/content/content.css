@@ -387,6 +387,32 @@
   color: #fc8181;
 }
 
+/* Voice selector */
+.talkient-voice-selection {
+  width: 100% !important;
+}
+
+.talkient-voice-select {
+  width: 100% !important;
+  max-width: 100% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  color: white !important;
+  font-size: 11px !important;
+  padding: 4px 6px !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.talkient-voice-select option {
+  background: #1a202c !important;
+  color: white !important;
+}
+
 /* Light mode support */
 @media (prefers-color-scheme: light) {
   #talkient-control-panel {
@@ -447,6 +473,18 @@
 
   .talkient-script-btn.remove {
     color: #e53e3e;
+  }
+
+  /* Light mode voice selector */
+  .talkient-voice-select {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    color: #2d3748 !important;
+  }
+
+  .talkient-voice-select option {
+    background: #ffffff !important;
+    color: #2d3748 !important;
   }
 
   /* Light mode toggle switch */

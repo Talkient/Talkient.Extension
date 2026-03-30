@@ -6,6 +6,7 @@ import {
   isControlPanelVisible,
   toggleControlPanel,
 } from '../content/panel-ui';
+import { updatePanelPlayIcon } from '../content/panel-controller';
 import {
   getDomainHideCookieName,
   isPanelHiddenForDomain,
@@ -39,6 +40,11 @@ jest.mock('../../../features/assets/content/icons', () => ({
 // Mock tts-playback to avoid DOM deps (panel-controller uses setSpeechRate)
 jest.mock('../../tts-playback/content/index', () => ({
   setSpeechRate: jest.fn(),
+}));
+
+// Mock play-button to capture safeClickButton calls
+jest.mock('../../tts-playback/content/play-button', () => ({
+  safeClickButton: jest.fn(),
 }));
 
 // Mock highlight to avoid DOM deps
@@ -196,7 +202,7 @@ describe('Control Panel Module', () => {
       expect(settingsBtn.disabled).toBe(false);
     });
 
-    it('should keep play button disabled by default', () => {
+    it('should have play button enabled immediately after creation', () => {
       createControlPanel();
 
       const panel = document.getElementById('talkient-control-panel');
@@ -205,7 +211,7 @@ describe('Control Panel Module', () => {
       ) as HTMLButtonElement;
 
       expect(playBtn).toBeTruthy();
-      expect(playBtn.disabled).toBe(true);
+      expect(playBtn.disabled).toBe(false);
     });
 
     it('should create panel collapsed by default', () => {
@@ -418,6 +424,145 @@ describe('Control Panel Module', () => {
 
       // Cursor should remain grab (not change to grabbing)
       expect(header.style.cursor).toBe('grab');
+    });
+  });
+
+  describe('Play/Pause Button Behaviour', () => {
+     
+    const { safeClickButton } =
+      require('../../tts-playback/content/play-button') as {
+        safeClickButton: jest.Mock;
+      };
+     
+    const { isSvgPauseIcon } =
+      require('../../../features/assets/content/icons') as {
+        isSvgPauseIcon: jest.Mock;
+      };
+
+    beforeEach(() => {
+      createControlPanel();
+      jest.clearAllMocks();
+    });
+
+    it('6.2: clicking play button when showing play icon and a .talkient-play-button exists → safeClickButton is called', () => {
+      // isSvgPauseIcon returns false → "play" state
+      isSvgPauseIcon.mockReturnValue(false);
+
+      const playButtonEl = document.createElement('button');
+      playButtonEl.className = 'talkient-play-button';
+      document.body.appendChild(playButtonEl);
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+      mainBtn.click();
+
+      expect(safeClickButton).toHaveBeenCalledWith(playButtonEl);
+
+      playButtonEl.remove();
+    });
+
+    it('resume: clicking play button when a .talkient-play-button shows pause icon → resets that button to play then calls safeClickButton on it', () => {
+       
+      const { getSvgIcon } =
+        require('../../../features/assets/content/icons') as {
+          getSvgIcon: jest.Mock;
+        };
+      getSvgIcon.mockImplementation(
+        (name: string) => `<svg data-icon="${name}"></svg>`,
+      );
+
+      // First call: panel primary button check → false (panel shows play)
+      // Second call: in-page play button SVG check → true (this is the paused button)
+      isSvgPauseIcon.mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+      const pausedPlayBtn = document.createElement('button');
+      pausedPlayBtn.className = 'talkient-play-button';
+      pausedPlayBtn.innerHTML = '<svg data-icon="pause"></svg>';
+      document.body.appendChild(pausedPlayBtn);
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+      mainBtn.click();
+
+      // Icon should be reset to play before clicking (so click handler sends SPEAK_TEXT not PAUSE_SPEECH)
+      expect(pausedPlayBtn.innerHTML).toBe('<svg data-icon="play"></svg>');
+      expect(safeClickButton).toHaveBeenCalledWith(pausedPlayBtn);
+
+      pausedPlayBtn.remove();
+    });
+
+    it('6.3: clicking play button when showing play icon and no .talkient-play-button exists → no error, console.warn emitted', () => {
+      isSvgPauseIcon.mockReturnValue(false);
+
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+
+      expect(() => mainBtn.click()).not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[Talkient.ControlPanel] No .talkient-play-button found on page.',
+      );
+
+      warnSpy.mockRestore();
+    });
+
+    it('6.4: clicking play button when showing pause icon → safeSendMessage called with PAUSE_SPEECH and icon resets to play', () => {
+       
+      const { getSvgIcon } =
+        require('../../../features/assets/content/icons') as {
+          getSvgIcon: jest.Mock;
+        };
+      isSvgPauseIcon.mockReturnValue(true);
+      getSvgIcon.mockImplementation(
+        (name: string) => `<svg data-icon="${name}"></svg>`,
+      );
+
+      // Simulate the callback being called synchronously
+      mockChrome.runtime.sendMessage.mockImplementation(
+        (_msg: unknown, cb: (r: { success: boolean }) => void) =>
+          cb({ success: true }),
+      );
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+      mainBtn.click();
+
+      expect(mockChrome.runtime.sendMessage).toHaveBeenCalledWith(
+        { type: 'PAUSE_SPEECH' },
+        expect.any(Function),
+      );
+      expect(mainBtn.innerHTML).toBe('<svg data-icon="play"></svg>');
+    });
+
+    it('6.5: updatePanelPlayIcon sets button to pause SVG then back to play SVG', () => {
+       
+      const { getSvgIcon } =
+        require('../../../features/assets/content/icons') as {
+          getSvgIcon: jest.Mock;
+        };
+      getSvgIcon.mockImplementation(
+        (name: string) => `<svg data-icon="${name}"></svg>`,
+      );
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+
+      updatePanelPlayIcon('pause');
+      expect(mainBtn.innerHTML).toBe('<svg data-icon="pause"></svg>');
+
+      updatePanelPlayIcon('play');
+      expect(mainBtn.innerHTML).toBe('<svg data-icon="play"></svg>');
     });
   });
 

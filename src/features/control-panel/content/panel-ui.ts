@@ -4,11 +4,13 @@
 import { isPanelHiddenForDomain } from './panel-visibility';
 import { setupControlPanelEventListeners } from './panel-controller';
 import { getProcessableElements } from '../../tts-playback/content/text-processor';
+import { VOICE_SELECT_ID } from './panel-constants';
 
 /**
  * Panel UI Module
  * Handles creation and lifecycle of the Talkient control panel DOM element
  */
+export { VOICE_SELECT_ID };
 
 // Function to create and inject the control panel
 export function createControlPanel(): void {
@@ -54,7 +56,7 @@ export function createControlPanel(): void {
     <div class="talkient-panel-content">
       <div class="talkient-control-section">
         <div class="talkient-main-controls">
-          <button class="talkient-control-btn primary" title="Play/Pause" disabled>
+          <button class="talkient-control-btn primary" title="Play/Pause">
             <svg class="talkient-control-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
@@ -93,6 +95,13 @@ export function createControlPanel(): void {
             value="1.0"
             disabled
           />
+        </div>
+      </div>
+
+      <div class="talkient-control-section">
+        <div class="talkient-section-title">Voice</div>
+        <div class="talkient-voice-selection">
+          <select id="${VOICE_SELECT_ID}" class="talkient-voice-select"></select>
         </div>
       </div>
 
