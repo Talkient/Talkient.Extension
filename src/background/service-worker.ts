@@ -3,6 +3,7 @@ import {
   isPauseSpeechMessage,
   isOpenOptionsMessage,
   isReloadPlayButtonsMessage,
+  isGetVoicesMessage,
   isSignInMessage,
   isSignOutMessage,
   isGetAuthStateMessage,
@@ -75,6 +76,11 @@ chrome.runtime.onMessage.addListener(
       } else {
         sendResponse({ success: true });
       }
+    } else if (isGetVoicesMessage(request)) {
+      chrome.tts.getVoices((voices) => {
+        sendResponse({ success: true, voices });
+      });
+      return true; // async
     } else if (isReloadPlayButtonsMessage(request)) {
       console.log('[Talkient.SW] Reloading play buttons...');
       // Forward the request to the content script

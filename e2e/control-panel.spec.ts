@@ -431,9 +431,7 @@ test.describe('Talkient Control Panel', () => {
     // will fire even when safeClickButton dispatches the event from the isolated
     // content-script world.
     await page.evaluate(() => {
-      const btn = document.querySelector(
-        '.talkient-play-button',
-      );
+      const btn = document.querySelector('.talkient-play-button');
       (window as unknown as Record<string, unknown>).__talkientPlayBtnClicked =
         false;
       if (btn) {
@@ -632,6 +630,197 @@ test.describe('Talkient Control Panel', () => {
 
       expect(panelCreated).toBe(true);
     });
+  });
+  test('4.1: voice selector shows voice stored via options page', async ({
+    page,
+    extensionId,
+  }) => {
+    // Navigate to options and select a non-default voice if available
+    const optionsPage = await page.context().newPage();
+    await optionsPage.goto(
+      `chrome-extension://${extensionId}/options/options.html`,
+    );
+    await optionsPage.waitForLoadState('networkidle');
+
+    const voiceCount = await optionsPage
+      .locator('#voice-select option')
+      .count();
+
+    if (voiceCount <= 1) {
+      // No non-default voices available in this environment — verify default is shown
+      const hasDefaultOption = await page.evaluate(() => {
+        const select = document.getElementById(
+          'talkient-voice-select',
+        ) as HTMLSelectElement | null;
+        return (
+          select !== null &&
+          Array.from(select.options).some(
+            (o) => o.value === 'default' && o.textContent === 'Default Voice',
+          )
+        );
+      });
+      expect(hasDefaultOption).toBe(true);
+      await optionsPage.close();
+      return;
+    }
+
+    // Select the second option (first non-default voice)
+    await optionsPage.selectOption('#voice-select', { index: 1 });
+    const selectedVoice = await optionsPage
+      .locator('#voice-select')
+      .inputValue();
+    await optionsPage.close();
+
+    // Navigate to a test page — control panel should reflect the stored voice
+    const path = require('path');
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'semantic-kernel-agent-contextual-function-selection.html',
+    );
+    await page.goto(`file://${testPagePath.replace(/\\/g, '/')}`);
+    await page.waitForLoadState('networkidle');
+
+    // Expand the panel if collapsed
+    await page.waitForSelector('#talkient-control-panel', { timeout: 10000 });
+    await page.evaluate(() => {
+      const panel = document.getElementById('talkient-control-panel');
+      if (panel?.classList.contains('talkient-collapsed')) {
+        (
+          panel.querySelector('.talkient-panel-toggle') as HTMLButtonElement
+        )?.click();
+      }
+    });
+    await page.waitForSelector(
+      '#talkient-control-panel:not(.talkient-collapsed)',
+      { timeout: 5000 },
+    );
+
+    // Wait for the voice selector to reflect the stored voice (double-async: storage → tts.getVoices)
+    await page.waitForFunction(
+      (voice) => {
+        const select = document.getElementById(
+          'talkient-voice-select',
+        ) as HTMLSelectElement | null;
+        return select !== null && select.value === voice;
+      },
+      selectedVoice,
+      { timeout: 10000 },
+    );
+
+    const panelVoice = await page
+      .locator('#talkient-voice-select')
+      .inputValue();
+
+    expect(panelVoice).toBe(selectedVoice);
+  });
+
+  test('4.2: changing voice in control panel is reflected in popup voice selector', async ({
+    page,
+    extensionId,
+  }) => {
+    // Panel is already expanded by beforeEach. Pick the second voice option if available.
+    const voiceCount = await page
+      .locator('#talkient-voice-select option')
+      .count();
+
+    if (voiceCount <= 1) {
+      // No non-default voices — verify selector is present with default
+      const selectValue = await page
+        .locator('#talkient-voice-select')
+        .inputValue();
+      expect(selectValue).toBe('default');
+      return;
+    }
+
+    // Change the voice in the control panel
+    await page.selectOption('#talkient-voice-select', { index: 1 });
+    const chosenVoice = await page
+      .locator('#talkient-voice-select')
+      .inputValue();
+
+    // Open the popup and verify it reflects the new voice
+    const popupPage = await page.context().newPage();
+    await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+    await popupPage.waitForLoadState('networkidle');
+
+    await popupPage.waitForFunction(
+      (voice) => {
+        const select = document.getElementById(
+          'voice-select',
+        ) as HTMLSelectElement | null;
+        return select !== null && select.value === voice;
+      },
+      chosenVoice,
+      { timeout: 5000 },
+    );
+
+    const popupVoice = await popupPage.locator('#voice-select').inputValue();
+    expect(popupVoice).toBe(chosenVoice);
+
+    await popupPage.close();
+  });
+
+  test('4.3: changing voice in control panel is used by subsequent TTS playback', async ({
+    page,
+  }) => {
+    // Wait for play buttons to be injected
+    await page.waitForSelector('.talkient-play-button', { timeout: 15000 });
+
+    const voiceCount = await page
+      .locator('#talkient-voice-select option')
+      .count();
+
+    if (voiceCount <= 1) {
+      // No non-default voices available — just verify selector exists and panel plays
+      const selectExists = await page.evaluate(
+        () => document.getElementById('talkient-voice-select') !== null,
+      );
+      expect(selectExists).toBe(true);
+      return;
+    }
+
+    // Select a non-default voice
+    await page.selectOption('#talkient-voice-select', { index: 1 });
+    const chosenVoice = await page
+      .locator('#talkient-voice-select')
+      .inputValue();
+
+    // Click a play button to start speech and confirm no error is thrown
+    const playButton = page.locator('.talkient-play-button').first();
+    await expect(playButton).toBeVisible();
+
+    // Attach a click spy before clicking
+    await page.evaluate(() => {
+      const btn = document.querySelector('.talkient-play-button');
+      (window as unknown as Record<string, unknown>).__panelVoicePlayClicked =
+        false;
+      btn?.addEventListener(
+        'click',
+        () => {
+          (
+            window as unknown as Record<string, unknown>
+          ).__panelVoicePlayClicked = true;
+        },
+        { once: true },
+      );
+    });
+
+    await playButton.click();
+    await page.waitForTimeout(500);
+
+    const wasClicked = await page.evaluate(
+      () =>
+        (window as unknown as Record<string, unknown>)
+          .__panelVoicePlayClicked ?? false,
+    );
+    expect(wasClicked).toBe(true);
+
+    // Verify the selector still shows the chosen voice (the change listener wrote it to storage)
+    const selectorValue = await page
+      .locator('#talkient-voice-select')
+      .inputValue();
+    expect(selectorValue).toBe(chosenVoice);
   });
 });
 

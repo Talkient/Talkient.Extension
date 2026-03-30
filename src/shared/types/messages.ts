@@ -23,12 +23,22 @@ export interface ReloadPlayButtonsMessage {
   type: 'RELOAD_PLAY_BUTTONS';
 }
 
+export interface GetVoicesMessage {
+  type: 'GET_VOICES';
+}
+
+export interface GetVoicesResponse {
+  success: true;
+  voices: chrome.tts.TtsVoice[];
+}
+
 // Union type for all messages to service worker
 export type ServiceWorkerMessage =
   | SpeakTextMessage
   | PauseSpeechMessage
   | OpenOptionsMessage
-  | ReloadPlayButtonsMessage;
+  | ReloadPlayButtonsMessage
+  | GetVoicesMessage;
 
 // Message types sent from service worker to content scripts
 export interface SpeechEndedMessage {
@@ -139,6 +149,16 @@ export function isReloadPlayButtonsMessage(
     typeof message === 'object' &&
     message !== null &&
     (message as ReloadPlayButtonsMessage).type === 'RELOAD_PLAY_BUTTONS'
+  );
+}
+
+export function isGetVoicesMessage(
+  message: unknown,
+): message is GetVoicesMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as GetVoicesMessage).type === 'GET_VOICES'
   );
 }
 

@@ -10,6 +10,8 @@ import { getProcessableElements } from '../../tts-playback/content/text-processo
  * Handles creation and lifecycle of the Talkient control panel DOM element
  */
 
+export const VOICE_SELECT_ID = 'talkient-voice-select';
+
 // Function to create and inject the control panel
 export function createControlPanel(): void {
   // Check if control panel already exists
@@ -93,6 +95,13 @@ export function createControlPanel(): void {
             value="1.0"
             disabled
           />
+        </div>
+      </div>
+
+      <div class="talkient-control-section">
+        <div class="talkient-section-title">Voice</div>
+        <div class="talkient-voice-selection">
+          <select id="talkient-voice-select" class="talkient-voice-select"></select>
         </div>
       </div>
 

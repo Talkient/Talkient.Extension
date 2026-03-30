@@ -2,7 +2,10 @@
 /// <reference types="chrome" />
 
 import { safeSendMessage } from '../../../shared/api/messaging';
-import type { MessageResponse } from '../../../shared/types/messages';
+import type {
+  MessageResponse,
+  GetVoicesResponse,
+} from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
 import { clearHighlight } from '../../../content/highlight';
 import { setSpeechRate } from '../../tts-playback/content/index';
@@ -18,6 +21,7 @@ export function setupControlPanelEventListeners(panel: HTMLElement): void {
   setupSettingsButton(panel);
   setupScriptControlButtons(panel);
   setupSpeechRateSlider(panel);
+  setupVoiceSelector(panel);
   setupMainControlButton(panel);
   setupDragFunctionality(panel);
 }
@@ -174,6 +178,71 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 }
 
 /**
+ * Populates the voice selector with available TTS voices
+ */
+function populateVoices(
+  voiceSelect: HTMLSelectElement,
+  selectedVoice: string,
+): void {
+  voiceSelect.innerHTML = '';
+  const defaultOption = document.createElement('option');
+  defaultOption.value = 'default';
+  defaultOption.textContent = 'Default Voice';
+  voiceSelect.appendChild(defaultOption);
+
+  safeSendMessage({ type: 'GET_VOICES' }, (response) => {
+    if (!response?.success) return;
+     
+    const voices: chrome.tts.TtsVoice[] = (
+      response as unknown as GetVoicesResponse
+    ).voices;
+    if (!voices) return;
+    voices.forEach((voice) => {
+      const option = document.createElement('option');
+      option.value = voice.voiceName || '';
+      option.textContent = `${voice.voiceName} (${voice.lang})`;
+      voiceSelect.appendChild(option);
+    });
+
+    const optionExists = Array.from(voiceSelect.options).some(
+      (opt) => opt.value === selectedVoice,
+    );
+    voiceSelect.value = optionExists ? selectedVoice : 'default';
+  });
+}
+
+/**
+ * Sets up the voice selector functionality
+ */
+function setupVoiceSelector(panel: HTMLElement): void {
+  const voiceSelect = panel.querySelector(
+    '#talkient-voice-select',
+  ) as HTMLSelectElement;
+  if (!voiceSelect) return;
+
+  chrome.storage.local.get(['selectedVoice'], (result) => {
+    const selectedVoice =
+      typeof result.selectedVoice === 'string'
+        ? result.selectedVoice
+        : 'default';
+    populateVoices(voiceSelect, selectedVoice);
+  });
+
+  voiceSelect.addEventListener('change', () => {
+    void chrome.storage.local.set({ selectedVoice: voiceSelect.value });
+  });
+
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace !== 'local' || !('selectedVoice' in changes)) return;
+    const newValue = changes.selectedVoice.newValue as string | undefined;
+    const optionExists = Array.from(voiceSelect.options).some(
+      (opt) => opt.value === newValue,
+    );
+    voiceSelect.value = optionExists && newValue ? newValue : 'default';
+  });
+}
+
+/**
  * Sets up the main play/pause control button
  */
 function setupMainControlButton(panel: HTMLElement): void {
@@ -210,7 +279,7 @@ function setupMainControlButton(panel: HTMLElement): void {
         pausedButton.innerHTML = getSvgIcon('play');
         safeClickButton(pausedButton);
       } else {
-        const playButton = document.querySelector(
+        const playButton = document.querySelector<HTMLElement>(
           '.talkient-play-button',
         );
         if (playButton) {
@@ -231,9 +300,7 @@ function setupMainControlButton(panel: HTMLElement): void {
 export function updatePanelPlayIcon(state: 'play' | 'pause'): void {
   const panel = document.getElementById('talkient-control-panel');
   if (!panel) return;
-  const button = panel.querySelector(
-    '.talkient-control-btn.primary',
-  );
+  const button = panel.querySelector('.talkient-control-btn.primary');
   if (!button) return;
   button.innerHTML = getSvgIcon(state);
 }
