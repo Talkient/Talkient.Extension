@@ -101,7 +101,7 @@ export function createControlPanel(): void {
       <div class="talkient-control-section">
         <div class="talkient-section-title">Voice</div>
         <div class="talkient-voice-selection">
-          <select id="talkient-voice-select" class="talkient-voice-select"></select>
+          <select id="${VOICE_SELECT_ID}" class="talkient-voice-select"></select>
         </div>
       </div>
 
