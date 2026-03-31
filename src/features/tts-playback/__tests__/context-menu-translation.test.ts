@@ -16,12 +16,11 @@ jest.mock('../../../background/tab-manager', () => ({
   setActiveTabId: jest.fn(),
 }));
 
-const translateMock = jest.fn();
+const executeSelectionTranslationMock = jest.fn();
 
-jest.mock('../../translation/background/provider', () => ({
-  defaultTranslationProvider: {
-    translate: (input: unknown) => translateMock(input),
-  },
+jest.mock('../../translation/background/selection-translation', () => ({
+  executeSelectionTranslation: (input: unknown) =>
+    executeSelectionTranslationMock(input),
 }));
 
 describe('context menu translation flow', () => {
@@ -50,9 +49,7 @@ describe('context menu translation flow', () => {
       } as unknown as typeof chrome.contextMenus,
       storage: {
         local: {
-          get: jest.fn((_, cb: (result: Record<string, unknown>) => void) =>
-            cb({ translationTargetLanguage: 'fr' }),
-          ),
+          get: jest.fn(),
         },
       } as unknown as typeof chrome.storage,
       tabs: {
@@ -86,16 +83,7 @@ describe('context menu translation flow', () => {
     expect(chrome.contextMenus.create).toHaveBeenCalledTimes(2);
   });
 
-  it('sends loading and translation result messages for selected text', async () => {
-    translateMock.mockResolvedValue({
-      ok: true,
-      originalText: 'Hello world',
-      translatedText: 'Bonjour le monde',
-      sourceLanguage: 'en',
-      targetLanguage: 'fr',
-      provider: 'libre-translate',
-    });
-
+  it('delegates translate menu clicks to selection translation executor', () => {
     setupContextMenuClickHandler();
     clickHandler?.(
       {
@@ -105,51 +93,30 @@ describe('context menu translation flow', () => {
       { id: 101 } as chrome.tabs.Tab,
     );
 
-    await Promise.resolve();
-
-    expect(chrome.tabs.sendMessage).toHaveBeenNthCalledWith(1, 101, {
-      type: 'TRANSLATION_LOADING',
-      originalText: 'Hello world',
-    });
-    expect(chrome.tabs.sendMessage).toHaveBeenNthCalledWith(2, 101, {
-      type: 'TRANSLATION_RESULT',
-      originalText: 'Hello world',
-      translatedText: 'Bonjour le monde',
-      sourceLanguage: 'en',
-      targetLanguage: 'fr',
-      provider: 'libre-translate',
+    expect(executeSelectionTranslationMock).toHaveBeenCalledWith({
+      tabId: 101,
+      selectedText: 'Hello world',
     });
   });
 
-  it('sends translation error message when provider fails', async () => {
-    translateMock.mockResolvedValue({
-      ok: false,
-      errorCode: 'TIMEOUT',
-      message: 'Translation request timed out. Please try again.',
-    });
-
+  it('passes empty selection string through to shared executor', () => {
     setupContextMenuClickHandler();
     clickHandler?.(
       {
         menuItemId: 'talkient-translate-text',
-        selectionText: 'Hello world',
+        selectionText: undefined,
       } as chrome.contextMenus.OnClickData,
       { id: 101 } as chrome.tabs.Tab,
     );
 
-    await Promise.resolve();
-
-    expect(chrome.tabs.sendMessage).toHaveBeenNthCalledWith(2, 101, {
-      type: 'TRANSLATION_ERROR',
-      errorCode: 'TIMEOUT',
-      message: 'Translation request timed out. Please try again.',
+    expect(executeSelectionTranslationMock).toHaveBeenCalledWith({
+      tabId: 101,
+      selectedText: '',
     });
   });
 
-  it('handles unexpected provider rejection with UNKNOWN_ERROR', async () => {
-    translateMock.mockRejectedValue(
-      new Error('Unexpected translation failure'),
-    );
+  it('skips translation execution when translate click has no tab id', () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     setupContextMenuClickHandler();
     clickHandler?.(
@@ -157,16 +124,14 @@ describe('context menu translation flow', () => {
         menuItemId: 'talkient-translate-text',
         selectionText: 'Hello world',
       } as chrome.contextMenus.OnClickData,
-      { id: 101 } as chrome.tabs.Tab,
+      {} as chrome.tabs.Tab,
     );
 
-    await Promise.resolve();
-    await Promise.resolve();
+    expect(executeSelectionTranslationMock).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      '[Talkient.SW] Missing tab id for translation request',
+    );
 
-    expect(chrome.tabs.sendMessage).toHaveBeenNthCalledWith(2, 101, {
-      type: 'TRANSLATION_ERROR',
-      errorCode: 'UNKNOWN_ERROR',
-      message: 'Unexpected translation failure',
-    });
+    consoleWarnSpy.mockRestore();
   });
 });

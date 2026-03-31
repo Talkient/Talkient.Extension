@@ -744,6 +744,51 @@
   outline-offset: 2px !important;
 }
 
+#talkient-inline-translate-trigger.talkient-inline-translate-trigger {
+  position: fixed !important;
+  z-index: 999999 !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 12px rgba(35, 85, 220, 0.32) !important;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease !important;
+}
+
+#talkient-inline-translate-trigger .talkient-inline-translate-trigger-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  display: block !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+#talkient-inline-translate-trigger.talkient-inline-translate-trigger:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 16px rgba(35, 85, 220, 0.4) !important;
+}
+
+#talkient-inline-translate-trigger.talkient-inline-translate-trigger:focus {
+  outline: 2px solid #1a49bf !important;
+  outline-offset: 2px !important;
+}
+
+#talkient-inline-translate-trigger.talkient-inline-translate-trigger.talkient-inline-translate-trigger-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+}
+
 /* Dark mode support for play buttons */
 @media (prefers-color-scheme: dark) {
   .talkient-play-button {
@@ -858,6 +903,7 @@
 @media print {
   #talkient-control-panel,
   #talkient-container,
+  #talkient-inline-translate-trigger,
   #talkient-translation-result,
   .talkient-play-button,
   .talkient-highlight {

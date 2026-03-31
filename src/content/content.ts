@@ -44,8 +44,103 @@ import {
   showTranslationLoading,
   showTranslationSuccess,
 } from './translation-result';
+import {
+  disableInlineTranslateTrigger,
+  getInlineTranslateTriggerElement,
+  hideInlineTranslateTrigger,
+  repositionInlineTranslateTrigger,
+  showInlineTranslateTrigger,
+} from './inline-translate-trigger';
 
 const CHARS_PER_SECOND_AT_1X = 14;
+let activeInlineSelectionText = '';
+
+function getSelectionRect(range: Range): DOMRect | null {
+  const rect = range.getBoundingClientRect();
+  if (rect.width > 0 || rect.height > 0) {
+    return rect;
+  }
+
+  const rectFromClientList = range.getClientRects().item(0);
+  if (
+    rectFromClientList &&
+    (rectFromClientList.width > 0 || rectFromClientList.height > 0)
+  ) {
+    return rectFromClientList;
+  }
+
+  return null;
+}
+
+function getCurrentSelectionForInlineTranslate(): {
+  text: string;
+  rect: DOMRect;
+} | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    return null;
+  }
+
+  const text = selection.toString().trim();
+  if (!text) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+  const rect = getSelectionRect(range);
+  if (!rect) {
+    return null;
+  }
+
+  return { text, rect };
+}
+
+function hideInlineTriggerAndResetState(): void {
+  activeInlineSelectionText = '';
+  hideInlineTranslateTrigger();
+}
+
+function shouldKeepInlineTriggerVisible(): boolean {
+  const currentSelection = getCurrentSelectionForInlineTranslate();
+  if (!currentSelection) {
+    return false;
+  }
+
+  return currentSelection.text === activeInlineSelectionText;
+}
+
+function sendInlineSelectionTranslationRequest(selectedText: string): void {
+  const text = selectedText.trim();
+  if (!text) {
+    hideInlineTriggerAndResetState();
+    return;
+  }
+
+  disableInlineTranslateTrigger();
+  safeSendMessage({ type: 'TRANSLATE_SELECTION', text });
+  hideInlineTriggerAndResetState();
+}
+
+function handleInlineTranslateTriggerSelection(): void {
+  const selectionData = getCurrentSelectionForInlineTranslate();
+  if (!selectionData) {
+    hideInlineTriggerAndResetState();
+    return;
+  }
+
+  activeInlineSelectionText = selectionData.text;
+
+  const shown = showInlineTranslateTrigger({
+    anchorRect: selectionData.rect,
+    onClick: () => {
+      sendInlineSelectionTranslationRequest(activeInlineSelectionText);
+    },
+  });
+
+  if (!shown) {
+    hideInlineTriggerAndResetState();
+  }
+}
 
 function isStringArray(value: unknown): value is string[] {
   return (
@@ -104,6 +199,7 @@ function removeTalkientUiElements(): void {
   });
 
   clearHighlight();
+  hideInlineTriggerAndResetState();
 }
 
 // Type guard for content script messages
@@ -508,6 +604,96 @@ window.addEventListener('afterprint', () => {
       processTextElements(() => updateRemainingTimeDisplay());
     }
   });
+});
+
+window.addEventListener('dblclick', (event) => {
+  if (event.button !== 0) {
+    return;
+  }
+
+  handleInlineTranslateTriggerSelection();
+});
+
+document.addEventListener(
+  'pointerdown',
+  (event) => {
+    const inlineTrigger = getInlineTranslateTriggerElement();
+    if (!inlineTrigger) {
+      return;
+    }
+
+    const targetNode = event.target;
+    if (targetNode instanceof Node && inlineTrigger.contains(targetNode)) {
+      return;
+    }
+
+    hideInlineTriggerAndResetState();
+  },
+  true,
+);
+
+document.addEventListener('selectionchange', () => {
+  const inlineTrigger = getInlineTranslateTriggerElement();
+  if (!inlineTrigger) {
+    return;
+  }
+
+  if (!shouldKeepInlineTriggerVisible()) {
+    hideInlineTriggerAndResetState();
+    return;
+  }
+
+  const currentSelection = getCurrentSelectionForInlineTranslate();
+  if (
+    !currentSelection ||
+    !repositionInlineTranslateTrigger(currentSelection.rect)
+  ) {
+    hideInlineTriggerAndResetState();
+  }
+});
+
+window.addEventListener(
+  'scroll',
+  () => {
+    const inlineTrigger = getInlineTranslateTriggerElement();
+    if (!inlineTrigger) {
+      return;
+    }
+
+    if (!shouldKeepInlineTriggerVisible()) {
+      hideInlineTriggerAndResetState();
+      return;
+    }
+
+    const currentSelection = getCurrentSelectionForInlineTranslate();
+    if (
+      !currentSelection ||
+      !repositionInlineTranslateTrigger(currentSelection.rect)
+    ) {
+      hideInlineTriggerAndResetState();
+    }
+  },
+  true,
+);
+
+window.addEventListener('resize', () => {
+  const inlineTrigger = getInlineTranslateTriggerElement();
+  if (!inlineTrigger) {
+    return;
+  }
+
+  if (!shouldKeepInlineTriggerVisible()) {
+    hideInlineTriggerAndResetState();
+    return;
+  }
+
+  const currentSelection = getCurrentSelectionForInlineTranslate();
+  if (
+    !currentSelection ||
+    !repositionInlineTranslateTrigger(currentSelection.rect)
+  ) {
+    hideInlineTriggerAndResetState();
+  }
 });
 
 // Watch for DOM changes to process new text elements

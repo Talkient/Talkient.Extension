@@ -315,6 +315,17 @@ describe('service-worker.ts', () => {
       });
     });
 
+    describe('TRANSLATE_SELECTION message', () => {
+      it('responds with success for inline selection translation requests', () => {
+        const request = { type: 'TRANSLATE_SELECTION', text: 'Hello world' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+        expect(result).toBe(true);
+      });
+    });
+
     describe('unknown message types', () => {
       it('should not respond to unknown message types', () => {
         const request = { type: 'UNKNOWN_MESSAGE' };
