@@ -88,6 +88,21 @@ describe('highlightText', () => {
     expect(getCurrentHighlightedElement()).toBe(testElement);
   });
 
+  test('should not add style-default class when using default style', () => {
+    highlightText(testElement, 'default');
+    expect(testElement.classList.contains('talkient-highlighted')).toBe(true);
+    expect(testElement.classList.contains('style-default')).toBe(false);
+  });
+
+  test('should not add duplicate talkient-highlighted class when re-highlighting same element', () => {
+    highlightText(testElement);
+    highlightText(testElement);
+    const classes = Array.from(testElement.classList).filter(
+      (c) => c === 'talkient-highlighted',
+    );
+    expect(classes).toHaveLength(1);
+  });
+
   test('should clear previous highlight when highlighting new element', () => {
     const secondElement = document.createElement('span');
     secondElement.textContent = 'Second test text';
@@ -151,6 +166,16 @@ describe('clearHighlight', () => {
     expect(getCurrentHighlightedElement()).toBeNull();
     expect(() => clearHighlight()).not.toThrow();
     expect(getCurrentHighlightedElement()).toBeNull();
+  });
+
+  test('should remove stray .talkient-active-word spans as safety net', () => {
+    const stray = document.createElement('span');
+    stray.classList.add('talkient-active-word');
+    container.appendChild(stray);
+
+    clearHighlight();
+
+    expect(stray.classList.contains('talkient-active-word')).toBe(false);
   });
 
   test('should clear all highlighted elements as safety net', () => {
@@ -338,6 +363,70 @@ describe('loadHighlightStyleFromStorage', () => {
     );
     // Should not change from default since invalid style is passed
     expect(getHighlightingStyle()).toBe('default');
+  });
+
+  it('should ignore onChanged events from non-local storage areas', () => {
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: true });
+      },
+    );
+
+    loadHighlightStyleFromStorage();
+
+    // Simulate a change from the 'sync' area — should be ignored
+    const changeListener =
+      mockChrome.storage.onChanged.addListener.mock.calls[0][0];
+    changeListener(
+      { followHighlight: { oldValue: true, newValue: false } },
+      'sync',
+    );
+
+    // followHighlight should still be true → scroll should still happen
+    // Use top: 700 so the element is below the 20% buffer zone in any jsdom viewport height
+    const testEl = document.createElement('p');
+    testEl.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 700,
+      bottom: 750,
+      height: 50,
+      width: 200,
+    });
+    document.body.appendChild(testEl);
+    scrollToHighlightedElement(testEl);
+    expect(window.scrollTo).toHaveBeenCalled();
+    document.body.removeChild(testEl);
+  });
+
+  it('should not overwrite cachedFollowHighlight when storage value is not a boolean', () => {
+    // Start with followHighlight: true cached
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: true });
+      },
+    );
+    loadHighlightStyleFromStorage();
+
+    // Now reload with a non-boolean followHighlight value
+    (mockChrome.storage.local.get as jest.Mock).mockImplementation(
+      (keys, callback) => {
+        callback({ highlightStyle: 'default', followHighlight: 'yes' });
+      },
+    );
+    loadHighlightStyleFromStorage();
+
+    // cachedFollowHighlight should still be true → scroll should happen
+    // Use top: 700 so the element is below the 20% buffer zone in any jsdom viewport height
+    const testEl = document.createElement('p');
+    testEl.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 700,
+      bottom: 750,
+      height: 50,
+      width: 200,
+    });
+    document.body.appendChild(testEl);
+    scrollToHighlightedElement(testEl);
+    expect(window.scrollTo).toHaveBeenCalled();
+    document.body.removeChild(testEl);
   });
 
   it('should load each valid highlight style from storage', () => {
@@ -559,6 +648,37 @@ describe('wrapWordsInElement', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
+  test('should return empty array for element with no text nodes', () => {
+    const element = document.createElement('span');
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(0);
+  });
+
+  test('should return empty array for element with only whitespace text', () => {
+    const element = document.createElement('span');
+    element.textContent = '   ';
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(0);
+  });
+
+  test('should return empty array for element with only element children (no text nodes)', () => {
+    const element = document.createElement('span');
+    const child = document.createElement('button');
+    child.textContent = 'Click me';
+    element.appendChild(child);
+    container.appendChild(element);
+
+    const spans = wrapWordsInElement(element);
+
+    expect(spans).toHaveLength(0);
+  });
+
   test('should NOT destroy sibling button elements', () => {
     const element = document.createElement('span');
     element.classList.add('talkient-processed');
@@ -684,6 +804,22 @@ describe('highlightWordAtIndex', () => {
     expect(window.scrollTo).toHaveBeenCalled();
   });
 
+  test('should no-op when charIndex is beyond all spans', () => {
+    wrapWordsInElement(element); // "Hello"=0, "world"=6, "test"=12
+
+    highlightWordAtIndex(999);
+
+    expect(element.querySelectorAll('.talkient-active-word')).toHaveLength(0);
+  });
+
+  test('should no-op when charIndex falls in whitespace gap between words', () => {
+    wrapWordsInElement(element); // "Hello world test" — gap at index 5
+
+    highlightWordAtIndex(5); // space between "Hello" and "world"
+
+    expect(element.querySelectorAll('.talkient-active-word')).toHaveLength(0);
+  });
+
   test('should highlight a word located in the second direct text node', () => {
     element.textContent = '';
     element.appendChild(document.createTextNode('Hello '));
@@ -696,6 +832,12 @@ describe('highlightWordAtIndex', () => {
     const active = element.querySelector('.talkient-active-word');
     expect(active).toBeTruthy();
     expect(active?.textContent).toBe('world');
+  });
+});
+
+describe('clearWordHighlight standalone', () => {
+  test('should not throw when nothing was wrapped', () => {
+    expect(() => clearWordHighlight()).not.toThrow();
   });
 });
 
