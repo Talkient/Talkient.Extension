@@ -25,6 +25,7 @@ describe('options.ts', () => {
   let followHighlightToggle: HTMLInputElement;
   let buttonPositionSelect: HTMLSelectElement;
   let minimumWordsInput: HTMLInputElement;
+  let maxNodesInput: HTMLInputElement;
   let panelHideDurationInput: HTMLInputElement;
   let translationTargetLanguageSelect: HTMLSelectElement;
   let resetDefaultSettingsButton: HTMLButtonElement;
@@ -64,6 +65,9 @@ describe('options.ts', () => {
     ) as HTMLSelectElement;
     minimumWordsInput = document.getElementById(
       'minimum-words-input',
+    ) as HTMLInputElement;
+    maxNodesInput = document.getElementById(
+      'max-nodes-input',
     ) as HTMLInputElement;
     panelHideDurationInput = document.getElementById(
       'panel-hide-duration-input',
@@ -991,6 +995,42 @@ describe('options.ts', () => {
       }
     });
 
+    it('should update maximum nodes input when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            maxNodesProcessed: {
+              newValue: 1500,
+              oldValue: 1000,
+            },
+          },
+          'local',
+        );
+
+        expect(maxNodesInput.value).toBe('1500');
+      }
+    });
+
+    it('should fallback translation language to english when storage changes to invalid option', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            translationTargetLanguage: {
+              newValue: 'xx-invalid',
+              oldValue: 'en',
+            },
+          },
+          'local',
+        );
+
+        expect(translationTargetLanguageSelect.value).toBe('en');
+      }
+    });
+
     it('should not update UI for non-local namespace changes', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -1033,6 +1073,56 @@ describe('options.ts', () => {
         // Check that the UI was NOT updated
         expect(rateSlider.value).toBe(originalValue);
       }
+    });
+  });
+
+  describe('maximum nodes functionality', () => {
+    beforeEach(() => {
+      require('../options/options-ui');
+
+      const event = new Event('DOMContentLoaded');
+      document.dispatchEvent(event);
+    });
+
+    it('should restore maximum nodes from storage', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(maxNodesInput.value).toBe('1000');
+    });
+
+    it('should save maximum nodes to storage when input changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      maxNodesInput.value = '1250';
+      maxNodesInput.dispatchEvent(new Event('input'));
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        maxNodesProcessed: 1250,
+      });
+    });
+
+    it('should clamp maximum nodes to 0 when negative is entered', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      maxNodesInput.value = '-5';
+      maxNodesInput.dispatchEvent(new Event('input'));
+
+      expect(maxNodesInput.value).toBe('0');
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        maxNodesProcessed: 0,
+      });
+    });
+
+    it('should clamp maximum nodes to 0 when value is NaN', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      maxNodesInput.value = 'abc';
+      maxNodesInput.dispatchEvent(new Event('input'));
+
+      expect(maxNodesInput.value).toBe('0');
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        maxNodesProcessed: 0,
+      });
     });
   });
 

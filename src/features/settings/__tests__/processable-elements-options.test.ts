@@ -332,6 +332,24 @@ describe('Processable elements options UI', () => {
       expect(list?.textContent).toContain('www.example.com');
     });
 
+    it('should add ignored domain on Enter key', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+
+      input.value = 'news.example.com';
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+      );
+      await Promise.resolve();
+
+      const calls = (chrome.storage.local.set as jest.Mock).mock.calls;
+      const lastCall = calls[calls.length - 1][0];
+      expect(lastCall.ignoredDomains).toEqual(['news.example.com']);
+    });
+
     it('should reject invalid ignored domain entry and show validation feedback', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -350,6 +368,34 @@ describe('Processable elements options UI', () => {
         expect.objectContaining({ ignoredDomains: expect.any(Array) }),
       );
       expect(validation?.textContent).toContain('Please enter a valid domain');
+    });
+
+    it('should reject duplicate ignored domain entries', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+      const validation = document.getElementById('ignored-domains-validation');
+
+      input.value = 'example.com';
+      addButton.click();
+      await Promise.resolve();
+
+      input.value = 'EXAMPLE.COM';
+      addButton.click();
+
+      const ignoredDomainWrites = (
+        chrome.storage.local.set as jest.Mock
+      ).mock.calls.filter((call) => call[0]?.ignoredDomains);
+      expect(ignoredDomainWrites.length).toBeGreaterThanOrEqual(1);
+      expect(ignoredDomainWrites[ignoredDomainWrites.length - 1][0]).toEqual({
+        ignoredDomains: ['example.com'],
+      });
+      expect(validation?.textContent).toContain('already in the ignored list');
     });
 
     it('should edit an existing ignored domain', async () => {
@@ -383,6 +429,39 @@ describe('Processable elements options UI', () => {
         list.querySelectorAll('.ignored-domains-item-text'),
       ).map((item) => item.textContent);
       expect(domainTexts).toEqual(['news.example.com']);
+    });
+
+    it('should cancel ignored domain editing and restore add mode', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const input = document.getElementById(
+        'ignored-domain-input',
+      ) as HTMLInputElement;
+      const addButton = document.getElementById(
+        'ignored-domain-add-button',
+      ) as HTMLButtonElement;
+      const cancelButton = document.getElementById(
+        'ignored-domain-cancel-button',
+      ) as HTMLButtonElement;
+
+      input.value = 'example.com';
+      addButton.click();
+      await Promise.resolve();
+
+      const list = document.getElementById(
+        'ignored-domains-list',
+      ) as HTMLUListElement;
+      const editButton = list.querySelector('button') as HTMLButtonElement;
+      editButton.click();
+
+      expect(addButton.textContent).toBe('Save');
+      expect(cancelButton.hidden).toBe(false);
+
+      cancelButton.click();
+
+      expect(addButton.textContent).toBe('Add');
+      expect(cancelButton.hidden).toBe(true);
+      expect(input.value).toBe('');
     });
 
     it('should delete an ignored domain entry', async () => {
