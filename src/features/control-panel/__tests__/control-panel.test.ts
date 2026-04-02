@@ -425,15 +425,178 @@ describe('Control Panel Module', () => {
       // Cursor should remain grab (not change to grabbing)
       expect(header.style.cursor).toBe('grab');
     });
+
+    it('should drag the panel and clamp it within the viewport', () => {
+      const panel = document.getElementById('talkient-control-panel')!;
+      const header = panel.querySelector(
+        '.talkient-panel-header',
+      ) as HTMLElement;
+
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        value: 300,
+      });
+      Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        value: 200,
+      });
+
+      let rect = {
+        left: 50,
+        top: 40,
+        width: 120,
+        height: 80,
+        right: 170,
+        bottom: 120,
+        x: 50,
+        y: 40,
+        toJSON: () => ({}),
+      };
+
+      jest
+        .spyOn(panel, 'getBoundingClientRect')
+        .mockImplementation(() => rect as DOMRect);
+
+      header.dispatchEvent(
+        new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          clientX: 60,
+          clientY: 50,
+        }),
+      );
+
+      expect(header.style.cursor).toBe('grabbing');
+      expect(panel.style.position).toBe('fixed');
+      expect(panel.style.left).toBe('50px');
+      expect(panel.style.top).toBe('40px');
+      expect(panel.style.transform).toBe('none');
+
+      rect = {
+        ...rect,
+        left: 180,
+        top: 140,
+        right: 300,
+        bottom: 220,
+      };
+
+      document.dispatchEvent(
+        new MouseEvent('mousemove', {
+          bubbles: true,
+          clientX: 400,
+          clientY: 400,
+        }),
+      );
+
+      expect(panel.style.left).toBe('180px');
+      expect(panel.style.top).toBe('120px');
+
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      expect(header.style.cursor).toBe('grab');
+    });
+  });
+
+  describe('Script Toggle Initial State', () => {
+    it('should initialize toggle as unchecked and remove existing play buttons when disabled in storage', () => {
+      document.body.innerHTML = `
+        <article>
+          <span class="talkient-processed">Processed text <button class="talkient-play-button">Play</button></span>
+          <p>Readable text</p>
+        </article>
+      `;
+
+      mockChrome.storage.local.get.mockImplementation(
+        (
+          keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          const result: Record<string, unknown> = {};
+          if (keys.includes('playButtonsEnabled')) {
+            result.playButtonsEnabled = false;
+          }
+          callback(result);
+        },
+      );
+
+      createControlPanel();
+
+      const toggleInput = document.querySelector(
+        '.talkient-toggle-input',
+      ) as HTMLInputElement;
+
+      expect(toggleInput.checked).toBe(false);
+      expect(document.querySelectorAll('.talkient-processed')).toHaveLength(0);
+      expect(document.querySelectorAll('.talkient-play-button')).toHaveLength(
+        0,
+      );
+      expect(document.body.textContent).toContain('Processed text');
+    });
+  });
+
+  describe('Speech Rate Slider', () => {
+    const { setSpeechRate } = require('../../tts-playback/content/index') as {
+      setSpeechRate: jest.Mock;
+    };
+
+    beforeEach(() => {
+      mockChrome.storage.local.get.mockImplementation(
+        (
+          keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          const result: Record<string, unknown> = {};
+          if (keys.includes('speechRate')) {
+            result.speechRate = 1.13;
+          }
+          callback(result);
+        },
+      );
+    });
+
+    it('should round stored speech rate to the nearest 0.05 on load', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const slider = panel.querySelector(
+        '.talkient-rate-slider',
+      ) as HTMLInputElement;
+      const value = panel.querySelector(
+        '.talkient-rate-value',
+      ) as HTMLSpanElement;
+
+      expect(slider.value).toBe('1.15');
+      expect(value.textContent).toBe('1.15x');
+    });
+
+    it('should round input speech rate, store it, and update playback cache', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const slider = panel.querySelector(
+        '.talkient-rate-slider',
+      ) as HTMLInputElement;
+      const value = panel.querySelector(
+        '.talkient-rate-value',
+      ) as HTMLSpanElement;
+
+      slider.value = '1.13';
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(slider.value).toBe('1.15');
+      expect(value.textContent).toBe('1.15x');
+      expect(mockChrome.storage.local.set).toHaveBeenCalledWith({
+        speechRate: 1.15,
+      });
+      expect(setSpeechRate).toHaveBeenCalledWith(1.15);
+    });
   });
 
   describe('Play/Pause Button Behaviour', () => {
-     
     const { safeClickButton } =
       require('../../tts-playback/content/play-button') as {
         safeClickButton: jest.Mock;
       };
-     
+
     const { isSvgPauseIcon } =
       require('../../../features/assets/content/icons') as {
         isSvgPauseIcon: jest.Mock;
@@ -464,7 +627,6 @@ describe('Control Panel Module', () => {
     });
 
     it('resume: clicking play button when a .talkient-play-button shows pause icon → resets that button to play then calls safeClickButton on it', () => {
-       
       const { getSvgIcon } =
         require('../../../features/assets/content/icons') as {
           getSvgIcon: jest.Mock;
@@ -514,7 +676,6 @@ describe('Control Panel Module', () => {
     });
 
     it('6.4: clicking play button when showing pause icon → safeSendMessage called with PAUSE_SPEECH and icon resets to play', () => {
-       
       const { getSvgIcon } =
         require('../../../features/assets/content/icons') as {
           getSvgIcon: jest.Mock;
@@ -544,7 +705,6 @@ describe('Control Panel Module', () => {
     });
 
     it('6.5: updatePanelPlayIcon sets button to pause SVG then back to play SVG', () => {
-       
       const { getSvgIcon } =
         require('../../../features/assets/content/icons') as {
           getSvgIcon: jest.Mock;
@@ -627,6 +787,30 @@ describe('Control Panel Module', () => {
       const icon = settingsBtn.querySelector('.talkient-control-icon');
       expect(icon).toBeTruthy();
       expect(icon?.tagName.toLowerCase()).toBe('svg');
+    });
+
+    it('should log an error when opening options fails', () => {
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      mockChrome.runtime.sendMessage.mockImplementation((_message, callback) =>
+        callback?.({ success: false, error: 'boom' }),
+      );
+
+      const panel = document.getElementById('talkient-control-panel');
+      const settingsBtn = panel?.querySelector(
+        '.talkient-control-btn.settings',
+      ) as HTMLButtonElement;
+
+      settingsBtn.click();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[Talkient.Content] Failed to open options page:',
+        'boom',
+      );
+
+      errorSpy.mockRestore();
     });
   });
 

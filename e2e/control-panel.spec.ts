@@ -54,34 +54,7 @@ test.describe('Talkient Control Panel', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    if (!panelVisibleNow) {
-      // If still not visible, try alternative approach
-      await page.evaluate(() => {
-        // Create a minimal control panel for testing if needed
-        if (!document.getElementById('talkient-control-panel')) {
-          const panel = document.createElement('div');
-          panel.id = 'talkient-control-panel';
-          panel.innerHTML = `
-            <div class="talkient-panel-header">
-              <button class="talkient-panel-toggle"></button>
-              <button class="talkient-control-btn settings"></button>
-            </div>
-            <div class="talkient-panel-content">
-              <div class="talkient-rate-control">
-                <input type="range" min="0.5" max="2" step="0.1" value="1" class="talkient-rate-slider">
-                <span class="talkient-rate-value">1.00x</span>
-              </div>
-              <label class="talkient-toggle">
-                <input type="checkbox" class="talkient-toggle-input" checked>
-                <span class="talkient-toggle-slider"></span>
-                <span>Scripts</span>
-              </label>
-            </div>
-          `;
-          document.body.appendChild(panel);
-        }
-      });
-    }
+    expect(panelVisibleNow).toBe(true);
 
     // Expand the panel if it's collapsed
     await page.evaluate(() => {
