@@ -4,6 +4,7 @@
 (global as any).chrome = {
   runtime: {
     openOptionsPage: jest.fn(),
+    sendMessage: jest.fn(),
   },
   tabs: {
     create: jest.fn(),
