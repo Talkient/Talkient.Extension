@@ -914,6 +914,42 @@ describe('options.ts', () => {
       }
     });
 
+    it('should update selected voice when storage changes', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            selectedVoice: {
+              newValue: 'Google UK English Male',
+              oldValue: 'default',
+            },
+          },
+          'local',
+        );
+
+        expect(voiceSelect.value).toBe('Google UK English Male');
+      }
+    });
+
+    it('should fallback selected voice to default when storage changes to an unknown voice', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      if (storageChangeListener) {
+        storageChangeListener(
+          {
+            selectedVoice: {
+              newValue: 'Missing Voice',
+              oldValue: 'default',
+            },
+          },
+          'local',
+        );
+
+        expect(voiceSelect.value).toBe('default');
+      }
+    });
+
     it('should update speech pitch slider when storage changes', async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 

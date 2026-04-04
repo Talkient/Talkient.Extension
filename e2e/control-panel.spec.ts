@@ -712,12 +712,14 @@ test.describe('Talkient Control Panel', () => {
       .locator('#talkient-voice-select')
       .inputValue();
 
-    // Open the popup and verify it reflects the new voice
-    const popupPage = await page.context().newPage();
-    await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await popupPage.waitForLoadState('networkidle');
+    // Open the options page and verify it reflects the new voice
+    const optionsPage = await page.context().newPage();
+    await optionsPage.goto(
+      `chrome-extension://${extensionId}/options/options.html`,
+    );
+    await optionsPage.waitForLoadState('networkidle');
 
-    await popupPage.waitForFunction(
+    await optionsPage.waitForFunction(
       (voice) => {
         const select = document.getElementById(
           'voice-select',
@@ -728,10 +730,12 @@ test.describe('Talkient Control Panel', () => {
       { timeout: 5000 },
     );
 
-    const popupVoice = await popupPage.locator('#voice-select').inputValue();
-    expect(popupVoice).toBe(chosenVoice);
+    const optionsVoice = await optionsPage
+      .locator('#voice-select')
+      .inputValue();
+    expect(optionsVoice).toBe(chosenVoice);
 
-    await popupPage.close();
+    await optionsPage.close();
   });
 
   test('4.3: changing voice in control panel is used by subsequent TTS playback', async ({
@@ -794,6 +798,36 @@ test.describe('Talkient Control Panel', () => {
       .locator('#talkient-voice-select')
       .inputValue();
     expect(selectorValue).toBe(chosenVoice);
+  });
+
+  test('4.4: changing speech rate in control panel is reflected in options page', async ({
+    page,
+    extensionId,
+  }) => {
+    const optionsPage = await page.context().newPage();
+    await optionsPage.goto(
+      `chrome-extension://${extensionId}/options/options.html`,
+    );
+    await optionsPage.waitForLoadState('networkidle');
+
+    const panelSlider = page.locator('.talkient-rate-slider');
+    await panelSlider.evaluate((element: HTMLInputElement) => {
+      element.value = '1.65';
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    await optionsPage.waitForFunction(() => {
+      const slider = document.getElementById(
+        'rate-slider',
+      ) as HTMLInputElement | null;
+      const label = document.getElementById('rate-value');
+      return slider?.value === '1.65' && label?.textContent === '1.65x';
+    });
+
+    await expect(optionsPage.locator('#rate-slider')).toHaveValue('1.65');
+    await expect(optionsPage.locator('#rate-value')).toContainText('1.65x');
+
+    await optionsPage.close();
   });
 });
 

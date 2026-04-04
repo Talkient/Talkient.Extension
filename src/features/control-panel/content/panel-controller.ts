@@ -173,6 +173,16 @@ function setupSpeechRateSlider(panel: HTMLElement): void {
 
     console.log('[Talkient.Content] Speech rate updated to:', speechRate);
   });
+
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace !== 'local' || !('speechRate' in changes)) return;
+    const newValue = changes.speechRate.newValue;
+    if (typeof newValue !== 'number') return;
+
+    const roundedRate = Math.round(newValue * 20) / 20;
+    rateSlider.value = roundedRate.toString();
+    rateValue.textContent = `${roundedRate.toFixed(2)}x`;
+  });
 }
 
 /**

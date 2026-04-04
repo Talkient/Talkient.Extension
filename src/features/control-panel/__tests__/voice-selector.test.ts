@@ -60,6 +60,22 @@ const SAMPLE_VOICES: chrome.tts.TtsVoice[] = [
   { voiceName: 'Google Deutsch', lang: 'de-DE' },
 ];
 
+function getVoiceStorageChangeListener(): (
+  changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
+  namespace: string,
+) => void {
+  const lastCallIndex = mockStorageOnChangedAddListener.mock.calls.length - 1;
+  const listener =
+    lastCallIndex >= 0
+      ? mockStorageOnChangedAddListener.mock.calls[lastCallIndex][0]
+      : undefined;
+  expect(listener).toBeDefined();
+  return listener as (
+    changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
+    namespace: string,
+  ) => void;
+}
+
 function setupDefaultMocks(
   selectedVoice = 'default',
   voices: chrome.tts.TtsVoice[] = SAMPLE_VOICES,
@@ -226,10 +242,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
-    expect(changeListener).toBeDefined();
+    const changeListener = getVoiceStorageChangeListener();
 
     changeListener(
       { selectedVoice: { oldValue: 'default', newValue: 'Google US English' } },
@@ -245,10 +258,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
-    expect(changeListener).toBeDefined();
+    const changeListener = getVoiceStorageChangeListener();
 
     changeListener(
       {
@@ -270,9 +280,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
+    const changeListener = getVoiceStorageChangeListener();
 
     // Change from sync namespace should be ignored
     changeListener(

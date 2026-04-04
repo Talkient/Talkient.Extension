@@ -426,7 +426,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (changes.selectedVoice) {
           const newVoice = changes.selectedVoice.newValue;
           if (typeof newVoice === 'string') {
-            voiceSelect.value = newVoice;
+            const hasVoiceOption = Array.from(voiceSelect.options).some(
+              (option) => option.value === newVoice,
+            );
+            voiceSelect.value = hasVoiceOption
+              ? newVoice
+              : DEFAULT_SETTINGS.selectedVoice;
           }
         }
 

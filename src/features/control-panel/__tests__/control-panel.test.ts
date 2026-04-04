@@ -589,6 +589,70 @@ describe('Control Panel Module', () => {
       });
       expect(setSpeechRate).toHaveBeenCalledWith(1.15);
     });
+
+    it('should update the slider when speech rate changes in local storage', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const slider = panel.querySelector(
+        '.talkient-rate-slider',
+      ) as HTMLInputElement;
+      const value = panel.querySelector(
+        '.talkient-rate-value',
+      ) as HTMLSpanElement;
+
+      const storageChangeListener =
+        mockChrome.storage.onChanged.addListener.mock.calls.find(
+          ([listener]: [unknown]) => typeof listener === 'function',
+        )?.[0];
+
+      expect(storageChangeListener).toBeDefined();
+
+      storageChangeListener(
+        {
+          speechRate: {
+            oldValue: 1.15,
+            newValue: 1.73,
+          },
+        },
+        'local',
+      );
+
+      expect(slider.value).toBe('1.75');
+      expect(value.textContent).toBe('1.75x');
+    });
+
+    it('should ignore non-local speech rate storage updates', () => {
+      createControlPanel();
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const slider = panel.querySelector(
+        '.talkient-rate-slider',
+      ) as HTMLInputElement;
+      const value = panel.querySelector(
+        '.talkient-rate-value',
+      ) as HTMLSpanElement;
+
+      const storageChangeListener =
+        mockChrome.storage.onChanged.addListener.mock.calls.find(
+          ([listener]: [unknown]) => typeof listener === 'function',
+        )?.[0];
+
+      expect(storageChangeListener).toBeDefined();
+
+      storageChangeListener(
+        {
+          speechRate: {
+            oldValue: 1.15,
+            newValue: 1.73,
+          },
+        },
+        'sync',
+      );
+
+      expect(slider.value).toBe('1.15');
+      expect(value.textContent).toBe('1.15x');
+    });
   });
 
   describe('Play/Pause Button Behaviour', () => {
