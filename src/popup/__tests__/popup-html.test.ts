@@ -437,6 +437,21 @@ describe('popup.ts - using actual HTML', () => {
       expect(userAvatar.src).toBe(authenticatedUser.picture);
     });
 
+    it('should fall back to the signed-out state when auth claims to be authenticated without a user', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockResolvedValue({
+        success: true,
+        isAuthenticated: true,
+        user: null,
+      });
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
     it('should show a loading state during sign-in and then render the user profile', async () => {
       let resolveSignIn!: (value: {
         success: boolean;

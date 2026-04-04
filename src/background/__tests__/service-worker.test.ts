@@ -1,5 +1,11 @@
 import './mocks/chrome';
 
+jest.mock('../../features/auth/background/message-handler', () => ({
+  handleSignIn: jest.fn(),
+  handleSignOut: jest.fn(),
+  handleGetAuthState: jest.fn(),
+}));
+
 describe('service-worker.ts', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,6 +40,7 @@ describe('service-worker.ts', () => {
       sender: unknown,
       sendResponse: jest.Mock,
     ) => boolean;
+    let authMessageHandler: typeof import('../../features/auth/background/message-handler');
     let mockSender: { tab?: { id: number } };
     let mockSendResponse: jest.Mock;
 
@@ -57,6 +64,7 @@ describe('service-worker.ts', () => {
       );
 
       require('../service-worker');
+      authMessageHandler = require('../../features/auth/background/message-handler');
 
       // Get the message handler that was registered
       const addListenerMock = chrome.runtime.onMessage.addListener as jest.Mock;
@@ -240,6 +248,54 @@ describe('service-worker.ts', () => {
           );
           consoleSpy.mockRestore();
         });
+      });
+    });
+
+    describe('authentication messages', () => {
+      it('should route SIGN_IN messages with interactive defaulting to true', () => {
+        const request = { type: 'SIGN_IN' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignIn).toHaveBeenCalledWith(
+          true,
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route SIGN_IN messages with interactive false', () => {
+        const request = { type: 'SIGN_IN', interactive: false };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignIn).toHaveBeenCalledWith(
+          false,
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route SIGN_OUT messages', () => {
+        const request = { type: 'SIGN_OUT' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignOut).toHaveBeenCalledWith(
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route GET_AUTH_STATE messages', () => {
+        const request = { type: 'GET_AUTH_STATE' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleGetAuthState).toHaveBeenCalledWith(
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
       });
     });
 
