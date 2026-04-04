@@ -169,6 +169,22 @@ describe('inline selection translate trigger', () => {
     ).not.toBeNull();
   });
 
+  it('ignores non-primary-button double clicks', () => {
+    selectionState.text = 'Hello';
+    selectionState.isCollapsed = false;
+    selectionState.hasRange = true;
+    selectionState.rect = new DOMRect(50, 40, 80, 18);
+    selectionState.fallbackRect = null;
+
+    window.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, button: 1 }),
+    );
+
+    expect(
+      document.getElementById('talkient-inline-translate-trigger'),
+    ).toBeNull();
+  });
+
   it('does not show trigger for invalid selection geometry', () => {
     selectionState.text = 'Hello';
     selectionState.isCollapsed = false;
@@ -222,6 +238,85 @@ describe('inline selection translate trigger', () => {
     expect(
       document.getElementById('talkient-inline-translate-trigger'),
     ).toBeNull();
+  });
+
+  it('repositions trigger on selectionchange when the same selection stays active', () => {
+    selectionState.text = 'Hello';
+    selectionState.isCollapsed = false;
+    selectionState.hasRange = true;
+    selectionState.rect = new DOMRect(50, 40, 80, 18);
+    selectionState.fallbackRect = null;
+
+    window.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, button: 0 }),
+    );
+
+    const trigger = document.getElementById(
+      'talkient-inline-translate-trigger',
+    ) as HTMLButtonElement | null;
+
+    expect(trigger).not.toBeNull();
+    const originalLeft = trigger?.style.left;
+    const originalTop = trigger?.style.top;
+
+    selectionState.rect = new DOMRect(180, 140, 90, 20);
+    document.dispatchEvent(new Event('selectionchange'));
+
+    expect(trigger?.style.left).not.toBe(originalLeft);
+    expect(trigger?.style.top).not.toBe(originalTop);
+    expect(
+      document.getElementById('talkient-inline-translate-trigger'),
+    ).not.toBeNull();
+  });
+
+  it('removes trigger when selection text changes after it was shown', () => {
+    selectionState.text = 'Hello';
+    selectionState.isCollapsed = false;
+    selectionState.hasRange = true;
+    selectionState.rect = new DOMRect(50, 40, 80, 18);
+    selectionState.fallbackRect = null;
+
+    window.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, button: 0 }),
+    );
+
+    expect(
+      document.getElementById('talkient-inline-translate-trigger'),
+    ).not.toBeNull();
+
+    selectionState.text = 'Different selection';
+    selectionState.rect = new DOMRect(180, 140, 90, 20);
+    document.dispatchEvent(new Event('selectionchange'));
+
+    expect(
+      document.getElementById('talkient-inline-translate-trigger'),
+    ).toBeNull();
+  });
+
+  it('repositions trigger on scroll while the same selection remains active', () => {
+    selectionState.text = 'Hello';
+    selectionState.isCollapsed = false;
+    selectionState.hasRange = true;
+    selectionState.rect = new DOMRect(50, 40, 80, 18);
+    selectionState.fallbackRect = null;
+
+    window.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, button: 0 }),
+    );
+
+    const trigger = document.getElementById(
+      'talkient-inline-translate-trigger',
+    ) as HTMLButtonElement | null;
+
+    expect(trigger).not.toBeNull();
+    const originalLeft = trigger?.style.left;
+    const originalTop = trigger?.style.top;
+
+    selectionState.rect = new DOMRect(220, 180, 90, 20);
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(trigger?.style.left).not.toBe(originalLeft);
+    expect(trigger?.style.top).not.toBe(originalTop);
   });
 
   it('removes trigger on outside pointerdown', () => {

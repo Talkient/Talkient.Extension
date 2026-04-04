@@ -35,6 +35,12 @@ jest.mock('../../shared/api/messaging', () => ({
   isExtensionContextValid: jest.fn(() => true),
 }));
 
+jest.mock('../translation-result', () => ({
+  showTranslationError: jest.fn(),
+  showTranslationLoading: jest.fn(),
+  showTranslationSuccess: jest.fn(),
+}));
+
 // Mock chrome runtime
 const mockChrome = {
   runtime: {
@@ -596,6 +602,99 @@ describe('Content Script Message Handling', () => {
     }).not.toThrow();
 
     expect(highlightWordSpy).toHaveBeenCalledWith(undefined, undefined);
+  });
+
+  test('should route TRANSLATION_LOADING messages to loading UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      { type: 'TRANSLATION_LOADING', originalText: 'Hello world' },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationLoading).toHaveBeenCalledWith(
+      'Hello world',
+    );
+  });
+
+  test('should route TRANSLATION_RESULT messages to success UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      {
+        type: 'TRANSLATION_RESULT',
+        originalText: 'Hello world',
+        translatedText: 'Ola mundo',
+        sourceLanguage: 'en',
+        targetLanguage: 'pt',
+        provider: 'libre-translate',
+      },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationSuccess).toHaveBeenCalledWith({
+      originalText: 'Hello world',
+      translatedText: 'Ola mundo',
+      sourceLanguage: 'en',
+      targetLanguage: 'pt',
+      provider: 'libre-translate',
+    });
+  });
+
+  test('should route TRANSLATION_ERROR messages to error UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      {
+        type: 'TRANSLATION_ERROR',
+        errorCode: 'NETWORK_ERROR',
+        message: 'Translation providers are currently unavailable.',
+      },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationError).toHaveBeenCalledWith({
+      errorCode: 'NETWORK_ERROR',
+      message: 'Translation providers are currently unavailable.',
+    });
+  });
+
+  test('should ignore invalid message payloads without throwing', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    expect(() => {
+      messageListener(null, {}, jest.fn());
+      messageListener({}, {}, jest.fn());
+    }).not.toThrow();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[Talkient] Unknown message format received',
+    );
+
+    consoleSpy.mockRestore();
   });
 
   test('should handle SPEECH_CANCELLED message correctly', () => {

@@ -1,29 +1,47 @@
-import { test } from './extension-test';
+import { test, expect } from './extension-test';
+import * as path from 'path';
+
+const TEST_PAGE_URL = `file://${path.resolve(__dirname, 'test-pages/example.html').replace(/\\/g, '/')}`;
+const ARTICLE_REQUIREMENT_URL = `file://${path.resolve(__dirname, 'test-pages/article-requirement-test.html').replace(/\\/g, '/')}`;
 
 test.describe('Talkient Content Script', () => {
-  test('should inject content script into web pages', async ({
+  test('injects the content UI into processable article content', async ({
     page,
-    context: _context,
-    extensionId: _extensionId,
   }) => {
-    // Navigate to a test page
-    await page.goto('https://example.com');
+    await page.goto(TEST_PAGE_URL);
+    await page.waitForLoadState('networkidle');
 
-    // Wait for content script to be injected
-    // You'll need to add appropriate selectors based on your extension's functionality
-    // For example, if your extension adds a button to the page:
-    // await page.waitForSelector('.talkient-button');
+    await page.waitForSelector('#talkient-control-panel', { timeout: 10000 });
+    await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
 
-    // Take a screenshot for verification
-    await page.screenshot({
-      path: 'e2e-results/content-script-screenshot.png',
+    await expect(page.locator('#talkient-control-panel')).toBeVisible();
+    await expect(page.locator('article .talkient-play-button')).toHaveCount(1);
+    await expect(page.locator('article .talkient-play-button')).toBeVisible();
+  });
+
+  test('keeps content outside article tags untouched', async ({ page }) => {
+    await page.goto(ARTICLE_REQUIREMENT_URL);
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('#talkient-control-panel', { timeout: 10000 });
+    await page.waitForSelector('.talkient-play-button', { timeout: 10000 });
+
+    const processingState = await page.evaluate(() => {
+      const hasProcessedWrapper = (selector: string) => {
+        const el = document.querySelector(selector);
+        return el?.closest('.talkient-processed') !== null;
+      };
+
+      return {
+        header: hasProcessedWrapper('header p'),
+        nav: hasProcessedWrapper('nav p'),
+        aside: hasProcessedWrapper('aside p'),
+        footer: hasProcessedWrapper('footer p'),
+      };
     });
 
-    // Test extension functionality on the page
-    // This will depend on what your extension does, for example:
-    // const button = page.locator('.talkient-button');
-    // await expect(button).toBeVisible();
-    // await button.click();
-    // await expect(page.locator('.talkient-popup')).toBeVisible();
+    expect(processingState.header).toBe(false);
+    expect(processingState.nav).toBe(false);
+    expect(processingState.aside).toBe(false);
+    expect(processingState.footer).toBe(false);
   });
 });
