@@ -371,17 +371,6 @@ describe('service-worker.ts', () => {
       });
     });
 
-    describe('TRANSLATE_SELECTION message', () => {
-      it('responds with success for inline selection translation requests', () => {
-        const request = { type: 'TRANSLATE_SELECTION', text: 'Hello world' };
-
-        const result = messageHandler(request, mockSender, mockSendResponse);
-
-        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
-        expect(result).toBe(true);
-      });
-    });
-
     describe('unknown message types', () => {
       it('should not respond to unknown message types', () => {
         const request = { type: 'UNKNOWN_MESSAGE' };
@@ -957,6 +946,132 @@ describe('service-worker.ts', () => {
           type: 'SPEECH_ENDED',
           autoPlayNext: true,
         });
+      });
+    });
+
+    describe('RELOAD_PLAY_BUTTONS message', () => {
+      beforeEach(() => {
+        (chrome.tabs.query as jest.Mock).mockClear();
+        (chrome.tabs.sendMessage as jest.Mock).mockClear();
+      });
+
+      it('should forward the message to the active tab and respond with success', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{ id: 42 }]),
+        );
+        (chrome.tabs.sendMessage as jest.Mock).mockImplementation(
+          (_id, _msg, cb) => {
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: undefined,
+              writable: true,
+              configurable: true,
+            });
+            cb({});
+          },
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
+          42,
+          { type: 'RELOAD_PLAY_BUTTONS' },
+          expect.any(Function),
+        );
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+      });
+
+      it('should respond with failure when sendMessage has a lastError', () => {
+        const mockError = { message: 'Could not reach content script' };
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{ id: 42 }]),
+        );
+        (chrome.tabs.sendMessage as jest.Mock).mockImplementation(
+          (_id, _msg, cb) => {
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: mockError,
+              writable: true,
+              configurable: true,
+            });
+            cb(undefined);
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: undefined,
+              writable: true,
+              configurable: true,
+            });
+          },
+        );
+
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: mockError,
+        });
+        consoleSpy.mockRestore();
+      });
+
+      it('should respond with failure when no active tab is found', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([]),
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: 'No active tab found',
+        });
+      });
+
+      it('should respond with failure when active tab has no id', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{}]),
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: 'No active tab found',
+        });
+      });
+    });
+
+    describe('TRANSLATE_SELECTION message', () => {
+      it('should call handleTranslateSelectionMessage with request and sender', () => {
+        const ttsMessageHandler = require('../../features/tts-playback/background/message-handler');
+        const spy = jest.spyOn(
+          ttsMessageHandler,
+          'handleTranslateSelectionMessage',
+        );
+
+        const request = { type: 'TRANSLATE_SELECTION', text: 'Bonjour' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(spy).toHaveBeenCalledWith(request, mockSender);
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+        spy.mockRestore();
+      });
+
+      it('should respond with success even when sender has no tab (handler warns internally)', () => {
+        const request = {
+          type: 'TRANSLATE_SELECTION',
+          text: 'Hello',
+        };
+        const senderWithoutTab = {};
+
+        expect(() => {
+          messageHandler(request, senderWithoutTab, mockSendResponse);
+        }).not.toThrow();
+
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
       });
     });
 
