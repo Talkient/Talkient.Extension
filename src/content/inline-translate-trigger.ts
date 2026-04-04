@@ -145,7 +145,7 @@ export function showInlineTranslateTrigger(input: {
     button.removeEventListener('click', activeClickHandler);
   }
 
-  activeClickHandler = (event: MouseEvent) => {
+  activeClickHandler = (event: MouseEvent): void => {
     event.preventDefault();
     event.stopPropagation();
     input.onClick();
