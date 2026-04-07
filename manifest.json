@@ -6,7 +6,7 @@
     "48": "assets/png/text-to-speech.png",
     "128": "assets/png/text-to-speech.png"
   },
-  "version": "0.0.25",
+  "version": "0.0.26",
   "permissions": [
     "tts",
     "storage",
