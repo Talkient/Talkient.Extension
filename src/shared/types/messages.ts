@@ -27,6 +27,11 @@ export interface GetVoicesMessage {
   type: 'GET_VOICES';
 }
 
+export interface TranslateSelectionMessage {
+  type: 'TRANSLATE_SELECTION';
+  text: string;
+}
+
 export interface GetVoicesResponse {
   success: true;
   voices: chrome.tts.TtsVoice[];
@@ -38,7 +43,8 @@ export type ServiceWorkerMessage =
   | PauseSpeechMessage
   | OpenOptionsMessage
   | ReloadPlayButtonsMessage
-  | GetVoicesMessage;
+  | GetVoicesMessage
+  | TranslateSelectionMessage;
 
 // Message types sent from service worker to content scripts
 export interface SpeechEndedMessage {
@@ -162,6 +168,17 @@ export function isGetVoicesMessage(
     typeof message === 'object' &&
     message !== null &&
     (message as GetVoicesMessage).type === 'GET_VOICES'
+  );
+}
+
+export function isTranslateSelectionMessage(
+  message: unknown,
+): message is TranslateSelectionMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as TranslateSelectionMessage).type === 'TRANSLATE_SELECTION' &&
+    typeof (message as TranslateSelectionMessage).text === 'string'
   );
 }
 

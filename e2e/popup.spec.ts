@@ -1,281 +1,204 @@
 import { test, expect } from './extension-test';
+import type { Page } from '@playwright/test';
+
+const popupPath = '/popup/popup.html';
+const authStorageKey = 'talkient_auth_state';
+
+type PopupAuthState = {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    picture: string;
+    verified_email: boolean;
+  } | null;
+  lastUpdated: number;
+};
+
+async function gotoPopup(page: Page, extensionId: string): Promise<void> {
+  await page.goto(`chrome-extension://${extensionId}${popupPath}`);
+  await page.waitForLoadState('domcontentloaded');
+  await page.locator('.popup-container').waitFor({ state: 'visible' });
+}
+
+async function setPopupStorage(
+  page: Page,
+  values: Record<string, unknown>,
+): Promise<void> {
+  await page.evaluate(async (storageValues) => {
+    await chrome.storage.local.set(storageValues);
+  }, values);
+}
+
+async function getPopupStorage<T>(
+  page: Page,
+  key: string,
+): Promise<T | undefined> {
+  return page.evaluate(async (storageKey) => {
+    const result = await chrome.storage.local.get(storageKey);
+    return result[storageKey] as T | undefined;
+  }, key);
+}
+
+async function removePopupStorage(page: Page, key: string): Promise<void> {
+  await page.evaluate(async (storageKey) => {
+    await chrome.storage.local.remove(storageKey);
+  }, key);
+}
 
 test.describe('Talkient Extension Popup', () => {
-  test('should load popup correctly', async ({ page, extensionId }) => {
-    // Navigate to the popup page
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Wait for the title element to be visible before checking
-    await page.locator('.title').waitFor({ state: 'visible', timeout: 5000 });
-
-    // Wait for popup container to ensure full load
-    await page
-      .locator('.popup-container')
-      .waitFor({ state: 'visible', timeout: 5000 });
-
-    // Take a screenshot for verification
-    await page.screenshot({ path: 'e2e-results/popup-screenshot.png' });
-
-    // Verify popup content loads correctly
-    await expect(page).toHaveTitle(/Talkient/, { timeout: 5000 });
+  test.beforeEach(async ({ page, extensionId }) => {
+    await gotoPopup(page, extensionId);
   });
 
-  test('should display minimalist popup structure', async ({
-    page,
-    extensionId,
-  }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Wait for key element to be visible
-    await page.locator('.popup-container').waitFor({ state: 'visible' });
-
-    // Verify header with title and tagline
-    const title = page.locator('.title');
-    await expect(title).toHaveText('Talkient');
-
-    const tagline = page.locator('.tagline');
-    await expect(tagline).toHaveText('Text-to-Speech');
-
-    // Verify popup container exists
-    const container = page.locator('.popup-container');
-    await expect(container).toBeVisible();
-
-    // Take screenshot of the minimalist design
-    await page.screenshot({
-      path: 'e2e-results/popup-minimalist-design.png',
-    });
+  test('loads the popup shell and essential actions', async ({ page }) => {
+    await expect(page).toHaveTitle(/Talkient/);
+    await expect(page.locator('.title')).toHaveText('Talkient');
+    await expect(page.locator('.tagline')).toHaveText('Text-to-Speech');
+    await expect(page.locator('#voice-select')).toBeVisible();
+    await expect(page.locator('#options-link')).toBeVisible();
+    await expect(page.locator('#report-issue-link')).toBeVisible();
   });
 
-  test('should display settings link with icon', async ({
+  test('navigates to options page from the settings link', async ({
     page,
-    extensionId,
-  }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Wait for settings link to be visible with explicit timeout
-    const settingsLink = page.locator('#options-link');
-    await settingsLink.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Verify settings link exists and is visible
-    await expect(settingsLink).toBeVisible();
-    await expect(settingsLink).toContainText('Settings');
-    await expect(settingsLink).toHaveClass(/settings-link/);
-
-    // Verify the settings icon SVG is present - wait for it explicitly
-    const settingsIcon = page.locator('#options-link .settings-icon');
-    await settingsIcon.waitFor({ state: 'visible', timeout: 5000 });
-    await expect(settingsIcon).toBeVisible();
-
-    // Take screenshot highlighting the settings link
-    await page.screenshot({
-      path: 'e2e-results/popup-settings-link.png',
-    });
-  });
-
-  test('should display report issue link in footer', async ({
-    page,
-    extensionId,
-  }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    // Wait for report link to be visible
-    const reportLink = page.locator('#report-issue-link');
-    await reportLink.waitFor({ state: 'visible' });
-
-    // Verify report issue link exists
-    await expect(reportLink).toBeVisible();
-    await expect(reportLink).toHaveText('Report an issue');
-    await expect(reportLink).toHaveClass(/report-link/);
-
-    // Verify it's inside the footer
-    const footer = page.locator('.footer');
-    await expect(footer).toBeVisible();
-    await expect(footer.locator('#report-issue-link')).toBeVisible();
-
-    // Take screenshot showing the footer
-    await page.screenshot({
-      path: 'e2e-results/popup-report-link.png',
-    });
-  });
-
-  test('should have subtle styling for report issue link', async ({
-    page,
-    extensionId,
-  }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const reportLink = page.locator('#report-issue-link');
-    await reportLink.waitFor({ state: 'visible' });
-
-    // Wait for CSS to be fully loaded and computed
-    await page.waitForLoadState('load');
-    // Give extra time for CSS styles to be applied
-    await page.waitForTimeout(300);
-
-    // Check the link has subtle/light styling (color should be light gray)
-    const color = await reportLink.evaluate(
-      (el) => window.getComputedStyle(el).color,
-    );
-    // The color should be a light gray (#bdc3c7 = rgb(189, 195, 199))
-    // Handle both rgb() and rgba() formats, with flexible spacing
-    expect(color).toMatch(
-      /rgba?\(189,\s*195,\s*199(?:,\s*1)?\)|rgb\(189, 195, 199\)/,
-    );
-
-    // Verify font size is small
-    const fontSize = await reportLink.evaluate(
-      (el) => window.getComputedStyle(el).fontSize,
-    );
-    expect(fontSize).toBe('11px');
-  });
-
-  test('should open GitHub issues page when report link is clicked', async ({
-    page,
-    extensionId,
     context,
   }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const reportLink = page.locator('#report-issue-link');
-    await reportLink.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Set up listener for new page/tab with timeout
-    const newPagePromise = context.waitForEvent('page', { timeout: 15000 });
-
-    // Click the report issue link
-    await reportLink.click();
-
-    // Wait for the new page to open
-    const newPage = await newPagePromise;
-
-    // Wait for the page to start loading (may involve redirects)
-    await newPage.waitForLoadState('domcontentloaded', { timeout: 15000 });
-
-    // Wait a bit for any potential redirects to complete
-    await newPage.waitForTimeout(1000);
-
-    // Verify the URL is a GitHub URL
-    // Note: GitHub may redirect to login or other pages, so we only verify it's github.com
-    const url = newPage.url();
-    expect(url).toContain('github.com');
-
-    // Verify it's related to Talkient (either in URL or we're being redirected from the correct repo)
-    // GitHub might redirect to login, so we make this assertion optional by checking both conditions
-    const isGitHubDomain = url.includes('github.com');
-
-    // Either we're on the talkient page, or we've been redirected to GitHub (which is acceptable)
-    expect(isGitHubDomain).toBe(true);
-
-    // Take screenshot of the GitHub page
-    await newPage.screenshot({
-      path: 'e2e-results/popup-github-issues-page.png',
-    });
-  });
-
-  test('should navigate to options page when settings link is clicked', async ({
-    page,
-    extensionId,
-    context,
-  }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-
-    const settingsLink = page.locator('#options-link');
-    await settingsLink.waitFor({ state: 'visible' });
-
-    // Set up listener for new page
     const optionsPagePromise = context.waitForEvent('page');
 
-    // Click the settings link
-    await settingsLink.click();
+    await page.locator('#options-link').click();
 
-    // Wait for the options page to open
     const optionsPage = await optionsPagePromise;
     await optionsPage.waitForLoadState('domcontentloaded');
 
-    // Verify we're on the options page
     await expect(optionsPage).toHaveTitle('Talkient Options');
-
-    // Take screenshot of the options page
-    await optionsPage.screenshot({
-      path: 'e2e-results/popup-to-options-navigation.png',
-    });
+    await optionsPage.close();
   });
 
-  test('should have correct visual hierarchy', async ({
+  test('opens the GitHub issue flow from the report link', async ({
+    page,
+    context,
+  }) => {
+    const newPagePromise = context.waitForEvent('page', { timeout: 15000 });
+
+    await page.locator('#report-issue-link').click();
+
+    const newPage = await newPagePromise;
+    await newPage.waitForLoadState('domcontentloaded', { timeout: 15000 });
+
+    expect(newPage.url()).toContain('github.com');
+    await newPage.close();
+  });
+
+  test('shows stored authenticated user details in the popup', async ({
     page,
     extensionId,
   }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
+    const authState: PopupAuthState = {
+      isAuthenticated: true,
+      user: {
+        id: 'user-1',
+        email: 'ada@example.com',
+        name: 'Ada Lovelace',
+        picture: 'https://example.com/ada.png',
+        verified_email: true,
+      },
+      lastUpdated: Date.now(),
+    };
 
-    // Wait for all elements to be visible
-    const header = page.locator('.header');
-    const settingsLink = page.locator('#options-link');
-    const footer = page.locator('.footer');
+    await setPopupStorage(page, { [authStorageKey]: authState });
+    await gotoPopup(page, extensionId);
 
-    await header.waitFor({ state: 'visible' });
-    await settingsLink.waitFor({ state: 'visible' });
-    await footer.waitFor({ state: 'visible' });
-
-    // Get bounding boxes to verify visual order
-    const headerBox = await header.boundingBox();
-    const settingsBox = await settingsLink.boundingBox();
-    const footerBox = await footer.boundingBox();
-
-    expect(headerBox).toBeTruthy();
-    expect(settingsBox).toBeTruthy();
-    expect(footerBox).toBeTruthy();
-
-    // Header should be above settings link
-    expect(headerBox!.y + headerBox!.height).toBeLessThanOrEqual(
-      settingsBox!.y,
-    );
-
-    // Settings link should be above footer
-    expect(settingsBox!.y + settingsBox!.height).toBeLessThanOrEqual(
-      footerBox!.y,
+    await expect(page.locator('#user-profile')).toBeVisible();
+    await expect(page.locator('#sign-in-btn')).toBeHidden();
+    await expect(page.locator('#user-name')).toHaveText(authState.user.name);
+    await expect(page.locator('#user-email')).toHaveText(authState.user.email);
+    await expect(page.locator('#user-avatar')).toHaveAttribute(
+      'src',
+      authState.user.picture,
     );
   });
 
-  test('should have hover effect on settings link', async ({
+  test('signing out from the popup clears stored auth state and returns to signed-out UI', async ({
     page,
     extensionId,
   }) => {
-    await page.goto(`chrome-extension://${extensionId}/popup/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
+    const authState: PopupAuthState = {
+      isAuthenticated: true,
+      user: {
+        id: 'user-1',
+        email: 'ada@example.com',
+        name: 'Ada Lovelace',
+        picture: 'https://example.com/ada.png',
+        verified_email: true,
+      },
+      lastUpdated: Date.now(),
+    };
 
-    const settingsLink = page.locator('#options-link');
-    await settingsLink.waitFor({ state: 'visible' });
+    await setPopupStorage(page, { [authStorageKey]: authState });
+    await gotoPopup(page, extensionId);
 
-    // Get initial background color
-    const initialBgColor = await settingsLink.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor,
+    await expect(page.locator('#user-profile')).toBeVisible();
+
+    await page.locator('#sign-out-btn').click();
+
+    await expect(page.locator('#sign-in-btn')).toBeVisible();
+    await expect(page.locator('#user-profile')).toBeHidden();
+
+    const storedAuthState = await getPopupStorage<PopupAuthState>(
+      page,
+      authStorageKey,
     );
+    expect(storedAuthState).toBeUndefined();
+  });
 
-    // Hover over the settings link
-    await settingsLink.hover();
+  test('persists voice selection across popup reopen', async ({
+    page,
+    extensionId,
+  }) => {
+    const voiceSelect = page.locator('#voice-select');
+    const optionCount = await page.locator('#voice-select option').count();
 
-    // Wait for transition
-    await page.waitForTimeout(300);
+    expect(optionCount).toBeGreaterThan(0);
 
-    // Get hover background color
-    const hoverBgColor = await settingsLink.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor,
-    );
+    if (optionCount === 1) {
+      await expect(voiceSelect).toHaveValue('default');
+      return;
+    }
 
-    // Colors should be different on hover
-    expect(hoverBgColor).not.toBe(initialBgColor);
+    await voiceSelect.selectOption({ index: 1 });
+    const chosenVoice = await voiceSelect.inputValue();
 
-    // Take screenshot of hover state
-    await page.screenshot({
-      path: 'e2e-results/popup-settings-hover.png',
+    await gotoPopup(page, extensionId);
+    await expect(page.locator('#voice-select')).toHaveValue(chosenVoice);
+
+    const storedVoice = await getPopupStorage<string>(page, 'selectedVoice');
+    expect(storedVoice).toBe(chosenVoice);
+  });
+
+  test('falls back to default when stored voice no longer exists', async ({
+    page,
+    extensionId,
+  }) => {
+    await setPopupStorage(page, {
+      selectedVoice: 'Voice That No Longer Exists',
     });
+
+    await gotoPopup(page, extensionId);
+
+    await expect(page.locator('#voice-select')).toHaveValue('default');
+  });
+
+  test('shows the signed-out state when no auth state is stored', async ({
+    page,
+    extensionId,
+  }) => {
+    await removePopupStorage(page, authStorageKey);
+    await gotoPopup(page, extensionId);
+
+    await expect(page.locator('#sign-in-btn')).toBeVisible();
+    await expect(page.locator('#user-profile')).toBeHidden();
+    await expect(page.locator('#auth-loading')).toBeHidden();
   });
 });

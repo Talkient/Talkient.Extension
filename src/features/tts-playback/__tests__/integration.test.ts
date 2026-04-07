@@ -315,4 +315,65 @@ describe('Text Highlighting Integration', () => {
     expect(newHighlightedElement).toBeTruthy();
     expect(newHighlightedElement).not.toBe(highlightedElement);
   });
+
+  test('playing a second button while first is active resets first button icon to play', async () => {
+    const article = document.createElement('article');
+
+    const para1 = document.createElement('p');
+    para1.textContent = 'First paragraph to be played first.';
+    const para2 = document.createElement('p');
+    para2.textContent = 'Second paragraph that interrupts the first.';
+
+    article.appendChild(para1);
+    article.appendChild(para2);
+    container.appendChild(article);
+
+    const textNode1 = para1.firstChild as Text;
+    const textNode2 = para2.firstChild as Text;
+
+    let callCount = 0;
+    const mockWalker = {
+      nextNode: jest.fn(() => {
+        callCount++;
+        if (callCount === 1) {
+          mockWalker.currentNode = textNode1;
+          return textNode1;
+        } else if (callCount === 2) {
+          mockWalker.currentNode = textNode2;
+          return textNode2;
+        }
+        return null;
+      }),
+      currentNode: null as Node | null,
+    };
+
+    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+
+    mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
+      if (callback) callback({ success: true });
+    });
+
+    processTextElements();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const playButtons = container.querySelectorAll<HTMLButtonElement>(
+      '.talkient-play-button',
+    );
+    expect(playButtons.length).toBe(2);
+
+    // Play first button — icon becomes pause
+    playButtons[0].click();
+    const svgAfterFirstPlay = playButtons[0].querySelector('svg');
+    expect(isSvgPauseIcon(svgAfterFirstPlay as SVGElement)).toBe(true);
+
+    // Click second button — first button's icon should reset to play
+    playButtons[1].click();
+
+    const svgFirstAfterInterrupt = playButtons[0].querySelector('svg');
+    expect(isSvgPlayIcon(svgFirstAfterInterrupt as SVGElement)).toBe(true);
+
+    // Second button's icon should now be pause
+    const svgSecond = playButtons[1].querySelector('svg');
+    expect(isSvgPauseIcon(svgSecond as SVGElement)).toBe(true);
+  });
 });

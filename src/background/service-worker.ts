@@ -4,6 +4,7 @@ import {
   isOpenOptionsMessage,
   isReloadPlayButtonsMessage,
   isGetVoicesMessage,
+  isTranslateSelectionMessage,
   isSignInMessage,
   isSignOutMessage,
   isGetAuthStateMessage,
@@ -18,6 +19,7 @@ import { checkTtsAvailability } from '../features/tts-playback/background/tts-en
 import {
   handleSpeakText,
   handlePauseSpeech,
+  handleTranslateSelectionMessage,
 } from '../features/tts-playback/background/message-handler';
 import {
   setupContextMenu,
@@ -81,6 +83,9 @@ chrome.runtime.onMessage.addListener(
         sendResponse({ success: true, voices });
       });
       return true; // async
+    } else if (isTranslateSelectionMessage(request)) {
+      handleTranslateSelectionMessage(request, sender);
+      sendResponse({ success: true });
     } else if (isReloadPlayButtonsMessage(request)) {
       console.log('[Talkient.SW] Reloading play buttons...');
       // Forward the request to the content script

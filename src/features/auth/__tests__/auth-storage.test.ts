@@ -85,6 +85,17 @@ describe('auth-storage', () => {
         lastUpdated: 0,
       });
     });
+
+    it('should return malformed stored state as-is when storage contains an unexpected shape', async () => {
+      const malformedState = {
+        isAuthenticated: true,
+      };
+      mockStorage['talkient_auth_state'] = malformedState;
+
+      const state = await getAuthState();
+
+      expect(state).toEqual(malformedState);
+    });
   });
 
   describe('saveAuthState', () => {

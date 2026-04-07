@@ -169,4 +169,28 @@ describe('content ignored domains integration', () => {
     expect(document.querySelector('.talkient-processed')).toBeNull();
     expect(mockClearHighlight).toHaveBeenCalled();
   });
+
+  it('recreates UI when ignoredDomains update stops matching current hostname', async () => {
+    setupChromeStorage(['localhost']);
+
+    require('../content');
+    await Promise.resolve();
+
+    expect(mockCreateControlPanel).not.toHaveBeenCalled();
+    expect(mockProcessTextElements).not.toHaveBeenCalled();
+    expect(storageListener).toBeTruthy();
+
+    storageListener?.(
+      {
+        ignoredDomains: {
+          newValue: [],
+        },
+      },
+      'local',
+    );
+
+    expect(mockSetIgnoredDomains).toHaveBeenLastCalledWith([]);
+    expect(mockCreateControlPanel).toHaveBeenCalledTimes(1);
+    expect(mockProcessTextElements).toHaveBeenCalledTimes(1);
+  });
 });

@@ -35,6 +35,12 @@ jest.mock('../../shared/api/messaging', () => ({
   isExtensionContextValid: jest.fn(() => true),
 }));
 
+jest.mock('../translation-result', () => ({
+  showTranslationError: jest.fn(),
+  showTranslationLoading: jest.fn(),
+  showTranslationSuccess: jest.fn(),
+}));
+
 // Mock chrome runtime
 const mockChrome = {
   runtime: {
@@ -493,6 +499,48 @@ describe('Content Script Message Handling', () => {
     });
   });
 
+  test('should not auto-play next text when next button is already in pause state', async () => {
+    const currentWrapper = document.createElement('span');
+    currentWrapper.classList.add('talkient-processed');
+    const currentText = document.createElement('span');
+    currentText.textContent = 'Current highlighted text';
+    currentWrapper.appendChild(currentText);
+    const currentButton = document.createElement('button');
+    currentButton.classList.add('talkient-play-button');
+    currentButton.innerHTML = getSvgIcon('pause');
+    currentWrapper.appendChild(currentButton);
+    container.appendChild(currentWrapper);
+
+    const nextWrapper = document.createElement('span');
+    nextWrapper.classList.add('talkient-processed');
+    const nextText = document.createElement('span');
+    nextText.textContent = 'Next text should not auto-play';
+    nextWrapper.appendChild(nextText);
+    const nextButton = document.createElement('button');
+    nextButton.classList.add('talkient-play-button');
+    nextButton.innerHTML = getSvgIcon('pause');
+    nextWrapper.appendChild(nextButton);
+    container.appendChild(nextWrapper);
+
+    highlightText(currentText);
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const nextButtonClickSpy = jest.spyOn(nextButton, 'click');
+
+    messageListener(
+      { type: 'SPEECH_ENDED', autoPlayNext: true },
+      {},
+      jest.fn(),
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    expect(nextButtonClickSpy).not.toHaveBeenCalled();
+  });
+
   test('should ignore unknown message types', () => {
     const testElement = document.createElement('span');
     container.appendChild(testElement);
@@ -554,6 +602,99 @@ describe('Content Script Message Handling', () => {
     }).not.toThrow();
 
     expect(highlightWordSpy).toHaveBeenCalledWith(undefined, undefined);
+  });
+
+  test('should route TRANSLATION_LOADING messages to loading UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      { type: 'TRANSLATION_LOADING', originalText: 'Hello world' },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationLoading).toHaveBeenCalledWith(
+      'Hello world',
+    );
+  });
+
+  test('should route TRANSLATION_RESULT messages to success UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      {
+        type: 'TRANSLATION_RESULT',
+        originalText: 'Hello world',
+        translatedText: 'Ola mundo',
+        sourceLanguage: 'en',
+        targetLanguage: 'pt',
+        provider: 'libre-translate',
+      },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationSuccess).toHaveBeenCalledWith({
+      originalText: 'Hello world',
+      translatedText: 'Ola mundo',
+      sourceLanguage: 'en',
+      targetLanguage: 'pt',
+      provider: 'libre-translate',
+    });
+  });
+
+  test('should route TRANSLATION_ERROR messages to error UI', () => {
+    const translationModule = require('../translation-result');
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    messageListener(
+      {
+        type: 'TRANSLATION_ERROR',
+        errorCode: 'NETWORK_ERROR',
+        message: 'Translation providers are currently unavailable.',
+      },
+      {},
+      jest.fn(),
+    );
+
+    expect(translationModule.showTranslationError).toHaveBeenCalledWith({
+      errorCode: 'NETWORK_ERROR',
+      message: 'Translation providers are currently unavailable.',
+    });
+  });
+
+  test('should ignore invalid message payloads without throwing', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+    expect(() => {
+      messageListener(null, {}, jest.fn());
+      messageListener({}, {}, jest.fn());
+    }).not.toThrow();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[Talkient] Unknown message format received',
+    );
+
+    consoleSpy.mockRestore();
   });
 
   test('should handle SPEECH_CANCELLED message correctly', () => {
@@ -653,6 +794,57 @@ describe('Content Script Message Handling', () => {
         call[0]?.type === 'PAUSE_SPEECH' && call[0]?.isPageUnload === true,
     );
     expect(hasCorrectCall).toBe(true);
+  });
+
+  test('should return disabled response for RELOAD_PLAY_BUTTONS when play buttons are disabled', () => {
+    mockChrome.storage.local.get.mockImplementation((keys, callback) => {
+      if (
+        keys === 'playButtonsEnabled' ||
+        (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
+      ) {
+        callback({ playButtonsEnabled: false });
+        return;
+      }
+
+      callback({ highlightStyle: 'default' });
+    });
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const sendResponse = jest.fn();
+
+    messageListener({ type: 'RELOAD_PLAY_BUTTONS' }, {}, sendResponse);
+
+    expect(sendResponse).toHaveBeenCalledWith({
+      success: false,
+      disabled: true,
+    });
+  });
+
+  test('should return success response for RELOAD_PLAY_BUTTONS when play buttons are enabled', () => {
+    mockChrome.storage.local.get.mockImplementation((keys, callback) => {
+      if (
+        keys === 'playButtonsEnabled' ||
+        (Array.isArray(keys) && keys.includes('playButtonsEnabled'))
+      ) {
+        callback({ playButtonsEnabled: true });
+        return;
+      }
+
+      callback({ highlightStyle: 'default' });
+    });
+
+    require('../content');
+
+    const messageListener =
+      mockChrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const sendResponse = jest.fn();
+
+    messageListener({ type: 'RELOAD_PLAY_BUTTONS' }, {}, sendResponse);
+
+    expect(sendResponse).toHaveBeenCalledWith({ success: true });
   });
 });
 

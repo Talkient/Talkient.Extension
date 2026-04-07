@@ -7,6 +7,13 @@ import './mocks/chrome';
 describe('popup.ts - using actual HTML', () => {
   let optionsLink: HTMLAnchorElement;
   let reportIssueLink: HTMLAnchorElement;
+  let signInBtn: HTMLButtonElement;
+  let signOutBtn: HTMLButtonElement;
+  let userProfile: HTMLElement;
+  let authLoading: HTMLElement;
+  let userAvatar: HTMLImageElement;
+  let userName: HTMLElement;
+  let userEmail: HTMLElement;
 
   beforeEach(async () => {
     // Reset DOM
@@ -28,6 +35,13 @@ describe('popup.ts - using actual HTML', () => {
     reportIssueLink = document.getElementById(
       'report-issue-link',
     ) as HTMLAnchorElement;
+    signInBtn = document.getElementById('sign-in-btn') as HTMLButtonElement;
+    signOutBtn = document.getElementById('sign-out-btn') as HTMLButtonElement;
+    userProfile = document.getElementById('user-profile') as HTMLElement;
+    authLoading = document.getElementById('auth-loading') as HTMLElement;
+    userAvatar = document.getElementById('user-avatar') as HTMLImageElement;
+    userName = document.getElementById('user-name') as HTMLElement;
+    userEmail = document.getElementById('user-email') as HTMLElement;
 
     // Clear all mocks before each test
     jest.clearAllMocks();
@@ -294,6 +308,269 @@ describe('popup.ts - using actual HTML', () => {
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         selectedVoice: 'Google US English',
       });
+    });
+
+    it('should keep only the default option when no voices are returned', () => {
+      (chrome.tts.getVoices as jest.Mock).mockImplementation(
+        (callback: (voices: chrome.tts.TtsVoice[]) => void) => {
+          callback([]);
+        },
+      );
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      );
+
+      require('../popup');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const voiceSelect = document.getElementById(
+        'voice-select',
+      ) as HTMLSelectElement;
+      const options = Array.from(voiceSelect.options).map((o) => ({
+        value: o.value,
+        label: o.textContent,
+      }));
+
+      expect(options).toEqual([{ value: 'default', label: 'Default Voice' }]);
+      expect(voiceSelect.value).toBe('default');
+    });
+  });
+
+  describe('auth UI', () => {
+    const authenticatedUser = {
+      name: 'Ada Lovelace',
+      email: 'ada@example.com',
+      picture: 'https://example.com/ada.png',
+    };
+    let runPopupDOMContentLoaded: (() => void) | null = null;
+
+    beforeEach(() => {
+      jest.resetModules();
+      require('./mocks/chrome');
+      (chrome.storage.local.get as jest.Mock).mockImplementation(
+        (
+          _keys: string[],
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({});
+        },
+      );
+
+      runPopupDOMContentLoaded = null;
+      const originalAddEventListener = document.addEventListener.bind(document);
+      jest
+        .spyOn(document, 'addEventListener')
+        .mockImplementation(
+          (
+            type: string,
+            listener: EventListenerOrEventListenerObject,
+            options?: boolean | AddEventListenerOptions,
+          ) => {
+            if (type === 'DOMContentLoaded' && typeof listener === 'function') {
+              runPopupDOMContentLoaded = () => {
+                listener(new Event('DOMContentLoaded'));
+              };
+              return;
+            }
+
+            originalAddEventListener(type, listener, options);
+          },
+        );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    function loadPopup(): void {
+      require('../popup');
+      runPopupDOMContentLoaded?.();
+    }
+
+    it('should request auth state when the popup loads', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockResolvedValue({
+        success: false,
+      });
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        type: 'GET_AUTH_STATE',
+      });
+    });
+
+    it('should show the signed-out state when the user is not authenticated', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockResolvedValue({
+        success: true,
+        isAuthenticated: false,
+      });
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show the signed-in profile when auth state includes a user', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockResolvedValue({
+        success: true,
+        isAuthenticated: true,
+        user: authenticatedUser,
+      });
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(false);
+      expect(signInBtn.classList.contains('hidden')).toBe(true);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+      expect(userName.textContent).toBe(authenticatedUser.name);
+      expect(userEmail.textContent).toBe(authenticatedUser.email);
+      expect(userAvatar.src).toBe(authenticatedUser.picture);
+    });
+
+    it('should fall back to the signed-out state when auth claims to be authenticated without a user', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockResolvedValue({
+        success: true,
+        isAuthenticated: true,
+        user: null,
+      });
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show a loading state during sign-in and then render the user profile', async () => {
+      let resolveSignIn!: (value: {
+        success: boolean;
+        user: typeof authenticatedUser;
+      }) => void;
+      (chrome.runtime.sendMessage as jest.Mock)
+        .mockResolvedValueOnce({
+          success: true,
+          isAuthenticated: false,
+        })
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              resolveSignIn = resolve;
+            }),
+        );
+
+      loadPopup();
+      await Promise.resolve();
+
+      signInBtn.click();
+
+      expect(authLoading.classList.contains('hidden')).toBe(false);
+      expect(signInBtn.classList.contains('hidden')).toBe(true);
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+
+      resolveSignIn({
+        success: true,
+        user: authenticatedUser,
+      });
+      await Promise.resolve();
+
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        type: 'SIGN_IN',
+        interactive: true,
+      });
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+      expect(userProfile.classList.contains('hidden')).toBe(false);
+      expect(userName.textContent).toBe(authenticatedUser.name);
+    });
+
+    it('should return to the signed-out state when sign-in fails', async () => {
+      (chrome.runtime.sendMessage as jest.Mock)
+        .mockResolvedValueOnce({
+          success: true,
+          isAuthenticated: false,
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          error: 'popup-blocked',
+        });
+
+      loadPopup();
+      await Promise.resolve();
+
+      signInBtn.click();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should return to the signed-out state when auth state check rejects', async () => {
+      (chrome.runtime.sendMessage as jest.Mock).mockRejectedValue(
+        new Error('background unavailable'),
+      );
+
+      loadPopup();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should sign out and show the signed-out state again', async () => {
+      (chrome.runtime.sendMessage as jest.Mock)
+        .mockResolvedValueOnce({
+          success: true,
+          isAuthenticated: true,
+          user: authenticatedUser,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+        });
+
+      loadPopup();
+      await Promise.resolve();
+
+      signOutBtn.click();
+      await Promise.resolve();
+
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        type: 'SIGN_OUT',
+      });
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should still show the signed-out state when sign-out fails', async () => {
+      (chrome.runtime.sendMessage as jest.Mock)
+        .mockResolvedValueOnce({
+          success: true,
+          isAuthenticated: true,
+          user: authenticatedUser,
+        })
+        .mockRejectedValueOnce(new Error('network error'));
+
+      loadPopup();
+      await Promise.resolve();
+
+      signOutBtn.click();
+      await Promise.resolve();
+
+      expect(userProfile.classList.contains('hidden')).toBe(true);
+      expect(signInBtn.classList.contains('hidden')).toBe(false);
+      expect(authLoading.classList.contains('hidden')).toBe(true);
     });
   });
 

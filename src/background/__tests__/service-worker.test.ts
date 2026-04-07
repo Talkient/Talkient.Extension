@@ -1,5 +1,11 @@
 import './mocks/chrome';
 
+jest.mock('../../features/auth/background/message-handler', () => ({
+  handleSignIn: jest.fn(),
+  handleSignOut: jest.fn(),
+  handleGetAuthState: jest.fn(),
+}));
+
 describe('service-worker.ts', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,6 +40,7 @@ describe('service-worker.ts', () => {
       sender: unknown,
       sendResponse: jest.Mock,
     ) => boolean;
+    let authMessageHandler: typeof import('../../features/auth/background/message-handler');
     let mockSender: { tab?: { id: number } };
     let mockSendResponse: jest.Mock;
 
@@ -57,6 +64,7 @@ describe('service-worker.ts', () => {
       );
 
       require('../service-worker');
+      authMessageHandler = require('../../features/auth/background/message-handler');
 
       // Get the message handler that was registered
       const addListenerMock = chrome.runtime.onMessage.addListener as jest.Mock;
@@ -240,6 +248,54 @@ describe('service-worker.ts', () => {
           );
           consoleSpy.mockRestore();
         });
+      });
+    });
+
+    describe('authentication messages', () => {
+      it('should route SIGN_IN messages with interactive defaulting to true', () => {
+        const request = { type: 'SIGN_IN' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignIn).toHaveBeenCalledWith(
+          true,
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route SIGN_IN messages with interactive false', () => {
+        const request = { type: 'SIGN_IN', interactive: false };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignIn).toHaveBeenCalledWith(
+          false,
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route SIGN_OUT messages', () => {
+        const request = { type: 'SIGN_OUT' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleSignOut).toHaveBeenCalledWith(
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
+      });
+
+      it('should route GET_AUTH_STATE messages', () => {
+        const request = { type: 'GET_AUTH_STATE' };
+
+        const result = messageHandler(request, mockSender, mockSendResponse);
+
+        expect(authMessageHandler.handleGetAuthState).toHaveBeenCalledWith(
+          mockSendResponse,
+        );
+        expect(result).toBe(true);
       });
     });
 
@@ -890,6 +946,132 @@ describe('service-worker.ts', () => {
           type: 'SPEECH_ENDED',
           autoPlayNext: true,
         });
+      });
+    });
+
+    describe('RELOAD_PLAY_BUTTONS message', () => {
+      beforeEach(() => {
+        (chrome.tabs.query as jest.Mock).mockClear();
+        (chrome.tabs.sendMessage as jest.Mock).mockClear();
+      });
+
+      it('should forward the message to the active tab and respond with success', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{ id: 42 }]),
+        );
+        (chrome.tabs.sendMessage as jest.Mock).mockImplementation(
+          (_id, _msg, cb) => {
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: undefined,
+              writable: true,
+              configurable: true,
+            });
+            cb({});
+          },
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
+          42,
+          { type: 'RELOAD_PLAY_BUTTONS' },
+          expect.any(Function),
+        );
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+      });
+
+      it('should respond with failure when sendMessage has a lastError', () => {
+        const mockError = { message: 'Could not reach content script' };
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{ id: 42 }]),
+        );
+        (chrome.tabs.sendMessage as jest.Mock).mockImplementation(
+          (_id, _msg, cb) => {
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: mockError,
+              writable: true,
+              configurable: true,
+            });
+            cb(undefined);
+            Object.defineProperty(chrome.runtime, 'lastError', {
+              value: undefined,
+              writable: true,
+              configurable: true,
+            });
+          },
+        );
+
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: mockError,
+        });
+        consoleSpy.mockRestore();
+      });
+
+      it('should respond with failure when no active tab is found', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([]),
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: 'No active tab found',
+        });
+      });
+
+      it('should respond with failure when active tab has no id', () => {
+        (chrome.tabs.query as jest.Mock).mockImplementation((_query, cb) =>
+          cb([{}]),
+        );
+
+        const request = { type: 'RELOAD_PLAY_BUTTONS' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+        expect(mockSendResponse).toHaveBeenCalledWith({
+          success: false,
+          error: 'No active tab found',
+        });
+      });
+    });
+
+    describe('TRANSLATE_SELECTION message', () => {
+      it('should call handleTranslateSelectionMessage with request and sender', () => {
+        const ttsMessageHandler = require('../../features/tts-playback/background/message-handler');
+        const spy = jest.spyOn(
+          ttsMessageHandler,
+          'handleTranslateSelectionMessage',
+        );
+
+        const request = { type: 'TRANSLATE_SELECTION', text: 'Bonjour' };
+        messageHandler(request, mockSender, mockSendResponse);
+
+        expect(spy).toHaveBeenCalledWith(request, mockSender);
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
+        spy.mockRestore();
+      });
+
+      it('should respond with success even when sender has no tab (handler warns internally)', () => {
+        const request = {
+          type: 'TRANSLATE_SELECTION',
+          text: 'Hello',
+        };
+        const senderWithoutTab = {};
+
+        expect(() => {
+          messageHandler(request, senderWithoutTab, mockSendResponse);
+        }).not.toThrow();
+
+        expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
       });
     });
 

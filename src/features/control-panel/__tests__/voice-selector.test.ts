@@ -60,7 +60,27 @@ const SAMPLE_VOICES: chrome.tts.TtsVoice[] = [
   { voiceName: 'Google Deutsch', lang: 'de-DE' },
 ];
 
-function setupDefaultMocks(selectedVoice = 'default') {
+function getVoiceStorageChangeListener(): (
+  changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
+  namespace: string,
+) => void {
+  const lastCallIndex = mockStorageOnChangedAddListener.mock.calls.length - 1;
+  const listener =
+    lastCallIndex >= 0
+      ? mockStorageOnChangedAddListener.mock.calls[lastCallIndex][0]
+      : undefined;
+  expect(listener).toBeDefined();
+  return listener as (
+    changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
+    namespace: string,
+  ) => void;
+}
+
+function setupDefaultMocks(
+  selectedVoice = 'default',
+  voices: chrome.tts.TtsVoice[] = SAMPLE_VOICES,
+  success = true,
+) {
   mockStorageGet.mockImplementation(
     (keys: string[], callback: (result: Record<string, unknown>) => void) => {
       const result: Record<string, unknown> = {};
@@ -84,7 +104,7 @@ function setupDefaultMocks(selectedVoice = 'default') {
       }) => void,
     ) => {
       if (message.type === 'GET_VOICES' && callback) {
-        callback({ success: true, voices: SAMPLE_VOICES });
+        callback({ success, voices });
       }
       return true;
     },
@@ -133,6 +153,39 @@ describe('Voice Selector', () => {
     expect(optionTexts).toContain('Google Deutsch (de-DE)');
   });
 
+  it('3.3b: duplicate voice names are rendered only once', () => {
+    setupDefaultMocks('default', [
+      { voiceName: 'Google US English', lang: 'en-US' },
+      { voiceName: 'Google US English', lang: 'en-GB' },
+    ]);
+
+    createControlPanel();
+    const select = document.getElementById(
+      VOICE_SELECT_ID,
+    ) as HTMLSelectElement;
+
+    const matchingOptions = Array.from(select.options).filter(
+      (option) => option.value === 'Google US English',
+    );
+    expect(matchingOptions).toHaveLength(1);
+  });
+
+  it('3.3c: missing voice name is ignored and missing lang falls back to "Unknown language"', () => {
+    setupDefaultMocks('default', [
+      { voiceName: '', lang: 'en-US' },
+      { voiceName: 'Mystery Voice' },
+    ]);
+
+    createControlPanel();
+    const select = document.getElementById(
+      VOICE_SELECT_ID,
+    ) as HTMLSelectElement;
+    const optionTexts = Array.from(select.options).map((o) => o.textContent);
+
+    expect(optionTexts).toContain('Mystery Voice (Unknown language)');
+    expect(optionTexts).not.toContain(' (en-US)');
+  });
+
   it('3.4a: stored named voice is pre-selected on panel creation', () => {
     setupDefaultMocks('Google US English');
     createControlPanel();
@@ -144,6 +197,15 @@ describe('Voice Selector', () => {
 
   it('3.4b: stored "default" is pre-selected when selectedVoice is "default"', () => {
     setupDefaultMocks('default');
+    createControlPanel();
+    const select = document.getElementById(
+      VOICE_SELECT_ID,
+    ) as HTMLSelectElement;
+    expect(select.value).toBe('default');
+  });
+
+  it('3.4c: falls back to default when stored voice is not returned by GET_VOICES', () => {
+    setupDefaultMocks('Missing Voice');
     createControlPanel();
     const select = document.getElementById(
       VOICE_SELECT_ID,
@@ -180,10 +242,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
-    expect(changeListener).toBeDefined();
+    const changeListener = getVoiceStorageChangeListener();
 
     changeListener(
       { selectedVoice: { oldValue: 'default', newValue: 'Google US English' } },
@@ -199,10 +258,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
-    expect(changeListener).toBeDefined();
+    const changeListener = getVoiceStorageChangeListener();
 
     changeListener(
       {
@@ -224,9 +280,7 @@ describe('Voice Selector', () => {
       VOICE_SELECT_ID,
     ) as HTMLSelectElement;
 
-    const changeListener = mockStorageOnChangedAddListener.mock.calls.find(
-      ([listener]) => listener,
-    )?.[0];
+    const changeListener = getVoiceStorageChangeListener();
 
     // Change from sync namespace should be ignored
     changeListener(
@@ -241,5 +295,17 @@ describe('Voice Selector', () => {
 
     // Value should remain as set by populateVoices (Google US English)
     expect(select.value).toBe('Google US English');
+  });
+
+  it('3.8: failed GET_VOICES response leaves only the default option', () => {
+    setupDefaultMocks('default', SAMPLE_VOICES, false);
+    createControlPanel();
+
+    const select = document.getElementById(
+      VOICE_SELECT_ID,
+    ) as HTMLSelectElement;
+
+    expect(select.options).toHaveLength(1);
+    expect(select.options[0].value).toBe('default');
   });
 });

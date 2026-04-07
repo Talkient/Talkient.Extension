@@ -12,7 +12,9 @@ import { setActiveTabId } from '../../../background/tab-manager';
 import type {
   SpeakTextMessage,
   PauseSpeechMessage,
+  TranslateSelectionMessage,
 } from '../../../shared/types/messages';
+import { executeSelectionTranslation } from '../../translation/background/selection-translation';
 
 export function handleSpeakText(
   request: SpeakTextMessage,
@@ -266,4 +268,21 @@ export function handlePauseSpeech(
   }
 
   sendResponse({ success: true });
+}
+
+export function handleTranslateSelectionMessage(
+  request: TranslateSelectionMessage,
+  sender: chrome.runtime.MessageSender,
+): void {
+  const tabId = sender.tab?.id;
+
+  if (!tabId) {
+    console.warn('[Talkient.SW] Missing tab id for translation request');
+    return;
+  }
+
+  executeSelectionTranslation({
+    tabId,
+    selectedText: request.text,
+  });
 }

@@ -80,6 +80,50 @@ async function triggerTranslateMenu(
 }
 
 test.describe('Selection translation', () => {
+  test('shows inline trigger on double-click and translates selected text', async ({
+    page,
+    context,
+  }) => {
+    await page.goto(TEST_PAGE_URL);
+    await page.waitForSelector('#talkient-control-panel');
+
+    const serviceWorker = await getServiceWorker(context);
+
+    await serviceWorker.evaluate(() => {
+      self.fetch = async () => {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            translatedText: 'Texto traduzido pelo gatilho inline.',
+            detectedLanguage: { language: 'en' },
+          }),
+        } as unknown as Response;
+      };
+    });
+
+    await page.locator('article p').first().dblclick();
+
+    await expect(
+      page.locator('#talkient-inline-translate-trigger'),
+    ).toBeVisible();
+
+    const selectedText = await page.evaluate(() => {
+      return window.getSelection()?.toString() ?? '';
+    });
+    expect(selectedText.trim().length).toBeGreaterThan(0);
+
+    await page.locator('#talkient-inline-translate-trigger').click();
+
+    await expect(
+      page.locator('#talkient-inline-translate-trigger'),
+    ).toHaveCount(0);
+    await expect(page.locator('#talkient-translation-result')).toBeVisible();
+    await expect(page.locator('.talkient-translation-text')).toContainText(
+      'Texto traduzido pelo gatilho inline.',
+    );
+  });
+
   test('renders translation result card after context menu translate action', async ({
     page,
     context,
