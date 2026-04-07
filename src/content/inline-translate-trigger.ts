@@ -1,3 +1,4 @@
+// Inline translation trigger should not validate the host list to be ignored. It should be applied to any page where the user selects text and clicks the trigger button, regardless of the host..
 const TRIGGER_ID = 'talkient-inline-translate-trigger';
 const VIEWPORT_MARGIN_PX = 8;
 const OFFSET_FROM_SELECTION_PX = 6;
