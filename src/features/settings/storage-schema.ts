@@ -95,6 +95,7 @@ export const DEFAULT_PROCESSABLE_ELEMENTS = [
   'h2',
   'h3',
   'li',
+  'em',
 ] as const;
 
 const PROCESSABLE_ELEMENTS_SET = new Set<string>(PROCESSABLE_ELEMENTS_CATALOG);
