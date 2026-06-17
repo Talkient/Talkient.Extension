@@ -1,229 +1,347 @@
-import type { AuthResult, GoogleUser, GoogleUserInfoResponse } from '../types';
+import type {
+  AuthResult,
+  AuthState,
+  TalkientAuthResponse,
+  TalkientUser,
+} from '../types';
 import {
   clearAuthState,
-  getStoredUser,
-  isStoredAuthenticated,
-  saveUser,
+  getAuthState,
+  saveAuthenticatedSession,
 } from './auth-storage';
 
-const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
+const DEFAULT_API_BASE_URL = 'https://api.talkient.app';
+const REFRESH_LEEWAY_MS = 60_000;
 
 /**
- * Sign in with Google using Chrome Identity API
- * @param interactive - Whether to show the sign-in prompt (true for user-initiated, false for silent)
+ * API client contract for Talkient auth endpoints.
+ */
+interface TalkientAuthClient {
+  exchangeCode(code: string): Promise<TalkientAuthResponse>;
+  refreshToken(refreshToken: string): Promise<TalkientAuthResponse>;
+  logout(accessToken: string): Promise<void>;
+}
+
+/**
+ * Sign in with Google through Talkient API + Chrome Identity launchWebAuthFlow.
  */
 export async function signInWithGoogle(
   interactive: boolean = true,
 ): Promise<AuthResult> {
-  console.log(
-    '[Talkient.Auth] Starting Google sign-in, interactive:',
-    interactive,
-  );
-
   try {
-    // Get OAuth token using Chrome Identity API
-    const token = await getAuthToken(interactive);
+    const redirectUri = chrome.identity.getRedirectURL();
+    const authStartUrl = buildAuthStartUrl(redirectUri);
+    const callbackUrl = await launchWebAuthFlow(authStartUrl, interactive);
+    const code = extractCodeFromRedirect(callbackUrl);
 
-    if (!token) {
+    if (!code) {
       return {
         success: false,
-        error: 'Failed to get authentication token',
+        error: 'Authorization code not returned by OAuth flow',
       };
     }
 
-    // Fetch user profile from Google
-    const user = await fetchUserProfile(token);
+    const tokenResponse = await talkientAuthClient.exchangeCode(code);
+    const user = parseUserFromAccessToken(tokenResponse.accessToken);
+    const expiresAt = Date.now() + tokenResponse.expiresIn * 1000;
 
-    if (!user) {
-      // Token might be invalid, remove it and fail
-      await removeCachedToken(token);
-      return {
-        success: false,
-        error: 'Failed to fetch user profile',
-      };
-    }
-
-    // Save user to storage
-    await saveUser(user);
-
-    console.log('[Talkient.Auth] Sign-in successful for:', user.email);
-
-    return {
-      success: true,
+    await saveAuthenticatedSession(
       user,
-    };
+      tokenResponse.accessToken,
+      tokenResponse.refreshToken,
+      expiresAt,
+    );
+
+    return { success: true, user };
   } catch (error) {
     console.error('[Talkient.Auth] Sign-in error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: error instanceof Error ? error.message : 'Unknown sign-in error',
     };
   }
 }
 
 /**
- * Sign out the current user
+ * Sign out current user and clear local auth state.
  */
 export async function signOut(): Promise<AuthResult> {
-  console.log('[Talkient.Auth] Starting sign-out');
+  let logoutError: string | null = null;
 
   try {
-    // Get current token to revoke
-    const token = await getAuthToken(false);
-
-    if (token) {
-      // Remove the cached token
-      await removeCachedToken(token);
-
-      // Optionally revoke the token on Google's side
-      await revokeToken(token);
+    const state = await getAuthState();
+    if (state.accessToken) {
+      await talkientAuthClient.logout(state.accessToken);
     }
-
-    // Clear local auth state
-    await clearAuthState();
-
-    console.log('[Talkient.Auth] Sign-out successful');
-
-    return { success: true };
   } catch (error) {
-    console.error('[Talkient.Auth] Sign-out error:', error);
-
-    // Still clear local state even if token revocation fails
+    logoutError =
+      error instanceof Error ? error.message : 'Unknown sign-out error';
+  } finally {
     await clearAuthState();
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error during sign-out',
-    };
   }
+
+  if (logoutError) {
+    return { success: false, error: logoutError };
+  }
+
+  return { success: true };
 }
 
 /**
- * Get the currently authenticated user
+ * Get the currently authenticated user, refreshing token if needed.
  */
-export async function getCurrentUser(): Promise<GoogleUser | null> {
-  // First check stored user
-  const storedUser = await getStoredUser();
-
-  if (storedUser) {
-    return storedUser;
-  }
-
-  // Try silent auth to check if user is still logged in
-  const result = await signInWithGoogle(false);
-
-  if (result.success && result.user) {
-    return result.user;
-  }
-
-  return null;
+export async function getCurrentUser(): Promise<TalkientUser | null> {
+  const state = await getRefreshedAuthState();
+  return state.user;
 }
 
 /**
- * Check if the user is currently authenticated
+ * Check whether current user is authenticated.
  */
 export async function isAuthenticated(): Promise<boolean> {
-  // Check stored state first for quick response
-  const storedAuth = await isStoredAuthenticated();
+  const state = await getRefreshedAuthState();
+  return state.isAuthenticated && !!state.user && !!state.accessToken;
+}
 
-  if (storedAuth) {
-    // Verify token is still valid with silent auth
-    const token = await getAuthToken(false);
-    return token !== null;
+/**
+ * Get a valid access token, refreshing if needed.
+ */
+export async function getAccessToken(): Promise<string | null> {
+  const state = await getRefreshedAuthState();
+  return state.accessToken;
+}
+
+async function getRefreshedAuthState(): Promise<AuthState> {
+  const state = await getAuthState();
+
+  if (
+    !state.isAuthenticated ||
+    !state.user ||
+    !state.accessToken ||
+    !state.refreshToken ||
+    !state.expiresAt
+  ) {
+    return state;
   }
 
-  return false;
-}
+  if (!isTokenExpiredOrNearExpiry(state.expiresAt)) {
+    return state;
+  }
 
-/**
- * Get OAuth token using Chrome Identity API
- */
-async function getAuthToken(interactive: boolean): Promise<string | null> {
-  return new Promise((resolve) => {
-    chrome.identity.getAuthToken({ interactive }, (result) => {
-      if (chrome.runtime.lastError) {
-        console.error(
-          '[Talkient.Auth] getAuthToken error:',
-          chrome.runtime.lastError.message,
-        );
-        resolve(null);
-        return;
-      }
-      // Handle both string token (older Chrome) and GetAuthTokenResult object (newer Chrome)
-      const token = typeof result === 'string' ? result : result?.token;
-      resolve(token ?? null);
-    });
-  });
-}
-
-/**
- * Remove a cached auth token
- */
-async function removeCachedToken(token: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.identity.removeCachedAuthToken({ token }, () => {
-      if (chrome.runtime.lastError) {
-        console.error(
-          '[Talkient.Auth] removeCachedAuthToken error:',
-          chrome.runtime.lastError.message,
-        );
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
-/**
- * Revoke the OAuth token on Google's servers
- */
-async function revokeToken(token: string): Promise<void> {
   try {
-    const response = await fetch(
-      `https://accounts.google.com/o/oauth2/revoke?token=${encodeURIComponent(
-        token,
-      )}`,
+    const refreshed = await talkientAuthClient.refreshToken(state.refreshToken);
+    const refreshedUser = parseUserFromAccessToken(refreshed.accessToken);
+    const refreshedExpiresAt = Date.now() + refreshed.expiresIn * 1000;
+
+    await saveAuthenticatedSession(
+      refreshedUser,
+      refreshed.accessToken,
+      refreshed.refreshToken,
+      refreshedExpiresAt,
     );
-    if (!response.ok) {
-      console.warn(
-        '[Talkient.Auth] Token revocation returned status:',
-        response.status,
-      );
-    }
-  } catch (error) {
-    console.warn('[Talkient.Auth] Token revocation failed:', error);
-    // Non-critical, continue with sign-out
-  }
-}
-
-/**
- * Fetch user profile from Google UserInfo API
- */
-async function fetchUserProfile(token: string): Promise<GoogleUser | null> {
-  try {
-    const response = await fetch(GOOGLE_USERINFO_URL, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      console.error('[Talkient.Auth] UserInfo API error:', response.status);
-      return null;
-    }
-
-    const data = (await response.json()) as GoogleUserInfoResponse;
 
     return {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      picture: data.picture,
-      verified_email: data.verified_email,
+      isAuthenticated: true,
+      user: refreshedUser,
+      accessToken: refreshed.accessToken,
+      refreshToken: refreshed.refreshToken,
+      expiresAt: refreshedExpiresAt,
     };
   } catch (error) {
-    console.error('[Talkient.Auth] Error fetching user profile:', error);
+    console.warn(
+      '[Talkient.Auth] Refresh failed, clearing local session:',
+      error,
+    );
+    await clearAuthState();
+    return {
+      isAuthenticated: false,
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      expiresAt: null,
+    };
+  }
+}
+
+function isTokenExpiredOrNearExpiry(expiresAt: number): boolean {
+  return expiresAt <= Date.now() + REFRESH_LEEWAY_MS;
+}
+
+function buildAuthStartUrl(redirectUri: string): string {
+  const url = new URL('/api/auth/google', getApiBaseUrl());
+  url.searchParams.set('redirect_uri', redirectUri);
+  return url.toString();
+}
+
+function getApiBaseUrl(): string {
+  const override = (globalThis as { __TALKIENT_API_BASE_URL__?: string })
+    .__TALKIENT_API_BASE_URL__;
+
+  if (override && override.trim().length > 0) {
+    return override;
+  }
+
+  return DEFAULT_API_BASE_URL;
+}
+
+async function launchWebAuthFlow(
+  url: string,
+  interactive: boolean,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    chrome.identity.launchWebAuthFlow(
+      { url, interactive },
+      (responseUrl?: string) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        if (!responseUrl) {
+          reject(new Error('OAuth flow was cancelled'));
+          return;
+        }
+
+        resolve(responseUrl);
+      },
+    );
+  });
+}
+
+function extractCodeFromRedirect(redirectUrl: string): string | null {
+  try {
+    const url = new URL(redirectUrl);
+    return url.searchParams.get('code');
+  } catch {
     return null;
   }
+}
+
+function parseUserFromAccessToken(accessToken: string): TalkientUser {
+  const tokenParts = accessToken.split('.');
+  if (tokenParts.length < 2) {
+    throw new Error('Invalid access token format');
+  }
+
+  const payload = decodeJwtPayload(tokenParts[1]);
+
+  const id = getStringClaim(payload, 'sub');
+  const email = getStringClaim(payload, 'email');
+  const name = getStringClaim(payload, 'name');
+  const picture = getOptionalStringClaim(payload, 'picture');
+
+  return {
+    id,
+    email,
+    name,
+    picture,
+  };
+}
+
+function decodeJwtPayload(payloadBase64Url: string): Record<string, unknown> {
+  const normalized = payloadBase64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+
+  try {
+    const decodedJson = atob(padded);
+    const parsed = JSON.parse(decodedJson) as unknown;
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('JWT payload is not an object');
+    }
+
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error('Invalid access token payload');
+  }
+}
+
+function getStringClaim(
+  payload: Record<string, unknown>,
+  claim: string,
+): string {
+  const value = payload[claim];
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`Access token missing required "${claim}" claim`);
+  }
+
+  return value;
+}
+
+function getOptionalStringClaim(
+  payload: Record<string, unknown>,
+  claim: string,
+): string | undefined {
+  const value = payload[claim];
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value;
+  }
+
+  return undefined;
+}
+
+const talkientAuthClient: TalkientAuthClient = {
+  async exchangeCode(code: string): Promise<TalkientAuthResponse> {
+    return postAuthPayload('/api/auth/google/extension-callback', { code });
+  },
+
+  async refreshToken(refreshToken: string): Promise<TalkientAuthResponse> {
+    return postAuthPayload('/api/auth/refresh', { refreshToken });
+  },
+
+  async logout(accessToken: string): Promise<void> {
+    const response = await fetch(new URL('/api/auth/logout', getApiBaseUrl()), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Logout failed with status ${response.status}`);
+    }
+  },
+};
+
+async function postAuthPayload(
+  endpoint: string,
+  body: Record<string, string>,
+): Promise<TalkientAuthResponse> {
+  const response = await fetch(new URL(endpoint, getApiBaseUrl()), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Auth request failed with status ${response.status}`);
+  }
+
+  const json = (await response.json()) as unknown;
+  return parseAuthResponse(json);
+}
+
+function parseAuthResponse(json: unknown): TalkientAuthResponse {
+  if (!json || typeof json !== 'object') {
+    throw new Error('Invalid auth response payload');
+  }
+
+  const payload = json as Record<string, unknown>;
+  const accessToken = payload.accessToken;
+  const refreshToken = payload.refreshToken;
+  const expiresIn = payload.expiresIn;
+
+  if (
+    typeof accessToken !== 'string' ||
+    typeof refreshToken !== 'string' ||
+    typeof expiresIn !== 'number'
+  ) {
+    throw new Error('Auth response is missing required fields');
+  }
+
+  return { accessToken, refreshToken, expiresIn };
 }

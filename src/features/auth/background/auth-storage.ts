@@ -1,23 +1,26 @@
-import type { AuthState, GoogleUser } from '../types';
+import type { AuthState, TalkientUser } from '../types';
 
 const AUTH_STORAGE_KEY = 'talkient_auth_state';
 
 /**
- * Default auth state when user is not authenticated
+ * Default auth state when user is not authenticated.
  */
 const DEFAULT_AUTH_STATE: AuthState = {
   isAuthenticated: false,
   user: null,
-  lastUpdated: 0,
+  accessToken: null,
+  refreshToken: null,
+  expiresAt: null,
 };
 
 /**
- * Get the current authentication state from storage
+ * Get the current authentication state from storage.
  */
 export async function getAuthState(): Promise<AuthState> {
   try {
     const result = await chrome.storage.local.get(AUTH_STORAGE_KEY);
     const state = result[AUTH_STORAGE_KEY] as AuthState | undefined;
+
     return state ?? DEFAULT_AUTH_STATE;
   } catch (error) {
     console.error('[Talkient.Auth] Error getting auth state:', error);
@@ -26,7 +29,7 @@ export async function getAuthState(): Promise<AuthState> {
 }
 
 /**
- * Save authentication state to storage
+ * Save authentication state to storage.
  */
 export async function saveAuthState(state: AuthState): Promise<void> {
   try {
@@ -39,19 +42,27 @@ export async function saveAuthState(state: AuthState): Promise<void> {
 }
 
 /**
- * Save user data after successful authentication
+ * Persist authenticated session data.
  */
-export async function saveUser(user: GoogleUser): Promise<void> {
+export async function saveAuthenticatedSession(
+  user: TalkientUser,
+  accessToken: string,
+  refreshToken: string,
+  expiresAt: number,
+): Promise<void> {
   const state: AuthState = {
     isAuthenticated: true,
     user,
-    lastUpdated: Date.now(),
+    accessToken,
+    refreshToken,
+    expiresAt,
   };
+
   await saveAuthState(state);
 }
 
 /**
- * Clear authentication state (for sign out)
+ * Clear authentication state (for sign out or auth failures).
  */
 export async function clearAuthState(): Promise<void> {
   try {
@@ -64,15 +75,15 @@ export async function clearAuthState(): Promise<void> {
 }
 
 /**
- * Get the currently stored user (if any)
+ * Get the currently stored user (if any).
  */
-export async function getStoredUser(): Promise<GoogleUser | null> {
+export async function getStoredUser(): Promise<TalkientUser | null> {
   const state = await getAuthState();
   return state.user;
 }
 
 /**
- * Check if user is authenticated based on stored state
+ * Check if user is authenticated based on stored state.
  */
 export async function isStoredAuthenticated(): Promise<boolean> {
   const state = await getAuthState();

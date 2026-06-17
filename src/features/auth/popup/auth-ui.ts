@@ -25,7 +25,7 @@ function initAuthElements(): void {
  */
 function updateAuthUI(
   isAuthenticated: boolean,
-  user?: { name: string; email: string; picture: string },
+  user?: { name: string; email: string; picture?: string },
 ): void {
   if (!userProfileEl || !signInBtnEl || !authLoadingEl) return;
 
@@ -38,7 +38,13 @@ function updateAuthUI(
     signInBtnEl.classList.add('hidden');
 
     // Update user info
-    if (userAvatarEl) userAvatarEl.src = user.picture;
+    if (userAvatarEl) {
+      if (user.picture) {
+        userAvatarEl.src = user.picture;
+      } else {
+        userAvatarEl.removeAttribute('src');
+      }
+    }
     if (userNameEl) userNameEl.textContent = user.name;
     if (userEmailEl) userEmailEl.textContent = user.email;
   } else {

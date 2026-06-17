@@ -8,7 +8,7 @@ export async function handleSignIn(
   sendResponse: (response: unknown) => void,
 ): Promise<void> {
   const result = await signInWithGoogle(interactive);
-  if (result.success) {
+  if (result.success && result.user) {
     sendResponse({ success: true, user: result.user });
   } else {
     sendResponse({ success: false, error: result.error });

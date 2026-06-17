@@ -51,7 +51,9 @@ export interface StorageSchema {
     isAuthenticated: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-redundant-type-constituents
     user: any | null;
-    lastUpdated: number;
+    accessToken: string | null;
+    refreshToken: string | null;
+    expiresAt: number | null;
   };
 }
 

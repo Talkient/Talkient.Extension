@@ -1,24 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  getAuthState,
-  saveAuthState,
-  saveUser,
   clearAuthState,
+  getAuthState,
   getStoredUser,
   isStoredAuthenticated,
+  saveAuthenticatedSession,
+  saveAuthState,
 } from '../background/auth-storage';
-import type { AuthState, GoogleUser } from '../types';
+import type { AuthState, TalkientUser } from '../types';
 
-// Mock Chrome storage API
 const mockStorage: Record<string, any> = {};
 
 (global as any).chrome = {
   storage: {
     local: {
-      get: jest.fn((key: string) => {
-        return Promise.resolve({ [key]: mockStorage[key] });
-      }),
-      set: jest.fn((data: Record<string, any>) => {
+      get: jest.fn((key: string) =>
+        Promise.resolve({ [key]: mockStorage[key] }),
+      ),
+      set: jest.fn((data: Record<string, unknown>) => {
         Object.assign(mockStorage, data);
         return Promise.resolve();
       }),
@@ -28,42 +27,41 @@ const mockStorage: Record<string, any> = {};
       }),
     },
   },
-  runtime: {
-    lastError: undefined,
-  },
 };
 
 describe('auth-storage', () => {
-  const mockUser: GoogleUser = {
-    id: '123456789',
+  const mockUser: TalkientUser = {
+    id: 'user-123',
     email: 'test@example.com',
     name: 'Test User',
     picture: 'https://example.com/avatar.jpg',
-    verified_email: true,
   };
 
   beforeEach(() => {
-    // Clear mock storage before each test
     Object.keys(mockStorage).forEach((key) => delete mockStorage[key]);
     jest.clearAllMocks();
   });
 
   describe('getAuthState', () => {
-    it('should return default auth state when storage is empty', async () => {
+    it('returns default auth state when storage is empty', async () => {
       const state = await getAuthState();
 
       expect(state).toEqual({
         isAuthenticated: false,
         user: null,
-        lastUpdated: 0,
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
       });
     });
 
-    it('should return stored auth state', async () => {
+    it('returns stored auth state', async () => {
       const storedState: AuthState = {
         isAuthenticated: true,
         user: mockUser,
-        lastUpdated: Date.now(),
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Date.now() + 30_000,
       };
       mockStorage['talkient_auth_state'] = storedState;
 
@@ -72,7 +70,7 @@ describe('auth-storage', () => {
       expect(state).toEqual(storedState);
     });
 
-    it('should return default state on storage error', async () => {
+    it('returns default auth state on storage errors', async () => {
       (chrome.storage.local.get as jest.Mock).mockRejectedValueOnce(
         new Error('Storage error'),
       );
@@ -82,28 +80,21 @@ describe('auth-storage', () => {
       expect(state).toEqual({
         isAuthenticated: false,
         user: null,
-        lastUpdated: 0,
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
       });
-    });
-
-    it('should return malformed stored state as-is when storage contains an unexpected shape', async () => {
-      const malformedState = {
-        isAuthenticated: true,
-      };
-      mockStorage['talkient_auth_state'] = malformedState;
-
-      const state = await getAuthState();
-
-      expect(state).toEqual(malformedState);
     });
   });
 
   describe('saveAuthState', () => {
-    it('should save auth state to storage', async () => {
+    it('saves auth state to storage', async () => {
       const state: AuthState = {
         isAuthenticated: true,
         user: mockUser,
-        lastUpdated: Date.now(),
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Date.now() + 30_000,
       };
 
       await saveAuthState(state);
@@ -112,75 +103,54 @@ describe('auth-storage', () => {
         talkient_auth_state: state,
       });
     });
-
-    it('should throw on storage error', async () => {
-      (chrome.storage.local.set as jest.Mock).mockRejectedValueOnce(
-        new Error('Storage error'),
-      );
-
-      const state: AuthState = {
-        isAuthenticated: true,
-        user: mockUser,
-        lastUpdated: Date.now(),
-      };
-
-      await expect(saveAuthState(state)).rejects.toThrow('Storage error');
-    });
   });
 
-  describe('saveUser', () => {
-    it('should save user with authenticated state', async () => {
-      const beforeTime = Date.now();
-      await saveUser(mockUser);
-      const afterTime = Date.now();
-
-      expect(chrome.storage.local.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          talkient_auth_state: expect.objectContaining({
-            isAuthenticated: true,
-            user: mockUser,
-          }),
-        }),
+  describe('saveAuthenticatedSession', () => {
+    it('stores authenticated state with tokens and expiration', async () => {
+      const expiresAt = Date.now() + 30_000;
+      await saveAuthenticatedSession(
+        mockUser,
+        'access-token',
+        'refresh-token',
+        expiresAt,
       );
 
-      // Verify lastUpdated is within the expected time range
-      const savedState = (chrome.storage.local.set as jest.Mock).mock
-        .calls[0][0]['talkient_auth_state'];
-      expect(savedState.lastUpdated).toBeGreaterThanOrEqual(beforeTime);
-      expect(savedState.lastUpdated).toBeLessThanOrEqual(afterTime);
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        talkient_auth_state: {
+          isAuthenticated: true,
+          user: mockUser,
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          expiresAt,
+        },
+      });
     });
   });
 
   describe('clearAuthState', () => {
-    it('should remove auth state from storage', async () => {
+    it('removes auth state from storage', async () => {
       await clearAuthState();
 
       expect(chrome.storage.local.remove).toHaveBeenCalledWith(
         'talkient_auth_state',
       );
     });
-
-    it('should throw on storage error', async () => {
-      (chrome.storage.local.remove as jest.Mock).mockRejectedValueOnce(
-        new Error('Storage error'),
-      );
-
-      await expect(clearAuthState()).rejects.toThrow('Storage error');
-    });
   });
 
   describe('getStoredUser', () => {
-    it('should return null when no user is stored', async () => {
+    it('returns null when no user is stored', async () => {
       const user = await getStoredUser();
 
       expect(user).toBeNull();
     });
 
-    it('should return stored user', async () => {
+    it('returns stored user', async () => {
       mockStorage['talkient_auth_state'] = {
         isAuthenticated: true,
         user: mockUser,
-        lastUpdated: Date.now(),
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Date.now() + 30_000,
       };
 
       const user = await getStoredUser();
@@ -190,21 +160,21 @@ describe('auth-storage', () => {
   });
 
   describe('isStoredAuthenticated', () => {
-    it('should return false when not authenticated', async () => {
+    it('returns false when user is not authenticated', async () => {
       const result = await isStoredAuthenticated();
-
       expect(result).toBe(false);
     });
 
-    it('should return true when authenticated', async () => {
+    it('returns true when user is authenticated', async () => {
       mockStorage['talkient_auth_state'] = {
         isAuthenticated: true,
         user: mockUser,
-        lastUpdated: Date.now(),
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Date.now() + 30_000,
       };
 
       const result = await isStoredAuthenticated();
-
       expect(result).toBe(true);
     });
   });

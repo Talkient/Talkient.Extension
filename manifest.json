@@ -15,7 +15,8 @@
   ],
   "host_permissions": [
     "https://translate.argosopentech.com/*",
-    "https://translate.googleapis.com/*"
+    "https://translate.googleapis.com/*",
+    "https://api.talkient.app/*"
   ],
   "oauth2": {
     "client_id": "487597228651-n6g0bj7j2t6ugk8bqe0d1d05b764pmcn.apps.googleusercontent.com",
