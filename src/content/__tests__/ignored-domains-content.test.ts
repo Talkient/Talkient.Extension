@@ -194,3 +194,72 @@ describe('content ignored domains integration', () => {
     expect(mockProcessTextElements).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('content article guard', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    mockCreateControlPanel.mockClear();
+    mockProcessTextElements.mockClear();
+  });
+
+  function setupChromeStorageNoIgnored(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).chrome = {
+      runtime: {
+        onMessage: {
+          addListener: jest.fn(),
+        },
+      },
+      storage: {
+        local: {
+          get: jest.fn(
+            (keys: string[], callback: (result: unknown) => void) => {
+              if (keys.includes('followHighlight')) {
+                callback({ followHighlight: true });
+                return;
+              }
+              if (keys.includes('processableElements')) {
+                callback({
+                  processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
+                  ignoredDomains: [],
+                });
+                return;
+              }
+              if (keys.includes('playButtonsEnabled')) {
+                callback({ playButtonsEnabled: true });
+                return;
+              }
+              callback({});
+            },
+          ),
+          set: jest.fn(),
+        },
+        onChanged: {
+          addListener: jest.fn(),
+        },
+      },
+    };
+  }
+
+  it('skips UI injection when page has no <article> element', async () => {
+    document.body.innerHTML = '<main><p>No article here.</p></main>';
+    setupChromeStorageNoIgnored();
+
+    require('../content');
+    await Promise.resolve();
+
+    expect(mockCreateControlPanel).not.toHaveBeenCalled();
+    expect(mockProcessTextElements).not.toHaveBeenCalled();
+  });
+
+  it('injects UI when page has at least one <article> element', async () => {
+    document.body.innerHTML = '<article><p>Article content here.</p></article>';
+    setupChromeStorageNoIgnored();
+
+    require('../content');
+    await Promise.resolve();
+
+    expect(mockCreateControlPanel).toHaveBeenCalledTimes(1);
+    expect(mockProcessTextElements).toHaveBeenCalledTimes(1);
+  });
+});
