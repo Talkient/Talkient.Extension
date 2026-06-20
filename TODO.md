@@ -2,9 +2,7 @@
 
 ## MVP
 
-- control panel within pages with no article/processable texts (config require article)
 - PRD + techspec to add shadcn UI
-- [Need more testing] Control panel appearing on any page - should be displayed only when there is article tag?
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
 - Claude Code rules
