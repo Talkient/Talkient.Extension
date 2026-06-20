@@ -11,9 +11,10 @@ type PopupAuthState = {
     email: string;
     name: string;
     picture: string;
-    verified_email: boolean;
   } | null;
-  lastUpdated: number;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: number | null;
 };
 
 async function gotoPopup(page: Page, extensionId: string): Promise<void> {
@@ -102,9 +103,10 @@ test.describe('Talkient Extension Popup', () => {
         email: 'ada@example.com',
         name: 'Ada Lovelace',
         picture: 'https://example.com/ada.png',
-        verified_email: true,
       },
-      lastUpdated: Date.now(),
+      accessToken: 'fake-access-token',
+      refreshToken: 'fake-refresh-token',
+      expiresAt: Date.now() + 60 * 60 * 1000,
     };
 
     await setPopupStorage(page, { [authStorageKey]: authState });
@@ -131,9 +133,10 @@ test.describe('Talkient Extension Popup', () => {
         email: 'ada@example.com',
         name: 'Ada Lovelace',
         picture: 'https://example.com/ada.png',
-        verified_email: true,
       },
-      lastUpdated: Date.now(),
+      accessToken: 'fake-access-token',
+      refreshToken: 'fake-refresh-token',
+      expiresAt: Date.now() + 60 * 60 * 1000,
     };
 
     await setPopupStorage(page, { [authStorageKey]: authState });

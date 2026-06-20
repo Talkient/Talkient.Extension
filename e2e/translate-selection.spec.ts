@@ -1,30 +1,40 @@
 import { test, expect } from './extension-test';
+import { BrowserContext } from '@playwright/test';
 import * as path from 'path';
 
 const TEST_PAGE_URL = `file://${path.resolve(__dirname, 'test-pages/example.html').replace(/\\/g, '/')}`;
 
-async function getServiceWorker(context: {
-  serviceWorkers(): Array<{
-    evaluate<R, Arg>(
-      pageFunction: (arg: Arg) => R | Promise<R>,
-      arg?: Arg,
-    ): Promise<R>;
-  }>;
-  waitForEvent(
-    event: 'serviceworker',
-    options?: { timeout?: number },
-  ): Promise<{
-    evaluate<R, Arg>(
-      pageFunction: (arg: Arg) => R | Promise<R>,
-      arg?: Arg,
-    ): Promise<R>;
-  }>;
-}) {
+async function getServiceWorker(context: BrowserContext) {
   let serviceWorker = context.serviceWorkers()[0];
+  if (serviceWorker) return serviceWorker;
+
+  const swPromise = context
+    .waitForEvent('serviceworker', { timeout: 5000 })
+    .catch(() => null);
+
+  const triggerPage = await context.newPage();
+  try {
+    await triggerPage.goto('data:text/html,<html><body></body></html>');
+  } catch {
+    // ignore navigation errors
+  } finally {
+    await triggerPage.close().catch(() => {});
+  }
+
+  serviceWorker = context.serviceWorkers()[0];
+  if (!serviceWorker) {
+    const sw = await swPromise;
+    if (sw) serviceWorker = sw;
+  }
+
   if (!serviceWorker) {
     serviceWorker = await context.waitForEvent('serviceworker', {
-      timeout: 5000,
+      timeout: 10000,
     });
+  }
+
+  if (!serviceWorker) {
+    throw new Error('Service worker not found');
   }
   return serviceWorker;
 }
