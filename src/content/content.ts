@@ -399,6 +399,13 @@ void loadButtonPositionFromStorage().then(() => {
         return;
       }
 
+      if (!document.querySelector('article')) {
+        console.log(
+          '[Talkient] No <article> element found. Skipping UI injection.',
+        );
+        return;
+      }
+
       // Create and inject the control panel
       createControlPanel();
 
