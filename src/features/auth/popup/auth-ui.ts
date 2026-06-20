@@ -38,7 +38,7 @@ function updateAuthUI(
     signInBtnEl.classList.add('hidden');
 
     // Update user info
-    if (userAvatarEl) userAvatarEl.src = user.picture;
+    if (userAvatarEl && user.picture) userAvatarEl.src = user.picture;
     if (userNameEl) userNameEl.textContent = user.name;
     if (userEmailEl) userEmailEl.textContent = user.email;
   } else {

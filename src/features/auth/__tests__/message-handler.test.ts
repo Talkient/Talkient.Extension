@@ -3,7 +3,7 @@ import {
   handleSignIn,
   handleSignOut,
 } from '../background/message-handler';
-import type { GoogleUser } from '../types';
+import type { TalkientUser } from '../types';
 
 jest.mock('../background/auth-service', () => ({
   signInWithGoogle: jest.fn(),
@@ -13,12 +13,11 @@ jest.mock('../background/auth-service', () => ({
 
 import * as authService from '../background/auth-service';
 
-const mockUser: GoogleUser = {
-  id: '123456789',
+const mockUser: TalkientUser = {
+  id: 'user-123',
   email: 'test@example.com',
   name: 'Test User',
   picture: 'https://example.com/avatar.jpg',
-  verified_email: true,
 };
 
 describe('auth message-handler', () => {
