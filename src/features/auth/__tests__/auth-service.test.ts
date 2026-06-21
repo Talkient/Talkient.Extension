@@ -62,7 +62,15 @@ const authenticatedState: AuthState = {
     launchWebAuthFlow: jest.fn(),
     getRedirectURL: jest.fn(() => 'https://test-id.chromiumapp.org/'),
   },
+  storage: {
+    local: {
+      get: jest.fn(async () => ({})),
+    },
+  },
   runtime: {
+    getManifest: jest.fn(() => ({
+      host_permissions: ['https://api.talkient.app/*'],
+    })),
     lastError: undefined as chrome.runtime.LastError | undefined,
   },
 };
@@ -86,6 +94,10 @@ describe('auth-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (chrome.runtime.lastError as any) = undefined;
+    (chrome.storage.local.get as jest.Mock).mockResolvedValue({});
+    (chrome.runtime.getManifest as jest.Mock).mockReturnValue({
+      host_permissions: ['https://api.talkient.app/*'],
+    });
     (authStorage.getAuthState as jest.Mock).mockResolvedValue(
       unauthenticatedState,
     );
@@ -128,6 +140,66 @@ describe('auth-service', () => {
         MOCK_ACCESS_TOKEN,
         MOCK_REFRESH_TOKEN,
         expect.any(Number),
+      );
+    });
+
+    it('should use the stored API base URL override when present', async () => {
+      (chrome.storage.local.get as jest.Mock).mockResolvedValue({
+        talkient_api_base_url: 'http://localhost:5000',
+      });
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(
+            'https://test-id.chromiumapp.org/?code=auth-code-123&state=abc',
+          );
+        },
+      );
+      mockTokenResponse();
+
+      await signInWithGoogle(true);
+
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining(
+            'http://localhost:5000/api/auth/google?redirect_uri=',
+          ),
+        }),
+        expect.any(Function),
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'http://localhost:5000/api/auth/google/extension-callback',
+        ),
+        expect.any(Object),
+      );
+    });
+
+    it('should default to localhost when loopback host permissions are present', async () => {
+      (chrome.runtime.getManifest as jest.Mock).mockReturnValue({
+        host_permissions: [
+          'http://localhost:*/*',
+          'http://127.0.0.1:*/*',
+          'https://api.talkient.app/*',
+        ],
+      });
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(
+            'https://test-id.chromiumapp.org/?code=auth-code-123&state=abc',
+          );
+        },
+      );
+      mockTokenResponse();
+
+      await signInWithGoogle(true);
+
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining(
+            'http://localhost:5000/api/auth/google?redirect_uri=',
+          ),
+        }),
+        expect.any(Function),
       );
     });
 

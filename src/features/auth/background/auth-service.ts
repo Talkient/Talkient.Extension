@@ -1,8 +1,63 @@
 import type { AuthResult, TalkientTokenResponse, TalkientUser } from '../types';
 import { clearAuthState, getAuthState, saveSession } from './auth-storage';
 
-const API_BASE_URL = 'https://api.talkient.app';
+const DEFAULT_API_BASE_URL = 'https://api.talkient.app';
+const LOCAL_API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL_STORAGE_KEY = 'talkient_api_base_url';
 const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;
+
+function normalizeApiBaseUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+async function getApiBaseUrl(): Promise<string> {
+  try {
+    const result = await chrome.storage.local.get(API_BASE_URL_STORAGE_KEY);
+    const override = result[API_BASE_URL_STORAGE_KEY];
+
+    if (typeof override === 'string') {
+      const normalizedOverride = normalizeApiBaseUrl(override);
+      if (normalizedOverride) {
+        return normalizedOverride;
+      }
+    }
+  } catch (error) {
+    console.warn(
+      '[Talkient.Auth] Failed to read API base URL override:',
+      error,
+    );
+  }
+
+  const manifest = chrome.runtime.getManifest() as {
+    host_permissions?: unknown;
+  };
+  const hostPermissions = Array.isArray(manifest.host_permissions)
+    ? manifest.host_permissions
+    : [];
+  const hasLoopbackHostPermission = hostPermissions.some(
+    (permission): permission is string =>
+      typeof permission === 'string' &&
+      (permission.includes('localhost') || permission.includes('127.0.0.1')),
+  );
+
+  if (hasLoopbackHostPermission) {
+    return LOCAL_API_BASE_URL;
+  }
+
+  return DEFAULT_API_BASE_URL;
+}
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -50,8 +105,9 @@ async function launchWebAuthFlowAsync(
 async function exchangeCodeForTokens(
   code: string,
 ): Promise<TalkientTokenResponse | null> {
+  const apiBaseUrl = await getApiBaseUrl();
   const response = await fetch(
-    `${API_BASE_URL}/api/auth/google/extension-callback`,
+    `${apiBaseUrl}/api/auth/google/extension-callback`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,8 +129,9 @@ export async function signInWithGoogle(
   console.log('[Talkient.Auth] Starting sign-in, interactive:', interactive);
 
   try {
+    const apiBaseUrl = await getApiBaseUrl();
     const redirectUri = chrome.identity.getRedirectURL();
-    const authUrl = `${API_BASE_URL}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `${apiBaseUrl}/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     const responseUrl = await launchWebAuthFlowAsync(authUrl, interactive);
 
@@ -122,6 +179,7 @@ export async function refreshSession(): Promise<AuthResult> {
   console.log('[Talkient.Auth] Attempting session refresh');
 
   try {
+    const apiBaseUrl = await getApiBaseUrl();
     const state = await getAuthState();
 
     // Include stored refresh token in body as a fallback for environments where
@@ -129,7 +187,7 @@ export async function refreshSession(): Promise<AuthResult> {
     // takes no effect (API prefers body token over cookie).
     const body = state.refreshToken ? { refreshToken: state.refreshToken } : {};
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -174,10 +232,11 @@ export async function signOut(): Promise<AuthResult> {
   console.log('[Talkient.Auth] Starting sign-out');
 
   try {
+    const apiBaseUrl = await getApiBaseUrl();
     const state = await getAuthState();
 
     if (state.accessToken) {
-      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
