@@ -1344,7 +1344,7 @@ describe('options.ts', () => {
           maxNodesProcessed: 1000,
           panelHideDuration: 30,
           translationTargetLanguage: 'en',
-          processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li'],
+          processableElements: ['article', 'p', 'h1', 'h2', 'h3', 'li', 'em'],
           ignoredDomains: [],
         }),
       );

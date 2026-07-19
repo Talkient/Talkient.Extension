@@ -186,7 +186,7 @@ export function isTranslateSelectionMessage(
 // Authentication Messages
 // ============================================
 
-import type { GoogleUser } from '../../features/auth/types';
+import type { TalkientUser } from '../../features/auth/types';
 
 // Auth message types sent to service worker
 export interface SignInMessage {
@@ -205,13 +205,13 @@ export interface GetAuthStateMessage {
 // Auth response types
 export interface AuthSuccessResponse {
   success: true;
-  user: GoogleUser;
+  user: TalkientUser;
 }
 
 export interface AuthStateResponse {
   success: true;
   isAuthenticated: boolean;
-  user: GoogleUser | null;
+  user: TalkientUser | null;
 }
 
 export interface AuthErrorResponse {

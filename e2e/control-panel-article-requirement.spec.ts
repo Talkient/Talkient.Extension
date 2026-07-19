@@ -2,13 +2,13 @@ import { test, expect } from './extension-test';
 import * as path from 'path';
 
 test.describe('Control Panel - Article Requirement', () => {
-  test('should process pages with configurable processable elements (p, h1, h2 by default)', async ({
+  test('should skip control panel on pages without an article element', async ({
     page,
     context: _context,
     extensionId: _extensionId,
   }) => {
     // Navigate to the test page WITHOUT an article element.
-    // This page has <p>, <h1>, <h2> elements which ARE processable by default.
+    // The control panel should not be injected on pages that do not contain <article>.
     const testPagePath = path.join(
       __dirname,
       'test-pages',
@@ -21,26 +21,26 @@ test.describe('Control Panel - Article Requirement', () => {
     // Wait for the page to load and content script to initialize
     await page.waitForTimeout(3000);
 
-    // Test 1: Verify control panel IS created because <p> elements are processable
+    // Test 1: Verify control panel is not created without <article>
     const controlPanelExists = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelExists).toBe(true);
+    expect(controlPanelExists).toBe(false);
 
-    // Test 2: Verify play buttons ARE created for processable elements (p, h1, h2)
+    // Test 2: Verify play buttons are not created without <article>
     const playButtonCount = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-play-button').length;
     });
 
-    expect(playButtonCount).toBeGreaterThan(0);
+    expect(playButtonCount).toBe(0);
 
-    // Test 3: Verify processed elements exist
+    // Test 3: Verify processed elements do not exist
     const processedElementsCount = await page.evaluate(() => {
       return document.querySelectorAll('.talkient-processed').length;
     });
 
-    expect(processedElementsCount).toBeGreaterThan(0);
+    expect(processedElementsCount).toBe(0);
 
     // Test 4: Verify all buttons are within a configured processable element
     const allButtonsInProcessable = await page.evaluate(() => {
@@ -102,12 +102,12 @@ test.describe('Control Panel - Article Requirement', () => {
     });
   });
 
-  test('should verify control panel visibility across different pages with processable elements', async ({
+  test('should verify control panel stays hidden on pages without an article element', async ({
     page,
     context: _context,
     extensionId: _extensionId,
   }) => {
-    // Test 1: Navigate to page with processable elements (p, h1, h2 — no article needed)
+    // Test 1: Navigate to page without <article>
     const noArticlePagePath = path.join(
       __dirname,
       'test-pages',
@@ -118,14 +118,14 @@ test.describe('Control Panel - Article Requirement', () => {
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
-    // Page has <p>, <h1>, <h2> so control panel SHOULD exist
+    // The control panel should stay hidden because there is no <article>
     const controlPanelOnNoArticlePage = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelOnNoArticlePage).toBe(true);
+    expect(controlPanelOnNoArticlePage).toBe(false);
 
-    // Test 2: Navigate to page WITH article (also has processable content)
+    // Test 2: Navigate to page WITH article
     const withArticlePagePath = path.join(
       __dirname,
       'test-pages',
@@ -142,7 +142,7 @@ test.describe('Control Panel - Article Requirement', () => {
 
     expect(controlPanelOnArticlePage).toBe(true);
 
-    // Test 3: Go back to page with processable elements — panel still appears
+    // Test 3: Go back to page without <article> — panel stays hidden
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
@@ -150,6 +150,6 @@ test.describe('Control Panel - Article Requirement', () => {
       return document.getElementById('talkient-control-panel') !== null;
     });
 
-    expect(controlPanelAfterNavigation).toBe(true);
+    expect(controlPanelAfterNavigation).toBe(false);
   });
 });

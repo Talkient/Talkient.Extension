@@ -48,7 +48,9 @@
       "mcp__paper__update_styles",
       "mcp__paper__finish_working_on_nodes",
       "Skill(paper-design)",
-      "Skill(paper-design:*)"
+      "Skill(paper-design:*)",
+      "mcp__paper__get_children",
+      "mcp__paper__set_text_content"
     ],
     "deny": [
       "Bash(rm -rf *)",

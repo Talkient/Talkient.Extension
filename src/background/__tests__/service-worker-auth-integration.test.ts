@@ -73,7 +73,6 @@ describe('service-worker auth integration', () => {
       email: 'ada@example.com',
       name: 'Ada Lovelace',
       picture: 'https://example.com/ada.png',
-      verified_email: true,
     };
     (authService.signInWithGoogle as jest.Mock).mockResolvedValueOnce({
       success: true,

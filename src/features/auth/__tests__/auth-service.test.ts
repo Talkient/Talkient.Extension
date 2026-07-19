@@ -3,113 +3,238 @@ import {
   signInWithGoogle,
   signOut,
   getCurrentUser,
-  isAuthenticated,
+  refreshSession,
 } from '../background/auth-service';
-import type { GoogleUser } from '../types';
+import type { TalkientUser, AuthState } from '../types';
 
-// Mock storage functions
 jest.mock('../background/auth-storage', () => ({
-  getStoredUser: jest.fn(),
-  isStoredAuthenticated: jest.fn(),
-  saveUser: jest.fn(),
+  getAuthState: jest.fn(),
+  saveSession: jest.fn(),
   clearAuthState: jest.fn(),
 }));
 
 import * as authStorage from '../background/auth-storage';
 
-const mockUser: GoogleUser = {
-  id: '123456789',
+const MOCK_ACCESS_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+  btoa(
+    JSON.stringify({
+      sub: 'user-123',
+      email: 'test@example.com',
+      name: 'Test User',
+      picture: 'https://example.com/avatar.jpg',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    }),
+  )
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '') +
+  '.signature';
+
+const MOCK_REFRESH_TOKEN = 'mock-refresh-token';
+const MOCK_EXPIRES_IN = 1800;
+
+const mockUser: TalkientUser = {
+  id: 'user-123',
   email: 'test@example.com',
   name: 'Test User',
   picture: 'https://example.com/avatar.jpg',
-  verified_email: true,
 };
 
-// Mock Chrome identity API
+const unauthenticatedState: AuthState = {
+  isAuthenticated: false,
+  user: null,
+  accessToken: null,
+  refreshToken: null,
+  expiresAt: null,
+};
+
+const authenticatedState: AuthState = {
+  isAuthenticated: true,
+  user: mockUser,
+  accessToken: MOCK_ACCESS_TOKEN,
+  refreshToken: MOCK_REFRESH_TOKEN,
+  expiresAt: Date.now() + 3600 * 1000,
+};
+
 (global as any).chrome = {
   identity: {
-    getAuthToken: jest.fn(),
-    removeCachedAuthToken: jest.fn(),
+    launchWebAuthFlow: jest.fn(),
+    getRedirectURL: jest.fn(() => 'https://test-id.chromiumapp.org/'),
+  },
+  storage: {
+    local: {
+      get: jest.fn(async () => ({})),
+    },
   },
   runtime: {
+    getManifest: jest.fn(() => ({
+      host_permissions: ['https://api.talkient.app/*'],
+    })),
     lastError: undefined as chrome.runtime.LastError | undefined,
   },
 };
 
-// Mock fetch
 const mockFetch = jest.fn();
 (global as any).fetch = mockFetch;
+
+function mockTokenResponse() {
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    json: () =>
+      Promise.resolve({
+        accessToken: MOCK_ACCESS_TOKEN,
+        refreshToken: MOCK_REFRESH_TOKEN,
+        expiresIn: MOCK_EXPIRES_IN,
+      }),
+  });
+}
 
 describe('auth-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (chrome.runtime.lastError as any) = undefined;
+    (chrome.storage.local.get as jest.Mock).mockResolvedValue({});
+    (chrome.runtime.getManifest as jest.Mock).mockReturnValue({
+      host_permissions: ['https://api.talkient.app/*'],
+    });
+    (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+      unauthenticatedState,
+    );
+    (authStorage.saveSession as jest.Mock).mockResolvedValue(undefined);
+    (authStorage.clearAuthState as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('signInWithGoogle', () => {
-    it('should successfully sign in with Google', async () => {
-      // Mock getAuthToken to return a token
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
+    it('should complete full sign-in flow via launchWebAuthFlow', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(
+            'https://test-id.chromiumapp.org/?code=auth-code-123&state=abc',
+          );
         },
       );
-
-      // Mock fetch to return user info
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            id: mockUser.id,
-            email: mockUser.email,
-            name: mockUser.name,
-            picture: mockUser.picture,
-            verified_email: mockUser.verified_email,
-          }),
-      });
+      mockTokenResponse();
 
       const result = await signInWithGoogle(true);
 
       expect(result.success).toBe(true);
       expect(result.user).toEqual(mockUser);
-      expect(authStorage.saveUser).toHaveBeenCalledWith(mockUser);
-      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
-        { interactive: true },
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining('/api/auth/google?redirect_uri='),
+          interactive: true,
+        }),
+        expect.any(Function),
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/google/extension-callback'),
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          body: JSON.stringify({ code: 'auth-code-123' }),
+        }),
+      );
+      expect(authStorage.saveSession).toHaveBeenCalledWith(
+        mockUser,
+        MOCK_ACCESS_TOKEN,
+        MOCK_REFRESH_TOKEN,
+        expect.any(Number),
+      );
+    });
+
+    it('should use the stored API base URL override when present', async () => {
+      (chrome.storage.local.get as jest.Mock).mockResolvedValue({
+        talkient_api_base_url: 'http://localhost:5000',
+      });
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(
+            'https://test-id.chromiumapp.org/?code=auth-code-123&state=abc',
+          );
+        },
+      );
+      mockTokenResponse();
+
+      await signInWithGoogle(true);
+
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining(
+            'http://localhost:5000/api/auth/google?redirect_uri=',
+          ),
+        }),
+        expect.any(Function),
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'http://localhost:5000/api/auth/google/extension-callback',
+        ),
+        expect.any(Object),
+      );
+    });
+
+    it('should default to localhost when loopback host permissions are present', async () => {
+      (chrome.runtime.getManifest as jest.Mock).mockReturnValue({
+        host_permissions: [
+          'http://localhost:*/*',
+          'http://127.0.0.1:*/*',
+          'https://api.talkient.app/*',
+        ],
+      });
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(
+            'https://test-id.chromiumapp.org/?code=auth-code-123&state=abc',
+          );
+        },
+      );
+      mockTokenResponse();
+
+      await signInWithGoogle(true);
+
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: expect.stringContaining(
+            'http://localhost:5000/api/auth/google?redirect_uri=',
+          ),
+        }),
         expect.any(Function),
       );
     });
 
-    it('should handle the GetAuthTokenResult object shape', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (result?: { token?: string }) => void) => {
-          callback({ token: 'mock-token-123' });
+    it('should use interactive: false for silent auth', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback('https://test-id.chromiumapp.org/?code=auth-code-123');
+        },
+      );
+      mockTokenResponse();
+
+      await signInWithGoogle(false);
+
+      expect(chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith(
+        expect.objectContaining({ interactive: false }),
+        expect.any(Function),
+      );
+    });
+
+    it('should fail when launchWebAuthFlow returns no URL', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback(undefined);
         },
       );
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            id: mockUser.id,
-            email: mockUser.email,
-            name: mockUser.name,
-            picture: mockUser.picture,
-            verified_email: mockUser.verified_email,
-          }),
-      });
-
       const result = await signInWithGoogle(true);
 
-      expect(result).toEqual({
-        success: true,
-        user: mockUser,
-      });
-      expect(authStorage.saveUser).toHaveBeenCalledWith(mockUser);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeTruthy();
     });
 
-    it('should fail when getAuthToken fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
+    it('should fail when launchWebAuthFlow sets a runtime error', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
           (chrome.runtime.lastError as any) = { message: 'User cancelled' };
           callback(undefined);
         },
@@ -118,395 +243,251 @@ describe('auth-service', () => {
       const result = await signInWithGoogle(true);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to get authentication token');
+      expect(result.error).toBe('User cancelled');
     });
 
-    it('should fail when user info fetch fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
+    it('should fail when redirect URL has no code', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback('https://test-id.chromiumapp.org/?error=access_denied');
         },
       );
 
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          callback();
+      const result = await signInWithGoogle(true);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('access_denied');
+    });
+
+    it('should fail when extension-callback API returns non-OK', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback('https://test-id.chromiumapp.org/?code=auth-code-123');
         },
       );
-
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 401 });
 
       const result = await signInWithGoogle(true);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to fetch user profile');
-      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
-        { token: 'mock-token-123' },
-        expect.any(Function),
+      expect(result.error).toBe('Failed to exchange authorization code');
+    });
+
+    it('should fail when extension-callback API throws', async () => {
+      (chrome.identity.launchWebAuthFlow as jest.Mock).mockImplementation(
+        (_options: any, callback: (url?: string) => void) => {
+          callback('https://test-id.chromiumapp.org/?code=auth-code-123');
+        },
+      );
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await signInWithGoogle(true);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Network error');
+    });
+  });
+
+  describe('refreshSession', () => {
+    it('should refresh using cookie (empty body) and update stored session', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        unauthenticatedState,
+      );
+      mockTokenResponse();
+
+      const result = await refreshSession();
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(mockUser);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/refresh'),
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+        }),
+      );
+      expect(authStorage.saveSession).toHaveBeenCalledWith(
+        mockUser,
+        MOCK_ACCESS_TOKEN,
+        MOCK_REFRESH_TOKEN,
+        expect.any(Number),
       );
     });
 
-    it('should fail and remove the cached token when fetching user info throws', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
+    it('should include stored refresh token in request body when available', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue({
+        ...authenticatedState,
+        refreshToken: 'stored-refresh-token',
+      });
+      mockTokenResponse();
 
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          callback();
-        },
-      );
+      await refreshSession();
 
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: expect.stringContaining('stored-refresh-token'),
+        }),
+      );
+    });
+
+    it('should send empty body when no refresh token is stored', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        unauthenticatedState,
+      );
+      mockTokenResponse();
+
+      await refreshSession();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: JSON.stringify({}),
+        }),
+      );
+    });
+
+    it('should clear auth state on 401 and return failure', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 401 });
+
+      const result = await refreshSession();
+
+      expect(result.success).toBe(false);
+      expect(authStorage.clearAuthState).toHaveBeenCalled();
+    });
+
+    it('should NOT clear auth state on transient server error (5xx)', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+
+      const result = await refreshSession();
+
+      expect(result.success).toBe(false);
+      expect(authStorage.clearAuthState).not.toHaveBeenCalled();
+    });
+
+    it('should fail when fetch throws', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network unavailable'));
 
-      const result = await signInWithGoogle(true);
+      const result = await refreshSession();
 
-      expect(result).toEqual({
-        success: false,
-        error: 'Failed to fetch user profile',
-      });
-      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
-        { token: 'mock-token-123' },
-        expect.any(Function),
-      );
-    });
-
-    it('should fail and remove the cached token when parsing user info fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          callback();
-        },
-      );
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.reject(new Error('Invalid JSON')),
-      });
-
-      const result = await signInWithGoogle(true);
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Failed to fetch user profile',
-      });
-      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalledWith(
-        { token: 'mock-token-123' },
-        expect.any(Function),
-      );
-    });
-
-    it('should return the storage error when saving the user fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            id: mockUser.id,
-            email: mockUser.email,
-            name: mockUser.name,
-            picture: mockUser.picture,
-            verified_email: mockUser.verified_email,
-          }),
-      });
-
-      (authStorage.saveUser as jest.Mock).mockRejectedValueOnce(
-        new Error('Storage unavailable'),
-      );
-
-      const result = await signInWithGoogle(true);
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Storage unavailable',
-      });
-    });
-
-    it('should return the token cache removal error when cleanup fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      });
-
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          (chrome.runtime.lastError as any) = {
-            message: 'Failed to remove cached token',
-          };
-          callback();
-        },
-      );
-
-      const result = await signInWithGoogle(true);
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Failed to remove cached token',
-      });
-    });
-
-    it('should use interactive: false for silent auth', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback(undefined);
-        },
-      );
-
-      await signInWithGoogle(false);
-
-      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
-        { interactive: false },
-        expect.any(Function),
-      );
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Network unavailable');
     });
   });
 
   describe('signOut', () => {
-    it('should successfully sign out', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
+    it('should call logout API with access token and clear state', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        authenticatedState,
       );
-
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          callback();
-        },
-      );
-
-      // Mock token revocation
       mockFetch.mockResolvedValueOnce({ ok: true });
 
       const result = await signOut();
 
       expect(result.success).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/logout'),
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${MOCK_ACCESS_TOKEN}`,
+          }),
+        }),
+      );
       expect(authStorage.clearAuthState).toHaveBeenCalled();
-      expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalled();
     });
 
-    it('should still clear local state even if token revocation fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
+    it('should still clear state even if logout API fails', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        authenticatedState,
+      );
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+      const result = await signOut();
+
+      expect(result.success).toBe(true);
+      expect(authStorage.clearAuthState).toHaveBeenCalled();
+    });
+
+    it('should skip API call when no access token is stored', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        unauthenticatedState,
       );
 
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          callback();
-        },
-      );
+      const result = await signOut();
 
-      // Mock token revocation failure
+      expect(result.success).toBe(true);
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(authStorage.clearAuthState).toHaveBeenCalled();
+    });
+
+    it('should clear state and return error when fetch throws', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        authenticatedState,
+      );
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await signOut();
 
-      // Should still be successful since local state is cleared
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Network error');
       expect(authStorage.clearAuthState).toHaveBeenCalled();
-    });
-
-    it('should handle sign out when no token exists', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback(undefined);
-        },
-      );
-
-      const result = await signOut();
-
-      expect(result.success).toBe(true);
-      expect(authStorage.clearAuthState).toHaveBeenCalled();
-    });
-
-    it('should return an error and clear local state when cached token removal fails', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          (chrome.runtime.lastError as any) = {
-            message: 'Unable to clear cached token',
-          };
-          callback();
-        },
-      );
-
-      const result = await signOut();
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Unable to clear cached token',
-      });
-      expect(authStorage.clearAuthState).toHaveBeenCalledTimes(1);
-    });
-
-    it('should reject when clearing local state fails after a sign-out error', async () => {
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      (chrome.identity.removeCachedAuthToken as jest.Mock).mockImplementation(
-        (_details: any, callback: () => void) => {
-          (chrome.runtime.lastError as any) = {
-            message: 'Unable to clear cached token',
-          };
-          callback();
-        },
-      );
-
-      (authStorage.clearAuthState as jest.Mock).mockRejectedValueOnce(
-        new Error('Clear auth state failed'),
-      );
-
-      await expect(signOut()).rejects.toThrow('Clear auth state failed');
     });
   });
 
   describe('getCurrentUser', () => {
-    it('should return stored user if available', async () => {
-      (authStorage.getStoredUser as jest.Mock).mockResolvedValueOnce(mockUser);
+    it('should return stored user when access token is still valid', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        authenticatedState,
+      );
 
       const user = await getCurrentUser();
 
       expect(user).toEqual(mockUser);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should try silent auth if no stored user', async () => {
-      (authStorage.getStoredUser as jest.Mock).mockResolvedValueOnce(null);
+    it('should attempt refresh when token is expired', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue({
+        ...authenticatedState,
+        expiresAt: Date.now() - 1000,
+      });
+      mockTokenResponse();
 
-      // Mock silent auth failure
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback(undefined);
-        },
+      const user = await getCurrentUser();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/refresh'),
+        expect.any(Object),
       );
+      expect(user).toEqual(mockUser);
+    });
+
+    it('should attempt refresh when no token is stored (cross-app session sync)', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        unauthenticatedState,
+      );
+      mockTokenResponse();
+
+      const user = await getCurrentUser();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/auth/refresh'),
+        expect.any(Object),
+      );
+      expect(user).toEqual(mockUser);
+    });
+
+    it('should return null when refresh fails', async () => {
+      (authStorage.getAuthState as jest.Mock).mockResolvedValue(
+        unauthenticatedState,
+      );
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 401 });
 
       const user = await getCurrentUser();
 
       expect(user).toBeNull();
-      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
-        { interactive: false },
-        expect.any(Function),
-      );
-    });
-
-    it('should silently sign in and return the authenticated user when storage is empty', async () => {
-      (authStorage.getStoredUser as jest.Mock).mockResolvedValueOnce(null);
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('mock-token-123');
-        },
-      );
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            id: mockUser.id,
-            email: mockUser.email,
-            name: mockUser.name,
-            picture: mockUser.picture,
-            verified_email: mockUser.verified_email,
-          }),
-      });
-
-      const user = await getCurrentUser();
-
-      expect(user).toEqual(mockUser);
-      expect(chrome.identity.getAuthToken).toHaveBeenCalledWith(
-        { interactive: false },
-        expect.any(Function),
-      );
-      expect(authStorage.saveUser).toHaveBeenCalledWith(mockUser);
-    });
-  });
-
-  describe('isAuthenticated', () => {
-    it('should return true when stored authenticated and token valid', async () => {
-      (authStorage.isStoredAuthenticated as jest.Mock).mockResolvedValueOnce(
-        true,
-      );
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback('valid-token');
-        },
-      );
-
-      const result = await isAuthenticated();
-
-      expect(result).toBe(true);
-    });
-
-    it('should return false when stored authenticated but token invalid', async () => {
-      (authStorage.isStoredAuthenticated as jest.Mock).mockResolvedValueOnce(
-        true,
-      );
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          callback(undefined);
-        },
-      );
-
-      const result = await isAuthenticated();
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when stored authenticated but silent auth sets runtime.lastError', async () => {
-      (authStorage.isStoredAuthenticated as jest.Mock).mockResolvedValueOnce(
-        true,
-      );
-      (chrome.identity.getAuthToken as jest.Mock).mockImplementation(
-        (_options: any, callback: (token?: string) => void) => {
-          (chrome.runtime.lastError as any) = {
-            message: 'Token no longer available',
-          };
-          callback(undefined);
-        },
-      );
-
-      const result = await isAuthenticated();
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when not stored authenticated', async () => {
-      (authStorage.isStoredAuthenticated as jest.Mock).mockResolvedValueOnce(
-        false,
-      );
-
-      const result = await isAuthenticated();
-
-      expect(result).toBe(false);
     });
   });
 });

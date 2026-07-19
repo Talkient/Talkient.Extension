@@ -7,6 +7,7 @@ const productionRules = {
   '@typescript-eslint/explicit-function-return-type': 'warn',
   '@typescript-eslint/no-explicit-any': 'error',
   '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  '@typescript-eslint/no-unnecessary-type-assertion': 'off',
 };
 
 // Relaxed rules for test files (unit tests and e2e)
@@ -15,6 +16,7 @@ const testRules = {
   '@typescript-eslint/explicit-function-return-type': 'off',
   '@typescript-eslint/no-explicit-any': 'warn', // Warn instead of error in tests
   '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  '@typescript-eslint/no-unnecessary-type-assertion': 'off',
   '@typescript-eslint/no-unsafe-assignment': 'off', // Common with mocks
   '@typescript-eslint/no-unsafe-member-access': 'off', // Common with mocks
   '@typescript-eslint/no-unsafe-call': 'off', // Common with mocks

@@ -1,6 +1,6 @@
 import { test, expect } from './extension-test';
 
-const DEFAULT_SELECTED = ['article', 'p', 'h1', 'h2', 'h3', 'li'];
+const DEFAULT_SELECTED = ['article', 'p', 'h1', 'h2', 'h3', 'li', 'em'];
 
 test.describe('Processable Elements Configuration', () => {
   test.setTimeout(60000);

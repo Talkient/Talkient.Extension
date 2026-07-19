@@ -1,8 +1,5 @@
 import { signInWithGoogle, signOut, getCurrentUser } from './auth-service';
 
-/**
- * Handle SIGN_IN message from popup
- */
 export async function handleSignIn(
   interactive: boolean,
   sendResponse: (response: unknown) => void,
@@ -15,9 +12,6 @@ export async function handleSignIn(
   }
 }
 
-/**
- * Handle SIGN_OUT message from popup
- */
 export async function handleSignOut(
   sendResponse: (response: unknown) => void,
 ): Promise<void> {
@@ -25,9 +19,6 @@ export async function handleSignOut(
   sendResponse(result);
 }
 
-/**
- * Handle GET_AUTH_STATE message from popup
- */
 export async function handleGetAuthState(
   sendResponse: (response: unknown) => void,
 ): Promise<void> {
