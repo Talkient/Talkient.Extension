@@ -2,6 +2,7 @@
 
 ## MVP
 
+- Can we remove "identity" permission from manifest?
 - PRD + techspec to add shadcn UI
 - Hooks (copilot, claude code and OpenCode)
   - Lint, tests
