@@ -88,7 +88,7 @@ describe('createPlayButton', () => {
 
   test('should have the correct CSS styles', () => {
     const cssText = button.style.cssText;
-    expect(cssText).toContain('display: flex');
+    expect(cssText).toContain('display: inline-flex');
     expect(cssText).toContain('align-items: center');
     expect(cssText).toContain('justify-content: center');
   });
@@ -109,7 +109,9 @@ describe('createPlayButton', () => {
 
   test('should have proper button semantics', () => {
     expect(button.tagName).toBe('BUTTON');
-    expect(button.type).toBe('submit'); // Default button type
+    // Not a submit button, so blocks inside a <form> never submit it
+    expect(button.type).toBe('button');
+    expect(button.getAttribute('aria-label')).toBe('Read aloud');
   });
 });
 

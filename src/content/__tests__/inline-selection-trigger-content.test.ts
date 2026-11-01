@@ -46,6 +46,9 @@ jest.mock('../../features/tts-playback/content/index', () => ({
   getCurrentPlayingChars: jest.fn(() => 0),
   resetEstimateCounters: jest.fn(),
   setOnPlayStartCallback: jest.fn(),
+  getIgnoredDomains: jest.fn(() => []),
+  unmarkProcessedBlocks: jest.fn(),
+  hasReadableContent: jest.fn(() => true),
 }));
 
 jest.mock('../highlight', () => ({

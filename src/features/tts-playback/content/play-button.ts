@@ -25,12 +25,15 @@ export function safeClickButton(button: HTMLElement): void {
 // Function to create a play button element
 export function createPlayButton(): HTMLButtonElement {
   const button = document.createElement('button');
+  // The button lives inside page blocks, which may be inside a <form>
+  button.type = 'button';
   // Using SVG play icon for better visual appearance
   button.innerHTML = getSvgIcon('play');
   button.title =
     'Click to play/pause speech\nShift+Click: Bold highlighting\nCtrl+Click: Minimal highlighting\nAlt+Click: Elegant highlighting';
-  // Styles are now primarily in content.css
+  button.setAttribute('aria-label', 'Read aloud');
+  // Styles are now primarily in content.css. Inline so it sits in the text flow.
   button.style.cssText =
-    'display: flex; align-items: center; justify-content: center;';
+    'display: inline-flex; align-items: center; justify-content: center;';
   return button;
 }

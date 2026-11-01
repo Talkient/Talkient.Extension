@@ -37,9 +37,18 @@ jest.mock('../../../features/assets/content/icons', () => ({
   isSvgPauseIcon: jest.fn(() => false),
 }));
 
-// Mock tts-playback to avoid DOM deps (panel-controller uses setSpeechRate)
+// Mock tts-playback to avoid DOM deps (panel-controller uses setSpeechRate).
+// Block helpers keep their real behaviour.
 jest.mock('../../tts-playback/content/index', () => ({
   setSpeechRate: jest.fn(),
+  findFirstVisibleBlock: () =>
+    jest
+      .requireActual('../../tts-playback/content/text-processor')
+      .findFirstVisibleBlock(),
+  unmarkProcessedBlocks: () =>
+    jest
+      .requireActual('../../tts-playback/content/text-processor')
+      .unmarkProcessedBlocks(),
 }));
 
 // Mock play-button to capture safeClickButton calls
@@ -50,6 +59,7 @@ jest.mock('../../tts-playback/content/play-button', () => ({
 // Mock highlight to avoid DOM deps
 jest.mock('../../../content/highlight', () => ({
   clearHighlight: jest.fn(),
+  getCurrentHighlightedElement: jest.fn(() => null),
 }));
 
 // Mock Chrome APIs
@@ -671,13 +681,35 @@ describe('Control Panel Module', () => {
       jest.clearAllMocks();
     });
 
+    const { getCurrentHighlightedElement, clearHighlight } =
+      require('../../../content/highlight') as {
+        getCurrentHighlightedElement: jest.Mock;
+        clearHighlight: jest.Mock;
+      };
+
+    function createBlock(rect: Partial<DOMRect>): {
+      block: HTMLElement;
+      button: HTMLButtonElement;
+    } {
+      const block = document.createElement('p');
+      block.className = 'talkient-processed';
+      const button = document.createElement('button');
+      button.className = 'talkient-play-button';
+      block.appendChild(button);
+      block.appendChild(document.createTextNode('Some readable text'));
+      block.getBoundingClientRect = jest.fn(
+        () =>
+          ({ width: 100, height: 20, top: 0, bottom: 20, ...rect }) as DOMRect,
+      );
+      document.body.appendChild(block);
+      return { block, button };
+    }
+
     it('6.2: clicking play button when showing play icon and a .talkient-play-button exists → safeClickButton is called', () => {
       // isSvgPauseIcon returns false → "play" state
       isSvgPauseIcon.mockReturnValue(false);
 
-      const playButtonEl = document.createElement('button');
-      playButtonEl.className = 'talkient-play-button';
-      document.body.appendChild(playButtonEl);
+      const { block, button } = createBlock({ top: 200, bottom: 240 });
 
       const panel = document.getElementById('talkient-control-panel')!;
       const mainBtn = panel.querySelector(
@@ -685,9 +717,54 @@ describe('Control Panel Module', () => {
       ) as HTMLButtonElement;
       mainBtn.click();
 
-      expect(safeClickButton).toHaveBeenCalledWith(playButtonEl);
+      expect(safeClickButton).toHaveBeenCalledWith(button);
 
-      playButtonEl.remove();
+      block.remove();
+    });
+
+    it('starts reading at the first block in view instead of the top of the page', () => {
+      isSvgPauseIcon.mockReturnValue(false);
+
+      // Other tests resize the viewport, so position blocks relative to it
+      const viewportHeight = window.innerHeight;
+      const above = createBlock({ top: -400, bottom: -360 });
+      const inView = createBlock({
+        top: viewportHeight * 0.4,
+        bottom: viewportHeight * 0.5,
+      });
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+      mainBtn.click();
+
+      // Identical DOM nodes are deep-equal, so compare by identity
+      expect(safeClickButton).toHaveBeenCalledTimes(1);
+      expect(safeClickButton.mock.calls[0][0]).toBe(inView.button);
+
+      above.block.remove();
+      inView.block.remove();
+    });
+
+    it('resumes the paused block, which keeps its highlight, even if its button shows the play icon', () => {
+      isSvgPauseIcon.mockReturnValue(false);
+
+      const first = createBlock({ top: 300, bottom: 340 });
+      const paused = createBlock({ top: 900, bottom: 940 });
+      getCurrentHighlightedElement.mockReturnValueOnce(paused.block);
+
+      const panel = document.getElementById('talkient-control-panel')!;
+      const mainBtn = panel.querySelector(
+        '.talkient-control-btn.primary',
+      ) as HTMLButtonElement;
+      mainBtn.click();
+
+      expect(safeClickButton).toHaveBeenCalledTimes(1);
+      expect(safeClickButton.mock.calls[0][0]).toBe(paused.button);
+
+      first.block.remove();
+      paused.block.remove();
     });
 
     it('resume: clicking play button when a .talkient-play-button shows pause icon → resets that button to play then calls safeClickButton on it', () => {
@@ -766,6 +843,8 @@ describe('Control Panel Module', () => {
         expect.any(Function),
       );
       expect(mainBtn.innerHTML).toBe('<svg data-icon="play"></svg>');
+      // The reader keeps their place while paused
+      expect(clearHighlight).not.toHaveBeenCalled();
     });
 
     it('6.5: updatePanelPlayIcon sets button to pause SVG then back to play SVG', () => {

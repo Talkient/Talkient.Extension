@@ -50,12 +50,24 @@ const mockChrome = {
   return 1;
 });
 
+// Only the block discovery walk is mocked; reading a block's text still uses
+// the real DOM walker.
+function mockDiscoveryWalker(walker: unknown): void {
+  jest
+    .spyOn(document, 'createTreeWalker')
+    .mockReturnValueOnce(walker as TreeWalker);
+}
+
 describe('Reading Time Counters', () => {
   function processTextElementsAndWaitForComplete(): Promise<void> {
     return new Promise((resolve) => {
       processTextElements(() => resolve());
     });
   }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   beforeEach(() => {
     resetEstimateCounters();
@@ -172,7 +184,7 @@ describe('Reading Time Counters', () => {
       container.appendChild(article);
 
       const textNode = p.firstChild as Text;
-      document.createTreeWalker = jest.fn().mockReturnValue({
+      mockDiscoveryWalker({
         nextNode: jest.fn().mockReturnValueOnce(textNode).mockReturnValue(null),
         currentNode: textNode,
       });
@@ -189,7 +201,7 @@ describe('Reading Time Counters', () => {
     });
 
     it('calls onComplete even when no nodes are found', async () => {
-      document.createTreeWalker = jest.fn().mockReturnValue({
+      mockDiscoveryWalker({
         nextNode: jest.fn().mockReturnValue(null),
         currentNode: null,
       });
@@ -214,7 +226,7 @@ describe('Reading Time Counters', () => {
       container.appendChild(article);
 
       const textNode = p.firstChild as Text;
-      document.createTreeWalker = jest.fn().mockReturnValue({
+      mockDiscoveryWalker({
         nextNode: jest.fn().mockReturnValueOnce(textNode).mockReturnValue(null),
         currentNode: textNode,
       });
@@ -255,7 +267,7 @@ describe('Reading Time Counters', () => {
         }),
         currentNode: null as Node | null,
       };
-      document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+      mockDiscoveryWalker(mockWalker);
 
       await processTextElementsAndWaitForComplete();
 
@@ -272,7 +284,7 @@ describe('Reading Time Counters', () => {
       container.appendChild(article);
 
       const textNode = p.firstChild as Text;
-      document.createTreeWalker = jest.fn().mockReturnValue({
+      mockDiscoveryWalker({
         nextNode: jest.fn().mockReturnValueOnce(textNode).mockReturnValue(null),
         currentNode: textNode,
       });
@@ -321,7 +333,7 @@ describe('Reading Time Counters', () => {
       container.appendChild(article);
 
       const textNode = p.firstChild as Text;
-      document.createTreeWalker = jest.fn().mockReturnValue({
+      mockDiscoveryWalker({
         nextNode: jest.fn().mockReturnValueOnce(textNode).mockReturnValue(null),
         currentNode: textNode,
       });
@@ -391,7 +403,7 @@ describe('Reading Time Counters', () => {
         }),
         currentNode: null as Node | null,
       };
-      document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+      mockDiscoveryWalker(mockWalker);
 
       await processTextElementsAndWaitForComplete();
 
@@ -460,7 +472,7 @@ describe('Reading Time Counters', () => {
         currentNode: null as Node | null,
       };
 
-      document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+      mockDiscoveryWalker(mockWalker);
     }
 
     async function runRafQueueUntilComplete(

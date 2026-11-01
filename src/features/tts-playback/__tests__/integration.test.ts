@@ -58,6 +58,14 @@ const mockChrome = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
 
+// Only the block discovery walk is mocked; reading a block's text still uses
+// the real DOM walker.
+function mockDiscoveryWalker(walker: unknown): void {
+  jest
+    .spyOn(document, 'createTreeWalker')
+    .mockReturnValueOnce(walker as TreeWalker);
+}
+
 describe('Text Highlighting Integration', () => {
   let container: HTMLDivElement;
 
@@ -80,6 +88,7 @@ describe('Text Highlighting Integration', () => {
     document.body.removeChild(container);
     clearHighlight();
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test('should highlight text when play button is clicked', async () => {
@@ -96,7 +105,7 @@ describe('Text Highlighting Integration', () => {
       currentNode: textNode,
     };
 
-    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    mockDiscoveryWalker(mockWalker);
 
     // Process text elements to add play buttons
     processTextElements();
@@ -145,7 +154,7 @@ describe('Text Highlighting Integration', () => {
     );
   });
 
-  test('should clear highlight when pause button is clicked', async () => {
+  test('should keep the highlight when pause button is clicked', async () => {
     // Create a paragraph with text
     const paragraph = document.createElement('p');
     const textContent = 'This is another test paragraph.';
@@ -159,7 +168,7 @@ describe('Text Highlighting Integration', () => {
       currentNode: textNode,
     };
 
-    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    mockDiscoveryWalker(mockWalker);
 
     // Process text elements
     processTextElements();
@@ -183,9 +192,10 @@ describe('Text Highlighting Integration', () => {
     expect(svgAfterPlay).not.toBeNull();
     expect(isSvgPauseIcon(svgAfterPlay as SVGElement)).toBe(true);
 
-    // Click pause to stop and clear highlight
+    // Click pause: the reader keeps their place, so the block stays highlighted
     playButton.click();
-    expect(getCurrentHighlightedElement()).toBeNull();
+    expect(getCurrentHighlightedElement()).toBe(paragraph);
+    expect(paragraph.classList.contains('talkient-highlighted')).toBe(true);
 
     // Check for play icon
     const svgAfterPause = playButton.querySelector('svg');
@@ -214,7 +224,7 @@ describe('Text Highlighting Integration', () => {
       currentNode: textNode,
     };
 
-    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    mockDiscoveryWalker(mockWalker);
 
     // Spy on console.error before processing
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -283,7 +293,7 @@ describe('Text Highlighting Integration', () => {
       currentNode: null as Node | null,
     };
 
-    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    mockDiscoveryWalker(mockWalker);
 
     // Process text elements
     processTextElements();
@@ -347,7 +357,7 @@ describe('Text Highlighting Integration', () => {
       currentNode: null as Node | null,
     };
 
-    document.createTreeWalker = jest.fn().mockReturnValue(mockWalker);
+    mockDiscoveryWalker(mockWalker);
 
     mockChrome.runtime.sendMessage.mockImplementation((message, callback) => {
       if (callback) callback({ success: true });

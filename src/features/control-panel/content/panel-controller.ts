@@ -4,8 +4,12 @@
 import { safeSendMessage } from '../../../shared/api/messaging';
 import type { MessageResponse } from '../../../shared/types/messages';
 import { getSvgIcon, isSvgPauseIcon } from '../../assets/content/icons';
-import { clearHighlight } from '../../../content/highlight';
-import { setSpeechRate } from '../../tts-playback/content/index';
+import { getCurrentHighlightedElement } from '../../../content/highlight';
+import {
+  findFirstVisibleBlock,
+  setSpeechRate,
+  unmarkProcessedBlocks,
+} from '../../tts-playback/content/index';
 import { safeClickButton } from '../../tts-playback/content/play-button';
 import { getPanelHideDuration, setDomainHideCookie } from './panel-visibility';
 import { VOICE_SELECT_ID } from './panel-constants';
@@ -275,26 +279,29 @@ function setupMainControlButton(panel: HTMLElement): void {
     );
 
     if (isPlaying) {
+      // The highlight stays so the reader keeps their place while paused
       safeSendMessage({ type: 'PAUSE_SPEECH' }, (_response) => {
         mainButton.innerHTML = getSvgIcon('play');
-        clearHighlight();
       });
     } else {
-      // If speech is paused, the paused play button still shows the pause icon.
-      // Find it first so we resume that text instead of starting from the top.
-      const pausedButton = Array.from(
-        document.querySelectorAll('.talkient-play-button'),
-      ).find((btn) =>
-        isSvgPauseIcon(btn.querySelector('svg') as SVGElement),
-      ) as HTMLElement | undefined;
+      // Resume the paused block (it keeps its highlight, and its button may
+      // still show the pause icon) instead of starting somewhere else.
+      const pausedButton =
+        getCurrentHighlightedElement()?.querySelector<HTMLElement>(
+          ':scope > .talkient-play-button',
+        ) ??
+        (Array.from(document.querySelectorAll('.talkient-play-button')).find(
+          (btn) => isSvgPauseIcon(btn.querySelector('svg') as SVGElement),
+        ) as HTMLElement | undefined);
 
       if (pausedButton) {
         // Reset to play icon so its click handler sends SPEAK_TEXT (SW resumes)
         pausedButton.innerHTML = getSvgIcon('play');
         safeClickButton(pausedButton);
       } else {
-        const playButton = document.querySelector<HTMLElement>(
-          '.talkient-play-button',
+        // Start reading where the user is, not at the top of the page
+        const playButton = findFirstVisibleBlock()?.querySelector<HTMLElement>(
+          ':scope > .talkient-play-button',
         );
         if (playButton) {
           safeClickButton(playButton);
@@ -323,19 +330,7 @@ export function updatePanelPlayIcon(state: 'play' | 'pause'): void {
  * Removes all play buttons from the page
  */
 function removeAllPlayButtons(): void {
-  const processedElements = document.querySelectorAll('.talkient-processed');
-  processedElements.forEach((element) => {
-    const textContent = element.textContent || '';
-    const textNode = document.createTextNode(textContent.replace(/\s*$/, ''));
-
-    if (element.parentNode) {
-      element.parentNode.insertBefore(textNode, element);
-      element.remove();
-    }
-  });
-
-  const playButtons = document.querySelectorAll('.talkient-play-button');
-  playButtons.forEach((button) => button.remove());
+  unmarkProcessedBlocks();
 }
 
 /**

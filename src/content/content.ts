@@ -15,6 +15,7 @@ import {
   loadButtonPositionFromStorage,
   setButtonPosition,
   setIgnoredDomains,
+  getIgnoredDomains,
   setProcessableElements,
   getTotalProcessedChars,
   getRemainingChars,
@@ -22,6 +23,8 @@ import {
   getCurrentPlayingChars,
   resetEstimateCounters,
   setOnPlayStartCallback,
+  hasReadableContent,
+  unmarkProcessedBlocks,
 } from '../features/tts-playback/content/index';
 import {
   clearHighlight,
@@ -184,19 +187,7 @@ function removeTalkientUiElements(): void {
     controlPanel.remove();
   }
 
-  document.querySelectorAll('.talkient-play-button').forEach((button) => {
-    button.remove();
-  });
-
-  document.querySelectorAll('.talkient-processed').forEach((el) => {
-    const parent = el.parentNode;
-    if (parent) {
-      while (el.firstChild) {
-        parent.insertBefore(el.firstChild, el);
-      }
-      el.remove();
-    }
-  });
+  unmarkProcessedBlocks();
 
   clearHighlight();
   hideInlineTriggerAndResetState();
@@ -266,11 +257,9 @@ chrome.runtime.onMessage.addListener(
         const svgInButton = nextPlayButton?.querySelector('svg');
 
         if (nextPlayButton && isSvgPlayIcon(svgInButton as SVGElement)) {
-          // Add a small delay to ensure the UI state is updated before auto-playing
-          setTimeout(() => {
-            console.log('[Talkient] Auto-playing next text element');
-            safeClickButton(nextPlayButton);
-          }, 500);
+          // Continue right away so consecutive blocks are read without a gap
+          console.log('[Talkient] Auto-playing next text element');
+          safeClickButton(nextPlayButton);
         }
       }
     } else if (
@@ -399,34 +388,120 @@ void loadButtonPositionFromStorage().then(() => {
         return;
       }
 
-      if (!document.querySelector('article')) {
+      if (hasReadableContent()) {
+        initializeTalkientUi();
+      } else {
         console.log(
-          '[Talkient] No <article> element found. Skipping UI injection.',
+          '[Talkient] No readable content found yet. Skipping UI injection.',
         );
-        return;
       }
 
-      // Create and inject the control panel
-      createControlPanel();
-
-      // Check if play buttons are enabled before initial processing
-      chrome.storage.local.get(['playButtonsEnabled'], (result) => {
-        // Default to true if not set
-        const isEnabled = result.playButtonsEnabled !== false;
-
-        if (isEnabled) {
-          // Initial processing
-          resetEstimateCounters();
-          processTextElements(() => updateRemainingTimeDisplay());
-        } else {
-          console.log(
-            '[Talkient] Play buttons are disabled. Skipping initial processing.',
-          );
-        }
-      });
+      startContentWatcher();
     },
   );
 });
+
+let isUiInitialized = false;
+
+function initializeTalkientUi(): void {
+  isUiInitialized = true;
+
+  // Create and inject the control panel
+  createControlPanel();
+
+  // Check if play buttons are enabled before initial processing
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+    // Default to true if not set
+    const isEnabled = result.playButtonsEnabled !== false;
+
+    if (isEnabled) {
+      // Initial processing
+      resetEstimateCounters();
+      processTextElements(() => updateRemainingTimeDisplay());
+    } else {
+      console.log(
+        '[Talkient] Play buttons are disabled. Skipping initial processing.',
+      );
+    }
+  });
+}
+
+// Pages often render their text after load (SPAs, lazy loading, infinite
+// scroll). Added content is processed shortly after it appears.
+const CONTENT_WATCH_DELAY_MS = 1000;
+const MAX_PENDING_CONTENT_ROOTS = 50;
+let pendingContentRoots: Node[] = [];
+let contentWatchTimer: ReturnType<typeof setTimeout> | null = null;
+
+function isTalkientNode(node: Node): boolean {
+  return (
+    node instanceof Element &&
+    (node.classList.contains('talkient-play-button') ||
+      node.id.startsWith('talkient-') ||
+      node.closest('[id^="talkient-"]') !== null)
+  );
+}
+
+function processAddedContent(): void {
+  contentWatchTimer = null;
+  const roots = pendingContentRoots.filter((root) => root.isConnected);
+  pendingContentRoots = [];
+
+  if (isHostnameIgnored(window.location.hostname, getIgnoredDomains())) {
+    return;
+  }
+
+  if (!isUiInitialized) {
+    if (hasReadableContent()) {
+      console.log('[Talkient] Readable content appeared. Injecting UI.');
+      initializeTalkientUi();
+    }
+    return;
+  }
+
+  chrome.storage.local.get(['playButtonsEnabled'], (result) => {
+    if (result.playButtonsEnabled === false) return;
+
+    const topLevelRoots =
+      roots.length > MAX_PENDING_CONTENT_ROOTS
+        ? [document.body]
+        : roots.filter(
+            (root) =>
+              !roots.some((other) => other !== root && other.contains(root)),
+          );
+    topLevelRoots.forEach((root) => {
+      processTextElements(() => updateRemainingTimeDisplay(), root);
+    });
+  });
+}
+
+function startContentWatcher(): void {
+  const observer = new MutationObserver((mutations: MutationRecord[]) => {
+    for (const mutation of mutations) {
+      for (const node of Array.from(mutation.addedNodes)) {
+        const root =
+          node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+        if (
+          !root ||
+          root.nodeType !== Node.ELEMENT_NODE ||
+          isTalkientNode(root)
+        ) {
+          continue;
+        }
+        pendingContentRoots.push(root);
+      }
+    }
+
+    if (pendingContentRoots.length > 0 && !contentWatchTimer) {
+      contentWatchTimer = setTimeout(
+        processAddedContent,
+        CONTENT_WATCH_DELAY_MS,
+      );
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
 
 // Listen for storage changes to update highlight style in real-time
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -702,17 +777,3 @@ window.addEventListener('resize', () => {
     hideInlineTriggerAndResetState();
   }
 });
-
-// Watch for DOM changes to process new text elements
-// const observer = new MutationObserver((mutations: MutationRecord[]) => {
-//     for (const mutation of mutations) {
-//         if (mutation.type === 'childList') {
-//             processTextElements();
-//         }
-//     }
-// });
-
-// observer.observe(document.body, {
-//     childList: true,
-//     subtree: true
-// });

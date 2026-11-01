@@ -15,6 +15,7 @@ import {
   setButtonPosition,
   setMinimumWords,
   setMaxNodesProcessed,
+  unmarkProcessedBlocks,
 } from '../../features/tts-playback/content/index';
 
 import { clearHighlight } from '../highlight';
@@ -98,22 +99,10 @@ function simulateBeforePrint(): void {
     controlPanel.remove();
   }
 
-  // Remove all play buttons
-  document.querySelectorAll('.talkient-play-button').forEach((button) => {
-    button.remove();
-  });
-
-  // Unwrap .talkient-processed spans so the DOM is fully restored before
-  // printing/re-processing (mirrors removeTalkientUiElements in content.ts)
-  document.querySelectorAll('.talkient-processed').forEach((el) => {
-    const parent = el.parentNode;
-    if (parent) {
-      while (el.firstChild) {
-        parent.insertBefore(el.firstChild, el);
-      }
-      el.remove();
-    }
-  });
+  // Remove all play buttons and processed markers so the DOM is fully
+  // restored before printing/re-processing (mirrors removeTalkientUiElements
+  // in content.ts)
+  unmarkProcessedBlocks();
 
   // Clear any highlights
   clearHighlight();

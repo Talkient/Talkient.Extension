@@ -32,6 +32,15 @@ jest.mock('../../features/tts-playback/content/index', () => ({
   getCurrentPlayingChars: jest.fn(() => 0),
   resetEstimateCounters: jest.fn(),
   setOnPlayStartCallback: jest.fn(),
+  getIgnoredDomains: jest.fn(() => []),
+  unmarkProcessedBlocks: () =>
+    jest
+      .requireActual('../../features/tts-playback/content/text-processor')
+      .unmarkProcessedBlocks(),
+  hasReadableContent: () =>
+    jest
+      .requireActual('../../features/tts-playback/content/text-processor')
+      .hasReadableContent(),
 }));
 
 jest.mock('../highlight', () => ({
@@ -241,7 +250,7 @@ describe('content article guard', () => {
     };
   }
 
-  it('skips UI injection when page has no <article> element', async () => {
+  it('skips UI injection when page has no <article> element and little text', async () => {
     document.body.innerHTML = '<main><p>No article here.</p></main>';
     setupChromeStorageNoIgnored();
 
@@ -261,5 +270,31 @@ describe('content article guard', () => {
 
     expect(mockCreateControlPanel).toHaveBeenCalledTimes(1);
     expect(mockProcessTextElements).toHaveBeenCalledTimes(1);
+  });
+
+  it('injects UI on a page without <article> when it has enough readable text', async () => {
+    const paragraph =
+      '<p>This paragraph has plenty of readable words so that the page is worth listening to without any article element at all.</p>';
+    document.body.innerHTML = `<main>${paragraph.repeat(5)}</main>`;
+    setupChromeStorageNoIgnored();
+
+    require('../content');
+    await Promise.resolve();
+
+    expect(mockCreateControlPanel).toHaveBeenCalledTimes(1);
+    expect(mockProcessTextElements).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not count navigation and footer text as readable content', async () => {
+    const paragraph =
+      '<p>This paragraph has plenty of readable words but it lives inside page boilerplate that is never read.</p>';
+    document.body.innerHTML = `<nav>${paragraph.repeat(3)}</nav><footer>${paragraph.repeat(3)}</footer>`;
+    setupChromeStorageNoIgnored();
+
+    require('../content');
+    await Promise.resolve();
+
+    expect(mockCreateControlPanel).not.toHaveBeenCalled();
+    expect(mockProcessTextElements).not.toHaveBeenCalled();
   });
 });

@@ -138,8 +138,8 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       const para = document.getElementById('para4');
       if (!para) throw new Error('Cannot find paragraph 4');
 
-      // The wrapper might be inside the paragraph, not the paragraph itself
-      const wrapper = para.querySelector('.talkient-processed') as HTMLElement;
+      // The paragraph itself is the processed reading block
+      const wrapper = para.closest('.talkient-processed') as HTMLElement;
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 4');
 
       const playButton = wrapper.querySelector(
@@ -171,7 +171,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     let para4IsHighlighted = await page.evaluate(() => {
       const para = document.getElementById('para4');
       if (!para) return false;
-      const highlightedElement = para.querySelector('.talkient-highlighted');
+      const highlightedElement = para.closest('.talkient-highlighted');
       return highlightedElement !== null;
     });
 
@@ -182,12 +182,11 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
         const para = document.getElementById('para4');
         if (!para) return;
 
-        const wrapper = para.querySelector('.talkient-processed');
+        const wrapper = para.closest('.talkient-processed');
         if (!wrapper) return;
 
-        // Find the text element to highlight
-        const textElement =
-          wrapper.querySelector('span') || wrapper.childNodes[0];
+        // The processed block itself holds the text
+        const textElement: Node = wrapper;
         if (textElement && textElement.nodeType === Node.ELEMENT_NODE) {
           const elem = textElement as HTMLElement;
           elem.classList.add('talkient-highlighted');
@@ -219,9 +218,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       // Verify highlight was applied
       para4IsHighlighted = await page.evaluate(() => {
         const para = document.getElementById('para4');
-        return para
-          ? para.querySelector('.talkient-highlighted') !== null
-          : false;
+        return para ? para.closest('.talkient-highlighted') !== null : false;
       });
     }
 
@@ -323,7 +320,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       if (!para) throw new Error('Cannot find paragraph 2');
 
       // The wrapper might be inside the paragraph
-      const wrapper = para.querySelector('.talkient-processed') as HTMLElement;
+      const wrapper = para.closest('.talkient-processed') as HTMLElement;
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 2');
 
       const playButton = wrapper.querySelector(
@@ -343,7 +340,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
     let para2IsHighlighted = await page.evaluate(() => {
       const para = document.getElementById('para2');
       if (!para) return false;
-      const highlightedElement = para.querySelector('.talkient-highlighted');
+      const highlightedElement = para.closest('.talkient-highlighted');
       console.log('Para2 highlighted naturally?', highlightedElement !== null);
       return highlightedElement !== null;
     });
@@ -359,11 +356,11 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
         const para = document.getElementById('para2');
         if (!para) return { error: 'Para not found' };
 
-        const wrapper = para.querySelector('.talkient-processed');
+        const wrapper = para.closest('.talkient-processed');
         if (!wrapper) return { error: 'Wrapper not found' };
 
-        const textElement =
-          wrapper.querySelector('span') || wrapper.childNodes[0];
+        // The processed block itself holds the text
+        const textElement: Node = wrapper;
         if (!textElement || textElement.nodeType !== Node.ELEMENT_NODE) {
           return { error: 'Text element not found' };
         }
@@ -406,9 +403,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
 
       para2IsHighlighted = await page.evaluate(() => {
         const para = document.getElementById('para2');
-        return para
-          ? para.querySelector('.talkient-highlighted') !== null
-          : false;
+        return para ? para.closest('.talkient-highlighted') !== null : false;
       });
     }
 
@@ -528,7 +523,7 @@ test.describe('Talkient Follow Highlight Feature Tests', () => {
       if (!para) throw new Error('Cannot find paragraph 3');
 
       // The wrapper is inside the paragraph
-      const wrapper = para.querySelector('.talkient-processed') as HTMLElement;
+      const wrapper = para.closest('.talkient-processed') as HTMLElement;
       if (!wrapper) throw new Error('Cannot find wrapper for paragraph 3');
 
       const playButton = wrapper.querySelector(

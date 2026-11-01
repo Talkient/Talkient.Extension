@@ -3,7 +3,8 @@
  *
  * Tests for the duplicate play button fix:
  * - Re-processing after removeTalkientUiElements() does not duplicate buttons
- * - removeTalkientUiElements() fully unwraps .talkient-processed spans
+ * - removeTalkientUiElements() removes every .talkient-processed marker
+ *   without touching the page elements
  */
 
 import {
@@ -14,6 +15,7 @@ import {
   setMaxNodesProcessed,
   setButtonPosition,
   resetEstimateCounters,
+  unmarkProcessedBlocks,
 } from '../content/text-processor';
 
 // Mock icons
@@ -58,7 +60,7 @@ global.requestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
 
 /**
  * Simulates removeTalkientUiElements() from content.ts:
- * remove panel → remove buttons → unwrap spans
+ * remove panel → remove buttons and processed markers
  */
 function removeTalkientUiElements(): void {
   const controlPanel = document.getElementById('talkient-control-panel');
@@ -66,19 +68,7 @@ function removeTalkientUiElements(): void {
     controlPanel.remove();
   }
 
-  document.querySelectorAll('.talkient-play-button').forEach((button) => {
-    button.remove();
-  });
-
-  document.querySelectorAll('.talkient-processed').forEach((el) => {
-    const parent = el.parentNode;
-    if (parent) {
-      while (el.firstChild) {
-        parent.insertBefore(el.firstChild, el);
-      }
-      el.remove();
-    }
-  });
+  unmarkProcessedBlocks();
 }
 
 describe('duplicate play buttons fix', () => {
@@ -185,6 +175,23 @@ describe('duplicate play buttons fix', () => {
       removeTalkientUiElements();
 
       expect(document.body.textContent).toContain(originalText);
+    });
+
+    it('should keep the page paragraphs in place after removeTalkientUiElements()', () => {
+      const article = document.createElement('article');
+      const p = document.createElement('p');
+      p.id = 'kept';
+      p.innerHTML = 'A paragraph with <a href="#">a link</a> inside of it.';
+      const originalHtml = p.innerHTML;
+      article.appendChild(p);
+      document.body.appendChild(article);
+
+      processTextElements();
+      removeTalkientUiElements();
+
+      expect(document.getElementById('kept')).toBe(p);
+      expect(p.innerHTML).toBe(originalHtml);
+      expect(p.className).toBe('');
     });
   });
 });

@@ -506,198 +506,123 @@
   }
 }
 
-/* Text highlighting styles — context highlight (softer when word-level is active) */
+/* Text highlighting styles — the block being read.
+   Only paint properties are used (no padding, margin, border or font
+   changes) so highlighting never reflows the page while reading. */
 .talkient-highlighted {
-  background: rgba(135, 206, 235, 0.15) !important;
-  border-left: 3px solid #4a90e2 !important;
+  background-color: rgba(135, 206, 235, 0.15) !important;
   border-radius: 4px !important;
-  padding: 2px 6px !important;
-  margin: 0 2px !important;
   box-shadow:
-    0 2px 8px rgba(74, 144, 226, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  z-index: 1 !important;
+    -6px 0 0 rgba(135, 206, 235, 0.15),
+    6px 0 0 rgba(135, 206, 235, 0.15),
+    -9px 0 0 #4a90e2 !important;
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease !important;
 }
 
-/* Word span base styles */
-.talkient-word {
-  display: inline !important;
-  border-radius: 3px !important;
-  transition: background 0.15s ease !important;
-}
-
-/* Active word — default style */
-.talkient-highlighted .talkient-active-word {
-  background: linear-gradient(
-    120deg,
-    rgba(135, 206, 235, 0.4) 0%,
-    rgba(135, 206, 235, 0.6) 100%
-  ) !important;
-  color: #1a365d !important;
-  font-weight: 500 !important;
-  animation: talkient-pulse 2s ease-in-out infinite !important;
-  border-radius: 3px !important;
-}
-
-/* Active word — minimal style */
-.talkient-highlighted.style-minimal .talkient-active-word {
-  background: rgba(74, 144, 226, 0.15) !important;
-  border-bottom: 2px solid #4a90e2 !important;
-  animation: none !important;
-  font-weight: inherit !important;
-  border-radius: 0 !important;
-}
-
-/* Active word — bold style */
-.talkient-highlighted.style-bold .talkient-active-word {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-  animation: none !important;
-  border-radius: 4px !important;
-  padding: 1px 3px !important;
-}
-
-/* Active word — elegant style */
-.talkient-highlighted.style-elegant .talkient-active-word {
-  background: linear-gradient(
-    45deg,
-    rgba(255, 215, 0, 0.3) 0%,
-    rgba(255, 193, 7, 0.45) 100%
-  ) !important;
-  color: #b8860b !important;
-  animation: none !important;
-  border-radius: 3px !important;
-  padding: 1px 2px !important;
-}
-
-/* Alternative highlighting styles (for future use) */
 .talkient-highlighted.style-minimal {
-  background: rgba(74, 144, 226, 0.1) !important;
-  border-bottom: 2px solid #4a90e2 !important;
-  border-left: none !important;
+  background-color: rgba(74, 144, 226, 0.08) !important;
   border-radius: 0 !important;
-  padding: 1px 0 !important;
-  margin: 0 !important;
-  animation: none !important;
+  box-shadow: inset 0 -2px 0 #4a90e2 !important;
 }
 
 .talkient-highlighted.style-bold {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  border: none !important;
+  background-color: rgba(102, 126, 234, 0.14) !important;
   border-radius: 6px !important;
-  padding: 3px 8px !important;
-  font-weight: 600 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-  animation: none !important; /* Override the default pulsing animation */
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3) !important;
+  box-shadow:
+    -6px 0 0 rgba(102, 126, 234, 0.14),
+    6px 0 0 rgba(102, 126, 234, 0.14),
+    -9px 0 0 #764ba2 !important;
 }
 
 .talkient-highlighted.style-elegant {
-  background: linear-gradient(
-    45deg,
-    rgba(255, 215, 0, 0.2) 0%,
-    rgba(255, 193, 7, 0.3) 100%
-  ) !important;
-  border: 1px solid rgba(255, 193, 7, 0.4) !important;
+  background-color: rgba(255, 215, 0, 0.12) !important;
   border-radius: 8px !important;
-  padding: 2px 6px !important;
-  color: #b8860b !important;
-  box-shadow: 0 2px 4px rgba(255, 193, 7, 0.1) !important;
+  box-shadow:
+    -6px 0 0 rgba(255, 215, 0, 0.12),
+    6px 0 0 rgba(255, 215, 0, 0.12),
+    0 0 0 1px rgba(255, 193, 7, 0.4) !important;
 }
 
-/* Subtle pulsing animation for the highlighted text */
-@keyframes talkient-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 2px 8px rgba(74, 144, 226, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-  50% {
-    box-shadow:
-      0 4px 12px rgba(74, 144, 226, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  }
+/* Word being spoken — painted with the CSS Custom Highlight API, so the
+   page DOM is never rewritten. Only paint properties are supported here. */
+::highlight(talkient-word) {
+  background-color: rgba(135, 206, 235, 0.6);
+  color: #1a365d;
+}
+
+::highlight(talkient-word-minimal) {
+  background-color: rgba(74, 144, 226, 0.15);
+  text-decoration: underline 2px #4a90e2;
+}
+
+::highlight(talkient-word-bold) {
+  background-color: #667eea;
+  color: #ffffff;
+}
+
+::highlight(talkient-word-elegant) {
+  background-color: rgba(255, 193, 7, 0.45);
+  color: #8a6508;
 }
 
 /* Dark mode support for highlighting */
 @media (prefers-color-scheme: dark) {
   .talkient-highlighted {
-    background: rgba(100, 149, 237, 0.1) !important;
-    border-left: 3px solid #6495ed !important;
+    background-color: rgba(100, 149, 237, 0.12) !important;
     box-shadow:
-      0 2px 8px rgba(100, 149, 237, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  }
-
-  .talkient-highlighted .talkient-active-word {
-    background: linear-gradient(
-      120deg,
-      rgba(100, 149, 237, 0.3) 0%,
-      rgba(100, 149, 237, 0.5) 100%
-    ) !important;
-    color: #e2f4fd !important;
+      -6px 0 0 rgba(100, 149, 237, 0.12),
+      6px 0 0 rgba(100, 149, 237, 0.12),
+      -9px 0 0 #6495ed !important;
   }
 
   .talkient-highlighted.style-minimal {
-    background: rgba(100, 149, 237, 0.08) !important;
-    border-bottom-color: #6495ed !important;
-  }
-
-  .talkient-highlighted.style-minimal .talkient-active-word {
-    background: rgba(100, 149, 237, 0.2) !important;
-    border-bottom-color: #6495ed !important;
-    color: #e2f4fd !important;
+    background-color: rgba(100, 149, 237, 0.08) !important;
+    box-shadow: inset 0 -2px 0 #6495ed !important;
   }
 
   .talkient-highlighted.style-bold {
-    background: rgba(76, 110, 245, 0.1) !important;
-  }
-
-  .talkient-highlighted.style-bold .talkient-active-word {
-    background: linear-gradient(135deg, #4c6ef5 0%, #7c3aed 100%) !important;
-    color: #f1f5f9 !important;
+    background-color: rgba(76, 110, 245, 0.12) !important;
+    box-shadow:
+      -6px 0 0 rgba(76, 110, 245, 0.12),
+      6px 0 0 rgba(76, 110, 245, 0.12),
+      -9px 0 0 #7c3aed !important;
   }
 
   .talkient-highlighted.style-elegant {
-    background: rgba(251, 191, 36, 0.08) !important;
-    border-color: rgba(245, 158, 11, 0.3) !important;
+    background-color: rgba(251, 191, 36, 0.08) !important;
+    box-shadow:
+      -6px 0 0 rgba(251, 191, 36, 0.08),
+      6px 0 0 rgba(251, 191, 36, 0.08),
+      0 0 0 1px rgba(245, 158, 11, 0.3) !important;
   }
 
-  .talkient-highlighted.style-elegant .talkient-active-word {
-    background: linear-gradient(
-      45deg,
-      rgba(251, 191, 36, 0.3) 0%,
-      rgba(245, 158, 11, 0.4) 100%
-    ) !important;
-    color: #fbbf24 !important;
+  ::highlight(talkient-word) {
+    background-color: rgba(100, 149, 237, 0.5);
+    color: #e2f4fd;
   }
 
-  @keyframes talkient-pulse {
-    0%,
-    100% {
-      box-shadow:
-        0 2px 8px rgba(100, 149, 237, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-    50% {
-      box-shadow:
-        0 4px 12px rgba(100, 149, 237, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
+  ::highlight(talkient-word-minimal) {
+    background-color: rgba(100, 149, 237, 0.2);
+    text-decoration: underline 2px #6495ed;
+    color: #e2f4fd;
+  }
+
+  ::highlight(talkient-word-bold) {
+    background-color: #4c6ef5;
+    color: #f1f5f9;
+  }
+
+  ::highlight(talkient-word-elegant) {
+    background-color: rgba(251, 191, 36, 0.35);
+    color: #fbbf24;
   }
 }
 
-/* Play button styles within processed text */
-.talkient-processed {
-  position: relative;
-}
-
+/* Play button: one per readable block, sitting inline at its start or end.
+   It stays faint until the reader hovers the block, and fully visible on
+   the block being read. */
 .talkient-play-button {
   background: linear-gradient(135deg, #4a90e2 0%, #2d6cdf 100%) !important;
   border: none !important;
@@ -705,16 +630,26 @@
   padding: 5px !important;
   font-size: 12px !important;
   line-height: 1 !important;
-  opacity: 0.2 !important;
-  transition: all 0.2s ease !important;
+  opacity: 0.15 !important;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease !important;
   border-radius: 50% !important;
   width: 22px !important;
   height: 22px !important;
+  min-width: 22px !important;
   color: white !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  vertical-align: middle !important;
   box-shadow: 0 2px 4px rgba(45, 108, 223, 0.3) !important;
+}
+
+.talkient-processed:hover > .talkient-play-button,
+.talkient-highlighted > .talkient-play-button {
+  opacity: 0.85 !important;
 }
 
 /* Button on the right side (default) */
@@ -729,7 +664,8 @@
   margin-right: 6px !important;
 }
 
-.talkient-play-button:hover {
+.talkient-play-button:hover,
+.talkient-play-button:focus-visible {
   opacity: 1 !important;
   transform: scale(1.05) !important;
   box-shadow: 0 3px 6px rgba(45, 108, 223, 0.4) !important;

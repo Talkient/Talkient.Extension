@@ -10,7 +10,6 @@ import {
 import { safeSendMessage } from '../../../shared/api/messaging';
 import {
   highlightText,
-  clearHighlight,
   getHighlightingStyle,
   getCurrentHighlightedElement,
 } from '../../../content/highlight';
@@ -187,10 +186,299 @@ export function getIgnoredDomains(): string[] {
   return ignoredDomainsCache;
 }
 
-function isInProcessedAncestor(parent: HTMLElement): boolean {
+// Inline tags never become a reading block on their own when a block-level
+// processable ancestor exists (e.g. <em> inside <p> is read as part of the <p>).
+const INLINE_TAGS = new Set([
+  'a',
+  'abbr',
+  'b',
+  'bdi',
+  'bdo',
+  'cite',
+  'data',
+  'dfn',
+  'em',
+  'font',
+  'i',
+  'kbd',
+  'mark',
+  'q',
+  's',
+  'samp',
+  'small',
+  'span',
+  'strong',
+  'sub',
+  'sup',
+  'time',
+  'u',
+  'var',
+]);
+
+// Subtrees whose text is never spoken (code, form controls, our own UI and
+// page boilerplate such as menus and footers)
+const SKIPPED_SELECTOR = [
+  'script',
+  'style',
+  'noscript',
+  'template',
+  'button',
+  'code',
+  'pre',
+  'input',
+  'textarea',
+  'select',
+  'svg',
+  'nav',
+  'aside',
+  'footer',
+  '[role="navigation"]',
+  '[role="menu"]',
+  '[role="menubar"]',
+  '[role="tablist"]',
+  '[role="toolbar"]',
+  '[role="banner"]',
+  '[role="contentinfo"]',
+  '[aria-hidden="true"]',
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '.talkient-play-button',
+  '#talkient-control-panel',
+  '#talkient-translation-result',
+  '#talkient-inline-translate-trigger',
+].join(', ');
+
+// Minimum amount of readable text for a page without <article> to get the UI
+const MIN_READABLE_PAGE_CHARS = 500;
+
+export interface TextSegment {
+  node: Text;
+  // Offset of this text node inside the spoken block text
+  start: number;
+}
+
+export interface BlockText {
+  text: string;
+  segments: TextSegment[];
+}
+
+function countWords(text: string): number {
+  return text.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+// A site-level <header> (outside article/main) is boilerplate; an article
+// header usually holds the title and is read.
+function isInSiteHeader(element: HTMLElement): boolean {
+  const header = element.closest('header');
+  return header !== null && header.closest('article, main') === null;
+}
+
+function isSkippedElement(element: HTMLElement): boolean {
+  return element.closest(SKIPPED_SELECTOR) !== null || isInSiteHeader(element);
+}
+
+function isElementHidden(element: HTMLElement): boolean {
+  const style = window.getComputedStyle(element);
+  return (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    style.opacity === '0'
+  );
+}
+
+/**
+ * Returns the element that is read as one utterance for the given text node:
+ * the nearest block-level processable ancestor, falling back to the nearest
+ * inline processable ancestor.
+ */
+export function getBlockElement(node: Node): HTMLElement | null {
+  let inlineFallback: HTMLElement | null = null;
+  for (let el = node.parentElement; el; el = el.parentElement) {
+    const tag = el.tagName.toLowerCase();
+    if (!processableElementsCache.includes(tag)) continue;
+    if (!INLINE_TAGS.has(tag)) return el;
+    if (!inlineFallback) inlineFallback = el;
+  }
+  return inlineFallback;
+}
+
+/**
+ * Collects the speakable text of a block. Text of nested blocks, skipped
+ * subtrees and hidden descendants is excluded. A space is inserted where a
+ * <br> or block-level child would otherwise glue two words together.
+ * `segments` maps every text node to its offset in `text`.
+ */
+export function getBlockText(block: HTMLElement): BlockText {
+  const segments: TextSegment[] = [];
+  let text = '';
+  let pendingBreak = false;
+
+  const walker = document.createTreeWalker(
+    block,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node: Node): number {
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        const el = node as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        // A nested block-level processable element is read as its own block
+        const isNestedBlock =
+          processableElementsCache.includes(tag) && !INLINE_TAGS.has(tag);
+        if (
+          isNestedBlock ||
+          el.matches(SKIPPED_SELECTOR) ||
+          el.classList.contains('talkient-processed') ||
+          isElementHidden(el)
+        ) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    },
+  );
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = (node as HTMLElement).tagName.toLowerCase();
+      if (tag === 'br' || !INLINE_TAGS.has(tag)) pendingBreak = true;
+      continue;
+    }
+
+    const value = node.textContent ?? '';
+    if (!value) continue;
+    if (pendingBreak && text && !/\s$/.test(text) && !/^\s/.test(value)) {
+      text += ' ';
+    }
+    pendingBreak = false;
+    segments.push({ node: node as Text, start: text.length });
+    text += value;
+  }
+
+  return { text, segments };
+}
+
+// Sentence punctuation that ends the sentence, not the URL
+const URL_TRAILING_PUNCTUATION = new Set([
+  '.',
+  ',',
+  ';',
+  ':',
+  '!',
+  '?',
+  ')',
+  ']',
+  '}',
+  "'",
+  '"',
+]);
+
+/**
+ * Prepares block text for the TTS engine without changing its length, so
+ * word boundary offsets still map 1:1 to the page text. URLs are reduced to
+ * their host name (the rest is replaced by spaces) and control characters
+ * become spaces.
+ */
+export function toSpeechText(text: string): string {
+  return text
+    .replace(/[\t\n\r\f\v\u00a0]/g, ' ')
+    .replace(
+      /\b(?:(?:https?|ftp):\/\/|www\.)[^\s<>"']+/gi,
+      (url: string): string => {
+        // Linear scan: a regex anchored with `+$` backtracks quadratically on
+        // long punctuation runs, and this text is page-controlled.
+        let bodyEnd = url.length;
+        while (bodyEnd > 0 && URL_TRAILING_PUNCTUATION.has(url[bodyEnd - 1])) {
+          bodyEnd--;
+        }
+        const trailing = url.slice(bodyEnd);
+        const body = url.slice(0, bodyEnd);
+        const prefix =
+          /^(?:(?:https?|ftp):\/\/)?(?:www\.)?/i.exec(body)?.[0] ?? '';
+        const rest = body.slice(prefix.length);
+        const host = rest.split(/[/?#:]/)[0] ?? '';
+        return (
+          ' '.repeat(prefix.length) +
+          host +
+          ' '.repeat(rest.length - host.length) +
+          trailing
+        );
+      },
+    );
+}
+
+/**
+ * Cheap readability check used to decide whether the page gets the Talkient
+ * UI: any <article>, or enough paragraph-like text outside boilerplate.
+ */
+export function hasReadableContent(): boolean {
+  if (isCurrentHostIgnored) return false;
+  if (document.querySelector('article')) return true;
+
+  const blockTags = processableElementsCache.filter(
+    (tag) => !INLINE_TAGS.has(tag),
+  );
+  if (blockTags.length === 0) return false;
+
+  let readableChars = 0;
+  for (const el of Array.from(
+    document.body.querySelectorAll<HTMLElement>(blockTags.join(', ')),
+  )) {
+    if (isSkippedElement(el)) continue;
+    // Collapse source indentation so only readable characters count
+    const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (countWords(text) < minimumWordsCache) continue;
+    readableChars += text.length;
+    if (readableChars >= MIN_READABLE_PAGE_CHARS) return true;
+  }
+  return false;
+}
+
+/**
+ * Picks where playback should start when the user presses the panel play
+ * button: the first block in view, falling back to the first block.
+ */
+export function findFirstVisibleBlock(): HTMLElement | null {
+  const blocks = Array.from(
+    document.querySelectorAll<HTMLElement>('.talkient-processed'),
+  );
+  const minVisibleBottom = window.innerHeight * 0.15;
+  const visible = blocks.find((block) => {
+    const rect = block.getBoundingClientRect();
+    return (
+      (rect.width > 0 || rect.height > 0) &&
+      rect.bottom > minVisibleBottom &&
+      rect.top < window.innerHeight
+    );
+  });
+  return visible ?? blocks[0] ?? null;
+}
+
+/**
+ * Removes every play button and processed marker, leaving the page DOM as it
+ * was before processing.
+ */
+export function unmarkProcessedBlocks(): void {
+  document.querySelectorAll('.talkient-play-button').forEach((button) => {
+    button.remove();
+  });
+  document.querySelectorAll('.talkient-processed').forEach((el) => {
+    el.classList.remove('talkient-processed');
+  });
+}
+
+// Only ancestors up to the node's own block count: an outer processed block
+// (e.g. an <article> with loose text) must not hide the paragraphs inside it.
+function isInProcessedAncestor(
+  parent: HTMLElement,
+  block: HTMLElement,
+): boolean {
   let ancestor: HTMLElement | null = parent;
   while (ancestor) {
     if (ancestor.classList.contains('talkient-processed')) return true;
+    if (ancestor === block) return false;
     ancestor = ancestor.parentElement;
   }
   return false;
@@ -225,78 +513,32 @@ export function shouldProcessNode(node: Node): boolean {
   const text = node.textContent?.trim();
   if (!text || text.length < 2) return false;
 
-  // Count words in text
-  const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
-
-  // Skip if text doesn't have enough words
-  if (wordCount < minimumWordsCache) return false;
-
   // Skip if parent is null
   const parent = node.parentElement;
   if (!parent) return false;
 
-  // Skip if any ancestor has the talkient-processed class (at any depth)
-  if (isInProcessedAncestor(parent)) return false;
+  // Only process nodes within a configured processable element
+  const block = getBlockElement(node);
+  if (!block) return false;
+
+  // Skip if the node's block (or anything in between) is already processed
+  if (isInProcessedAncestor(parent, block)) return false;
+
+  // Skip code, form controls, our own UI and page boilerplate (nav, footer...)
+  if (isSkippedElement(parent)) return false;
 
   // Check if the node is within a hidden element
   if (isHiddenByStyle(parent)) return false;
 
-  // Skip if parent is a script, style, or button
-  if (
-    parent.tagName === 'SCRIPT' ||
-    parent.tagName === 'STYLE' ||
-    parent.tagName === 'BUTTON' ||
-    parent.tagName === 'CODE' ||
-    parent.tagName === 'INPUT'
-  )
-    return false;
-
-  // Skip if the node itself already has a play button directly attached to it
-  // This handles the case where a text node has been wrapped with a span + button
-  const nextSibling = node.nextSibling;
-  if (
-    nextSibling &&
-    nextSibling instanceof HTMLElement &&
-    nextSibling.classList.contains('talkient-play-button')
-  ) {
-    return false;
-  }
-
-  // Skip if parent's direct children contain a play button for this specific text node
-  // But allow other text nodes in the same parent to be processed
-  const isDirectlyNextToButton = Array.from(parent.childNodes).some(
-    (childNode, index, array) => {
-      if (childNode === node) {
-        const nextNode = array[index + 1];
-        return (
-          nextNode &&
-          nextNode instanceof HTMLElement &&
-          nextNode.classList.contains('talkient-play-button')
-        );
-      }
-      return false;
-    },
-  );
-
-  if (isDirectlyNextToButton) return false;
-
-  // Skip if node is inside the control panel
-  const controlPanel = parent.closest('#talkient-control-panel');
-  if (controlPanel) return false;
-
-  // Only process nodes within a configured processable element
-  let ancestor: HTMLElement | null = parent;
-  let insideProcessable = false;
-  while (ancestor) {
-    if (processableElementsCache.includes(ancestor.tagName.toLowerCase())) {
-      insideProcessable = true;
-      break;
-    }
-    ancestor = ancestor.parentElement;
-  }
-  if (!insideProcessable) return false;
-
   return true;
+}
+
+// The minimum words setting applies to the whole block, so a paragraph made
+// of short fragments (text, link, text) is still read in full.
+function isReadableBlock(block: HTMLElement): boolean {
+  if (block.classList.contains('talkient-processed')) return false;
+  if (block.isContentEditable) return false;
+  return countWords(getBlockText(block).text) >= minimumWordsCache;
 }
 
 // Function to find the next text element to play
@@ -354,189 +596,172 @@ export function autoPlayNextText(): void {
   }
 }
 
-// Function to process text nodes and add play buttons
-export function processTextElements(onComplete?: () => void): void {
-  console.log('[Talkient] Processing the text elements...');
+// Chars per block, captured at processing time for the reading time estimate
+const blockCharCounts = new WeakMap<Element, number>();
 
-  // Get all text nodes in the document
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
+function getBlockCharCount(block: Element): number {
+  return blockCharCounts.get(block) ?? (block.textContent ?? '').trim().length;
+}
+
+function resetOtherPlayButtons(current: HTMLButtonElement): void {
+  document.querySelectorAll('.talkient-play-button').forEach((btn) => {
+    if (
+      btn !== current &&
+      isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
+    ) {
+      btn.innerHTML = getSvgIcon('play');
+    }
+  });
+}
+
+function playBlock(
+  block: HTMLElement,
+  playButton: HTMLButtonElement,
+  highlightStyle: string,
+): void {
+  resetOtherPlayButtons(playButton);
+
+  const blockText = getBlockText(block);
+
+  // Re-highlighting a paused block would drop its word highlight; the SW
+  // resumes the same text, so keep the current highlight in that case.
+  if (getCurrentHighlightedElement() !== block) {
+    highlightText(block, highlightStyle, blockText.segments);
+  }
+
+  // Compute playback offsets based on currently processed blocks.
+  currentPlayingChars = blockText.text.trim().length;
+  const allProcessed = Array.from(
+    document.querySelectorAll('.talkient-processed'),
+  );
+  const currentIndex = allProcessed.indexOf(block);
+  const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+
+  // Chars before the clicked block. This remains stable as more blocks are
+  // processed and is later used with final `totalProcessedChars`.
+  playbackCharsBeforeCurrentNode = allProcessed
+    .slice(0, safeIndex)
+    .reduce((sum, el) => sum + getBlockCharCount(el), 0);
+
+  // Provisional remaining chars from this block through processed end.
+  remainingChars = allProcessed
+    .slice(safeIndex)
+    .reduce((sum, el) => sum + getBlockCharCount(el), 0);
+
+  safeSendMessage(
     {
-      acceptNode: function (node: Node): number {
-        return shouldProcessNode(node)
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_REJECT;
-      },
+      type: 'SPEAK_TEXT',
+      text: toSpeechText(blockText.text),
+    },
+    (_response) => {
+      // Set pause icon
+      playButton.innerHTML = getSvgIcon('pause');
+      // Update remaining time now that playback has started
+      onPlayStartCallback?.();
     },
   );
+}
 
-  const processedNodes = new Set<Node>();
-  const BATCH_SIZE = 50; // Process 50 nodes at a time
+function attachPlayButton(block: HTMLElement): void {
+  const playButton = createPlayButton();
+  playButton.classList.add('talkient-play-button');
+
+  // Add position class based on configuration
+  if (buttonPositionCache === 'left') {
+    playButton.classList.add('talkient-button-left');
+  }
+
+  playButton.addEventListener('click', (event) => {
+    // Prevent event propagation to avoid triggering link navigation
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isPlaying = isSvgPauseIcon(
+      playButton.querySelector('svg') as SVGElement,
+    );
+
+    if (isPlaying) {
+      // Pause the speech. The highlight stays so the reader keeps their place.
+      safeSendMessage(
+        {
+          type: 'PAUSE_SPEECH',
+        },
+        (_response) => {
+          playButton.innerHTML = getSvgIcon('play');
+          resetOtherPlayButtons(playButton);
+        },
+      );
+    } else {
+      // Determine highlighting style based on keyboard modifiers
+      let highlightStyle = getHighlightingStyle();
+      if (event.shiftKey) {
+        highlightStyle = 'bold';
+      } else if (event.ctrlKey || event.metaKey) {
+        highlightStyle = 'minimal';
+      } else if (event.altKey) {
+        highlightStyle = 'elegant';
+      }
+
+      playBlock(block, playButton, highlightStyle);
+    }
+  });
+
+  block.classList.add('talkient-processed');
+  if (buttonPositionCache === 'left') {
+    block.insertBefore(playButton, block.firstChild);
+  } else {
+    block.appendChild(playButton);
+  }
+}
+
+// Function to find reading blocks and add one play button to each
+export function processTextElements(
+  onComplete?: () => void,
+  root: Node = document.body,
+): void {
+  console.log('[Talkient] Processing the text elements...');
+
+  // Every qualifying text node leads to the block it belongs to
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: function (node: Node): number {
+      return shouldProcessNode(node)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+  });
+
+  const BATCH_SIZE = 50; // Process 50 blocks at a time
   let processedCount = 0;
+  // Blocks below the minimum words, so their other text nodes skip the check
+  const rejectedBlocks = new Set<HTMLElement>();
 
   function processBatch(): void {
     let batchCount = 0;
 
-    while (walker.nextNode() && batchCount < BATCH_SIZE) {
-      const textNode = walker.currentNode;
-
-      // Skip if already processed
-      if (processedNodes.has(textNode)) continue;
-
-      // Skip if the parent of the text node is already processed
-      const parentEl = textNode.parentElement;
-      if (parentEl && parentEl.classList.contains('talkient-processed'))
-        continue;
-
-      // Skip if direct parent is a span that already has a play button
-      if (
-        parentEl &&
-        parentEl.tagName === 'SPAN' &&
-        parentEl.querySelector('.talkient-play-button')
-      )
-        continue;
-
-      // Create a wrapper span if the text node is not already wrapped
-      const wrapper = document.createElement('span');
-      wrapper.style.cssText = 'display: inline-flex; align-items: center;';
-      wrapper.classList.add('talkient-processed');
-
-      // Create and add the play button
-      const playButton = createPlayButton();
-      playButton.classList.add('talkient-play-button');
-
-      // Add position class based on configuration
-      if (buttonPositionCache === 'left') {
-        playButton.classList.add('talkient-button-left');
-      }
-
-      // Add click handler
-      playButton.addEventListener('click', (event) => {
-        // Prevent event propagation to avoid triggering link navigation
-        event.preventDefault();
-        event.stopPropagation();
-
-        const isPlaying = isSvgPauseIcon(
-          playButton.querySelector('svg') as SVGElement,
-        );
-
-        if (isPlaying) {
-          // Pause the speech and clear highlighting
-          safeSendMessage(
-            {
-              type: 'PAUSE_SPEECH',
-            },
-            (_response) => {
-              // Set play icon
-              playButton.innerHTML = getSvgIcon('play');
-              clearHighlight();
-
-              // Reset all other buttons that might be in pause state
-              document
-                .querySelectorAll('.talkient-play-button')
-                .forEach((btn) => {
-                  if (
-                    btn !== playButton &&
-                    isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
-                  ) {
-                    btn.innerHTML = getSvgIcon('play');
-                  }
-                });
-            },
-          );
-        } else {
-          // Determine highlighting style based on keyboard modifiers
-          let highlightStyle = getHighlightingStyle();
-          if (event.shiftKey) {
-            highlightStyle = 'bold';
-          } else if (event.ctrlKey || event.metaKey) {
-            highlightStyle = 'minimal';
-          } else if (event.altKey) {
-            highlightStyle = 'elegant';
-          }
-
-          // Reset all other buttons that might be in pause state
-          document.querySelectorAll('.talkient-play-button').forEach((btn) => {
-            if (
-              btn !== playButton &&
-              isSvgPauseIcon(btn.querySelector('svg') as SVGElement)
-            ) {
-              btn.innerHTML = getSvgIcon('play');
-            }
-          });
-
-          // Play the speech and highlight the text
-          const textElement = wrapper.querySelector('span') || wrapper;
-          highlightText(textElement as HTMLElement, highlightStyle);
-
-          // Compute playback offsets based on currently processed nodes.
-          currentPlayingChars = (textNode.textContent ?? '').trim().length;
-          const allProcessed = Array.from(
-            document.querySelectorAll('.talkient-processed'),
-          );
-          const currentIndex = allProcessed.indexOf(wrapper);
-          const safeIndex = currentIndex >= 0 ? currentIndex : 0;
-
-          // Chars before the clicked node. This remains stable as more nodes are
-          // processed and is later used with final `totalProcessedChars`.
-          playbackCharsBeforeCurrentNode = allProcessed
-            .slice(0, safeIndex)
-            .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
-
-          // Provisional remaining chars from this node through processed end.
-          remainingChars = allProcessed
-            .slice(safeIndex)
-            .reduce((sum, el) => sum + (el.textContent ?? '').trim().length, 0);
-
-          safeSendMessage(
-            {
-              type: 'SPEAK_TEXT',
-              text: textNode.textContent || '',
-            },
-            (_response) => {
-              // Set pause icon
-              playButton.innerHTML = getSvgIcon('pause');
-              // Update remaining time now that playback has started
-              onPlayStartCallback?.();
-            },
-          );
-        }
-      });
-
-      // Replace the text node with our wrapped version
-      const parentNode = textNode.parentNode;
-      if (parentNode) {
-        parentNode.insertBefore(wrapper, textNode);
-        const textSpan = document.createElement('span');
-        textSpan.appendChild(textNode);
-
-        // Add button based on position configuration
-        if (buttonPositionCache === 'left') {
-          wrapper.appendChild(playButton);
-          wrapper.appendChild(textSpan);
-        } else {
-          wrapper.appendChild(textSpan);
-          wrapper.appendChild(playButton);
-        }
-      } else {
-        // Parent node is null, skip this text node
+    while (batchCount < BATCH_SIZE && walker.nextNode()) {
+      const block = getBlockElement(walker.currentNode);
+      if (!block || rejectedBlocks.has(block)) continue;
+      if (!isReadableBlock(block)) {
+        rejectedBlocks.add(block);
         continue;
       }
 
-      totalProcessedChars += (textNode.textContent ?? '').trim().length;
-      processedNodes.add(textNode);
+      const chars = getBlockText(block).text.trim().length;
+      attachPlayButton(block);
+      blockCharCounts.set(block, chars);
+
+      totalProcessedChars += chars;
       batchCount++;
       processedCount++;
     }
 
-    // If we processed a batch and there might be more nodes, schedule the next batch
+    // If we processed a batch and there might be more blocks, schedule the next batch
     if (batchCount > 0 && processedCount < maxNodesProcessedCache) {
       // Safety limit based on user setting
       requestAnimationFrame(processBatch);
     } else {
       console.log(
-        `[Talkient] Elements processed. Total nodes processed: ${processedCount}`,
+        `[Talkient] Elements processed. Total blocks processed: ${processedCount}`,
       );
 
       // After all batches complete, fix early-click undercount using final total.

@@ -5,15 +5,57 @@
 let currentHighlightedElement: HTMLElement | null = null;
 let currentHighlightingStyle: string = 'default';
 
-// Word-level highlighting state
-let wordSpans: HTMLSpanElement[] = [];
-let originalInnerHTML: string | null = null;
-let activeWordSpan: HTMLSpanElement | null = null;
-let wordWrappedElement: HTMLElement | null = null;
-let wordWrappedElementOriginalDisplay: string = '';
+// Word-level highlighting state. Words are painted with the CSS Custom
+// Highlight API, so the page DOM is never rewritten while reading.
+export interface WordSegment {
+  node: Text;
+  // Offset of this text node inside the spoken text
+  start: number;
+}
+
+const WORD_HIGHLIGHT_NAMES = [
+  'talkient-word',
+  'talkient-word-minimal',
+  'talkient-word-bold',
+  'talkient-word-elegant',
+];
+let wordSegments: WordSegment[] = [];
+let wordHighlightName = 'talkient-word';
+let activeWordRange: Range | null = null;
 
 // Cached followHighlight setting to avoid repeated storage reads
 let cachedFollowHighlight: boolean = true;
+
+// Auto-scroll is suspended for a while after the user scrolls manually, so
+// following the highlight never fights the reader.
+const USER_SCROLL_SUSPEND_MS = 4000;
+const SCROLL_KEYS = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+  ' ',
+]);
+let lastUserScrollAt = 0;
+
+function noteUserScroll(): void {
+  lastUserScrollAt = Date.now();
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('wheel', noteUserScroll, { passive: true });
+  window.addEventListener('touchmove', noteUserScroll, { passive: true });
+  window.addEventListener('keydown', (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    const isEditable =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target?.isContentEditable === true;
+    if (!isEditable && SCROLL_KEYS.has(event.key)) noteUserScroll();
+  });
+}
 
 // Function to load highlight style from storage
 export function loadHighlightStyleFromStorage(): void {
@@ -53,120 +95,124 @@ export function getHighlightingStyle(): string {
   return currentHighlightingStyle;
 }
 
-// Wrap words in an element with individual spans for word-level highlighting
-export function wrapWordsInElement(element: HTMLElement): HTMLSpanElement[] {
-  const spans: HTMLSpanElement[] = [];
-  let charOffset = 0;
-
-  // Find text nodes (skip button children)
-  const textNodes: Text[] = [];
-  for (const child of Array.from(element.childNodes)) {
-    if (child.nodeType === Node.TEXT_NODE) {
-      textNodes.push(child as Text);
-    }
-  }
-
-  for (const textNode of textNodes) {
-    const text = textNode.textContent || '';
-    originalInnerHTML = element.innerHTML;
-
-    const fragment = document.createDocumentFragment();
-    const regex = /(\S+)/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(text)) !== null) {
-      // Add whitespace before the word
-      if (match.index > lastIndex) {
-        fragment.appendChild(
-          document.createTextNode(text.slice(lastIndex, match.index)),
-        );
-      }
-
-      const word = match[1];
-      const span = document.createElement('span');
-      span.className = 'talkient-word';
-      span.dataset.charIndex = String(charOffset + match.index);
-      span.textContent = word;
-      fragment.appendChild(span);
-      spans.push(span);
-
-      lastIndex = match.index + word.length;
-    }
-
-    // Add any trailing whitespace
-    if (lastIndex < text.length) {
-      fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
-
-    charOffset += text.length;
-    textNode.replaceWith(fragment);
-  }
-
-  wordWrappedElementOriginalDisplay = element.style.display;
-
-  wordSpans = spans;
-  wordWrappedElement = element;
-  return spans;
+function supportsHighlightApi(): boolean {
+  return (
+    typeof CSS !== 'undefined' &&
+    'highlights' in CSS &&
+    typeof Highlight !== 'undefined'
+  );
 }
 
-// Highlight a specific word by character index
-export function highlightWordAtIndex(
-  charIndex: number,
-  _length?: number,
-): void {
-  if (wordSpans.length === 0) {
-    return;
+// Collects the text nodes of an element (excluding the play button) with
+// their offsets, for callers that don't provide segments themselves.
+function collectTextSegments(element: HTMLElement): WordSegment[] {
+  const segments: WordSegment[] = [];
+  let offset = 0;
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode(node: Node): number {
+      return node.parentElement?.closest('.talkient-play-button')
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    segments.push({ node, start: offset });
+    offset += node.data.length;
   }
+  return segments;
+}
 
-  // Find the matching span
-  let targetSpan: HTMLSpanElement | null = null;
-  for (const span of wordSpans) {
-    const spanCharIndex = parseInt(span.dataset.charIndex || '0', 10);
-    const spanLength = (span.textContent || '').length;
-    if (charIndex >= spanCharIndex && charIndex < spanCharIndex + spanLength) {
-      targetSpan = span;
-      break;
+function findSegment(index: number): WordSegment | null {
+  for (const segment of wordSegments) {
+    if (index >= segment.start && index < segment.start + segment.node.length) {
+      return segment;
     }
   }
+  return null;
+}
 
-  if (!targetSpan) {
+// Maps a spoken-text char range onto the page text nodes
+function createWordRange(charIndex: number, length?: number): Range | null {
+  const startSegment = findSegment(charIndex);
+  if (!startSegment || !startSegment.node.isConnected) return null;
+
+  const startText = startSegment.node.data;
+  let startOffset = charIndex - startSegment.start;
+  // Some engines report the whitespace before the word
+  while (startOffset < startText.length && /\s/.test(startText[startOffset])) {
+    startOffset++;
+  }
+  if (startOffset >= startText.length) return null;
+
+  let endSegment = startSegment;
+  let endOffset: number;
+  const endSegmentFromLength =
+    length && length > 0 ? findSegment(charIndex + length - 1) : null;
+  if (endSegmentFromLength && endSegmentFromLength.node.isConnected) {
+    endSegment = endSegmentFromLength;
+    endOffset = Math.min(
+      charIndex + (length as number) - endSegment.start,
+      endSegment.node.length,
+    );
+  } else {
+    const word = /^\S+/.exec(startText.slice(startOffset));
+    endOffset = startOffset + (word ? word[0].length : 0);
+  }
+
+  try {
+    const range = document.createRange();
+    range.setStart(startSegment.node, startOffset);
+    range.setEnd(endSegment.node, endOffset);
+    return range;
+  } catch {
+    // The page changed the text while it was being read
+    return null;
+  }
+}
+
+// Highlight a specific word by character index of the spoken text
+export function highlightWordAtIndex(charIndex: number, length?: number): void {
+  if (wordSegments.length === 0 || !Number.isFinite(charIndex)) {
     return;
   }
 
-  // Remove previous active word
-  if (activeWordSpan) {
-    activeWordSpan.classList.remove('talkient-active-word');
+  const range = createWordRange(charIndex, length);
+  if (!range) {
+    return;
   }
 
-  // Activate new word
-  targetSpan.classList.add('talkient-active-word');
-  activeWordSpan = targetSpan;
+  activeWordRange = range;
+  if (supportsHighlightApi()) {
+    WORD_HIGHLIGHT_NAMES.forEach((name) => CSS.highlights.delete(name));
+    CSS.highlights.set(wordHighlightName, new Highlight(range));
+  }
 
   // Scroll to the active word
-  scrollToHighlightedElement(targetSpan);
+  scrollToHighlightedElement(range);
 }
 
-// Clear word-level highlighting and restore original text nodes
+// Get the range of the word currently being spoken
+export function getActiveWordRange(): Range | null {
+  return activeWordRange;
+}
+
+// Clear word-level highlighting
 export function clearWordHighlight(): void {
-  if (wordWrappedElement && originalInnerHTML) {
-    wordWrappedElement.innerHTML = originalInnerHTML;
+  if (supportsHighlightApi()) {
+    WORD_HIGHLIGHT_NAMES.forEach((name) => CSS.highlights.delete(name));
   }
-
-  // Restore original display value
-  if (wordWrappedElement) {
-    wordWrappedElement.style.display = wordWrappedElementOriginalDisplay;
-  }
-
-  wordSpans = [];
-  activeWordSpan = null;
-  originalInnerHTML = null;
-  wordWrappedElement = null;
-  wordWrappedElementOriginalDisplay = '';
+  wordSegments = [];
+  activeWordRange = null;
 }
 
-// Function to highlight text being spoken
-export function highlightText(element: HTMLElement, style?: string): void {
+// Function to highlight text being spoken. `segments` maps the spoken text
+// onto the element's text nodes; when omitted, all its text nodes are used.
+export function highlightText(
+  element: HTMLElement,
+  style?: string,
+  segments?: WordSegment[],
+): void {
   // Remove any existing highlights
   clearHighlight();
 
@@ -183,13 +229,16 @@ export function highlightText(element: HTMLElement, style?: string): void {
 
   currentHighlightedElement = element;
 
-  // Wrap words for word-level highlighting
-  wrapWordsInElement(element);
+  // Prepare word-level highlighting
+  wordSegments = segments ?? collectTextSegments(element);
+  wordHighlightName =
+    activeStyle === 'default'
+      ? 'talkient-word'
+      : `talkient-word-${activeStyle}`;
 
   // Scroll to the highlighted element if follow highlight is enabled
   scrollToHighlightedElement(element);
 }
-
 // Function to clear text highlighting
 export function clearHighlight(): void {
   // Clear word-level highlighting first
@@ -247,9 +296,14 @@ export function testHighlightingStyle(
 }
 
 // Function to smoothly scroll to highlighted element if followHighlight is enabled
-export function scrollToHighlightedElement(element: HTMLElement): void {
+export function scrollToHighlightedElement(element: HTMLElement | Range): void {
   // Use cached followHighlight setting to avoid repeated storage reads
   if (!cachedFollowHighlight || !element) {
+    return;
+  }
+
+  // Don't fight a reader who just scrolled away
+  if (Date.now() - lastUserScrollAt < USER_SCROLL_SUSPEND_MS) {
     return;
   }
 

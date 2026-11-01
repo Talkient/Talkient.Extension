@@ -2,17 +2,18 @@ import { test, expect } from './extension-test';
 import * as path from 'path';
 
 test.describe('Control Panel - Article Requirement', () => {
-  test('should skip control panel on pages without an article element', async ({
+  test('should skip control panel on pages without an article element and little readable text', async ({
     page,
     context: _context,
     extensionId: _extensionId,
   }) => {
-    // Navigate to the test page WITHOUT an article element.
-    // The control panel should not be injected on pages that do not contain <article>.
+    // Navigate to a short test page WITHOUT an article element (e.g. a sign-in
+    // page). The control panel should not be injected on pages that have
+    // neither an <article> nor enough readable text.
     const testPagePath = path.join(
       __dirname,
       'test-pages',
-      'no-article-test.html',
+      'short-no-article-test.html',
     );
     const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
 
@@ -65,6 +66,44 @@ test.describe('Control Panel - Article Requirement', () => {
     });
   });
 
+  test('should create control panel on pages without an article element but with enough readable text', async ({
+    page,
+    context: _context,
+    extensionId: _extensionId,
+  }) => {
+    const testPagePath = path.join(
+      __dirname,
+      'test-pages',
+      'no-article-test.html',
+    );
+    const fileUrl = `file://${testPagePath.replace(/\\/g, '/')}`;
+
+    await page.goto(fileUrl);
+    await page.waitForTimeout(3000);
+
+    const controlPanelExists = await page.evaluate(() => {
+      return document.getElementById('talkient-control-panel') !== null;
+    });
+
+    expect(controlPanelExists).toBe(true);
+
+    // One play button per paragraph/heading, each inside its own block
+    const blocks = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.talkient-processed')).map(
+        (el) => ({
+          tag: el.tagName.toLowerCase(),
+          buttons: el.querySelectorAll(':scope > .talkient-play-button').length,
+        }),
+      ),
+    );
+
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const block of blocks) {
+      expect(['p', 'h1', 'h2']).toContain(block.tag);
+      expect(block.buttons).toBe(1);
+    }
+  });
+
   test('should create control panel when article is added to page with article', async ({
     page,
     context: _context,
@@ -107,18 +146,18 @@ test.describe('Control Panel - Article Requirement', () => {
     context: _context,
     extensionId: _extensionId,
   }) => {
-    // Test 1: Navigate to page without <article>
+    // Test 1: Navigate to a short page without <article>
     const noArticlePagePath = path.join(
       __dirname,
       'test-pages',
-      'no-article-test.html',
+      'short-no-article-test.html',
     );
     const noArticleUrl = `file://${noArticlePagePath.replace(/\\/g, '/')}`;
 
     await page.goto(noArticleUrl);
     await page.waitForTimeout(3000);
 
-    // The control panel should stay hidden because there is no <article>
+    // The control panel should stay hidden: no <article> and little text
     const controlPanelOnNoArticlePage = await page.evaluate(() => {
       return document.getElementById('talkient-control-panel') !== null;
     });

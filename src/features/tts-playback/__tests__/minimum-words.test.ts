@@ -5,6 +5,7 @@
 import {
   shouldProcessNode,
   loadMinimumWordsFromStorage,
+  processTextElements,
 } from '../content/text-processor';
 
 // Mock for minimum words
@@ -33,6 +34,17 @@ const mockChrome = {
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).chrome = mockChrome;
+
+// Run processing batches synchronously
+global.requestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
+  callback(0);
+  return 1;
+});
+
+// The minimum words setting applies to a whole reading block
+function isProcessed(element: Element): boolean {
+  return element.classList.contains('talkient-processed');
+}
 
 describe('Minimum words functionality', () => {
   let container: HTMLDivElement;
@@ -96,19 +108,16 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const threeWordsNode = document.createTextNode('Three Words Here');
-    article.appendChild(threeWordsNode);
+    container.innerHTML =
+      '<article><p id="three">Three Words Here</p><p id="four">This Has Four Words</p></article>';
 
-    const fourWordsNode = document.createTextNode('This Has Four Words');
-    article.appendChild(fourWordsNode);
-    container.appendChild(article);
+    processTextElements();
 
     // With minimum set to 4, three words should not be processed
-    expect(shouldProcessNode(threeWordsNode)).toBe(false);
+    expect(isProcessed(container.querySelector('#three')!)).toBe(false);
 
     // But four words should be processed
-    expect(shouldProcessNode(fourWordsNode)).toBe(true);
+    expect(isProcessed(container.querySelector('#four')!)).toBe(true);
   });
 
   test('should handle high minimum words value', async () => {
@@ -121,21 +130,16 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const fourWordsNode = document.createTextNode('This has four words');
-    article.appendChild(fourWordsNode);
+    container.innerHTML =
+      '<article><p id="four">This has four words</p><p id="five">This has exactly five words</p></article>';
 
-    const fiveWordsNode = document.createTextNode(
-      'This has exactly five words',
-    );
-    article.appendChild(fiveWordsNode);
-    container.appendChild(article);
+    processTextElements();
 
     // Four words shouldn't be processed when minimum is 5
-    expect(shouldProcessNode(fourWordsNode)).toBe(false);
+    expect(isProcessed(container.querySelector('#four')!)).toBe(false);
 
     // Five words should be processed
-    expect(shouldProcessNode(fiveWordsNode)).toBe(true);
+    expect(isProcessed(container.querySelector('#five')!)).toBe(true);
   });
   test('should default to 3 words if minimumWords setting is not available', async () => {
     // Mock the storage to return empty object (no minimumWords)
@@ -146,19 +150,29 @@ describe('Minimum words functionality', () => {
     // Reload the setting
     await loadMinimumWordsFromStorage();
 
-    const article = document.createElement('article');
-    const twoWordsNode = document.createTextNode('Two Words');
-    article.appendChild(twoWordsNode);
+    container.innerHTML =
+      '<article><p id="two">Two Words</p><p id="three">Three Words Here</p></article>';
 
-    const threeWordsNode = document.createTextNode('Three Words Here');
-    article.appendChild(threeWordsNode);
-    container.appendChild(article);
+    processTextElements();
 
     // Two words shouldn't be processed (default minimum is 3)
-    expect(shouldProcessNode(twoWordsNode)).toBe(false);
+    expect(isProcessed(container.querySelector('#two')!)).toBe(false);
 
     // Three words should be processed
-    expect(shouldProcessNode(threeWordsNode)).toBe(true);
+    expect(isProcessed(container.querySelector('#three')!)).toBe(true);
+  });
+
+  test('should count words across the whole block, not per text node', () => {
+    // Every fragment is below the minimum, the paragraph as a whole is not
+    container.innerHTML =
+      '<p id="fragmented">Read <a href="#">the docs</a> now.</p>';
+    const fragment = container.querySelector('a')!.firstChild!;
+
+    expect(shouldProcessNode(fragment)).toBe(true);
+
+    processTextElements();
+
+    expect(isProcessed(container.querySelector('#fragmented')!)).toBe(true);
   });
 
   test('should handle punctuation when counting words', () => {
