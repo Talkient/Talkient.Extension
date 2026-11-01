@@ -5,6 +5,9 @@
  * infinite scroll) and for gapless auto-play between blocks.
  */
 
+// Keep this file a module so its mock names don't clash with other test files
+export {};
+
 const mockCreateControlPanel = jest.fn();
 const mockProcessTextElements = jest.fn();
 const mockSafeClickButton = jest.fn();
