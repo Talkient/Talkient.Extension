@@ -29,6 +29,7 @@
 
 # V2
 
+- PDF: languages/voices
 - [ ] Talkient scripts switch (control panel) is a global config instead of current page config
 - [ ] Summary by AI
 - [ ] Getting started tour

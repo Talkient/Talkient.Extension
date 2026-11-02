@@ -1,0 +1,305 @@
+:root {
+  --tk-pdf-bg: #e5e7eb;
+  --tk-pdf-surface: #ffffff;
+  --tk-pdf-text: #111827;
+  --tk-pdf-muted: #4b5563;
+  --tk-pdf-accent: #2563eb;
+  --tk-pdf-error: #b91c1c;
+  --tk-pdf-sentence: rgba(250, 204, 21, 0.35);
+  --tk-pdf-word: rgba(249, 115, 22, 0.55);
+  --tk-pdf-sentence-dark: rgba(253, 224, 71, 0.35);
+  --tk-pdf-word-dark: rgba(251, 146, 60, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tk-pdf-bg: #1f2937;
+    --tk-pdf-surface: #111827;
+    --tk-pdf-text: #f9fafb;
+    --tk-pdf-muted: #d1d5db;
+    --tk-pdf-error: #fca5a5;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--tk-pdf-bg);
+  color: var(--tk-pdf-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+#talkient-pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tk-pdf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--tk-pdf-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.tk-pdf-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-pdf-page-indicator {
+  flex-shrink: 0;
+  color: var(--tk-pdf-muted);
+  font-size: 14px;
+}
+
+.tk-pdf-status {
+  padding: 12px 20px;
+  color: var(--tk-pdf-muted);
+  text-align: center;
+}
+
+.tk-pdf-status[hidden] {
+  display: none;
+}
+
+.tk-pdf-status.tk-pdf-status-error {
+  color: var(--tk-pdf-error);
+}
+
+.tk-pdf-scroll {
+  flex: 1;
+  overflow: auto;
+  overflow-anchor: auto;
+}
+
+.tk-pdf-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px 96px;
+}
+
+.tk-pdf-page {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.tk-pdf-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Highlights sit between the page image and the (transparent) text */
+.tk-pdf-highlights {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.tk-pdf-sentence-highlight,
+.tk-pdf-word-highlight {
+  position: absolute;
+  border-radius: 3px;
+  mix-blend-mode: multiply;
+}
+
+.tk-pdf-sentence-highlight {
+  background: var(--tk-pdf-sentence);
+}
+
+.tk-pdf-word-highlight {
+  background: var(--tk-pdf-word);
+}
+
+.tk-pdf-page[data-background='dark'] .tk-pdf-sentence-highlight,
+.tk-pdf-page[data-background='dark'] .tk-pdf-word-highlight {
+  mix-blend-mode: lighten;
+}
+
+.tk-pdf-page[data-background='dark'] .tk-pdf-sentence-highlight {
+  background: var(--tk-pdf-sentence-dark);
+}
+
+.tk-pdf-page[data-background='dark'] .tk-pdf-word-highlight {
+  background: var(--tk-pdf-word-dark);
+}
+
+/* Text layer, adapted from pdf.js (pdf_viewer.css) */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: clip;
+  opacity: 1;
+  color: transparent;
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: initial;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+/* Reading blocks have no box: their pdf.js text runs are positioned */
+.textLayer .tk-pdf-block {
+  display: contents;
+}
+
+.textLayer span:not(.tk-pdf-block),
+.textLayer br {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: pointer;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+
+.textLayer > span:not(.tk-pdf-block),
+.textLayer .tk-pdf-block > span {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x))
+    scale(var(--min-font-size-inv));
+}
+
+.textLayer ::selection {
+  background: color-mix(in srgb, AccentColor, transparent 50%);
+  color: transparent;
+}
+
+.tk-pdf-password {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(420px, calc(100% - 32px));
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--tk-pdf-surface);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+}
+
+.tk-pdf-password[hidden] {
+  display: none;
+}
+
+.tk-pdf-password-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tk-pdf-password input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--tk-pdf-muted);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.tk-pdf-password button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--tk-pdf-accent);
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tk-pdf-player {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #1f2937;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+}
+
+.tk-pdf-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.tk-pdf-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tk-pdf-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.tk-pdf-button svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.tk-pdf-button svg[hidden] {
+  display: none;
+}
+
+.tk-pdf-play {
+  width: 44px;
+  height: 44px;
+  background: var(--tk-pdf-accent);
+}
+
+.tk-pdf-play:hover:not(:disabled) {
+  background: #1d4ed8;
+}

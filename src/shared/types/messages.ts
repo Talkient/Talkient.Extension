@@ -32,6 +32,12 @@ export interface TranslateSelectionMessage {
   text: string;
 }
 
+export interface OpenPdfViewerMessage {
+  type: 'OPEN_PDF_VIEWER';
+  url: string;
+  autoplay?: boolean;
+}
+
 export interface GetVoicesResponse {
   success: true;
   voices: chrome.tts.TtsVoice[];
@@ -44,7 +50,8 @@ export type ServiceWorkerMessage =
   | OpenOptionsMessage
   | ReloadPlayButtonsMessage
   | GetVoicesMessage
-  | TranslateSelectionMessage;
+  | TranslateSelectionMessage
+  | OpenPdfViewerMessage;
 
 // Message types sent from service worker to content scripts
 export interface SpeechEndedMessage {
@@ -179,6 +186,17 @@ export function isTranslateSelectionMessage(
     message !== null &&
     (message as TranslateSelectionMessage).type === 'TRANSLATE_SELECTION' &&
     typeof (message as TranslateSelectionMessage).text === 'string'
+  );
+}
+
+export function isOpenPdfViewerMessage(
+  message: unknown,
+): message is OpenPdfViewerMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    (message as OpenPdfViewerMessage).type === 'OPEN_PDF_VIEWER' &&
+    typeof (message as OpenPdfViewerMessage).url === 'string'
   );
 }
 

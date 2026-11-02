@@ -8,14 +8,15 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"e2e/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"e2e/**/*.ts\"",
-    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -rf dist/features && rm -rf dist/shared && rm -f dist/background/tab-manager.js && rm -f dist/content/highlight.js && rm -f dist/tsconfig.tsbuildinfo",
-    "publish:local": "rm -rf dist && pnpm build && pnpm update-manifest:local && pnpm update-assets && pnpm update-htmls && pnpm update-css && rm -rf dist/features && rm -rf dist/shared && rm -f dist/background/tab-manager.js && rm -f dist/content/highlight.js && rm -f dist/tsconfig.tsbuildinfo",
-    "build": "tsc --build && pnpm build:content && pnpm build:popup && pnpm build:sw && pnpm build:options",
+    "publish": "rm -rf dist && pnpm build && pnpm update-manifest && pnpm update-assets && pnpm update-htmls && pnpm update-css && pnpm update-pdf-viewer && rm -rf dist/features && rm -rf dist/shared && rm -f dist/background/tab-manager.js && rm -f dist/content/highlight.js && rm -f dist/tsconfig.tsbuildinfo",
+    "publish:local": "rm -rf dist && pnpm build && pnpm update-manifest:local && pnpm update-assets && pnpm update-htmls && pnpm update-css && pnpm update-pdf-viewer && rm -rf dist/features && rm -rf dist/shared && rm -f dist/background/tab-manager.js && rm -f dist/content/highlight.js && rm -f dist/tsconfig.tsbuildinfo",
+    "build": "tsc --build && pnpm build:content && pnpm build:popup && pnpm build:sw && pnpm build:options && pnpm build:pdf-viewer",
     "update-manifest": "cp manifest.json dist/",
     "update-manifest:local": "node -e \"const fs=require('fs'); const path=require('path'); const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8')); const loopbackHosts=['http://localhost:*/*','http://127.0.0.1:*/*','https://localhost:*/*','https://127.0.0.1:*/*']; const hostPermissions=new Set(manifest.host_permissions||[]); for (const host of loopbackHosts) hostPermissions.add(host); manifest.host_permissions=[...hostPermissions]; fs.mkdirSync('dist',{recursive:true}); fs.writeFileSync(path.join('dist','manifest.json'), JSON.stringify(manifest,null,2) + '\\n');\"",
     "update-assets": "cp assets/ dist/ -r",
     "update-htmls": "cp src/features/settings/options/*.html dist/options -r && cp src/popup/*.html dist/popup -r",
     "update-css": "cp src/features/settings/options/*.css dist/options -r && cp src/popup/*.css dist/popup -r && cp src/content/*.css dist/content -r",
+    "update-pdf-viewer": "node -e \"require('fs').mkdirSync('dist/pdf-viewer',{recursive:true})\" &&cp src/features/pdf-viewer/viewer/*.html src/features/pdf-viewer/viewer/*.css node_modules/pdfjs-dist/build/pdf.worker.min.mjs dist/pdf-viewer/ && cp -r node_modules/pdfjs-dist/cmaps node_modules/pdfjs-dist/iccs dist/pdf-viewer/",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -24,6 +25,7 @@
     "build:popup": "esbuild src/popup/popup.ts --bundle --outfile=dist/popup/popup.js --format=iife --platform=browser --target=chrome58",
     "build:sw": "esbuild src/background/service-worker.ts --bundle --outfile=dist/background/service-worker.js --format=esm --platform=browser --target=chrome58",
     "build:options": "esbuild src/features/settings/options/options-ui.ts --bundle --outfile=dist/options/options.js --format=iife --platform=browser --target=chrome58",
+    "build:pdf-viewer": "esbuild src/features/pdf-viewer/viewer/pdf-viewer.ts --bundle --outfile=dist/pdf-viewer/pdf-viewer.js --format=esm --platform=browser --target=chrome120",
     "test:e2e": "pnpm run publish && playwright test --reporter=list",
     "test:e2e:ui-report": "pnpm run publish && playwright test",
     "test:e2e:ui": "pnpm run publish && playwright test --ui",
@@ -63,5 +65,8 @@
     "ts-jest": "^29.4.11",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.1"
+  },
+  "dependencies": {
+    "pdfjs-dist": "~6.4.299"
   }
 }

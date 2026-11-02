@@ -35,6 +35,19 @@
   - Play/pause button
 - Highlight
 - Handle `beforeprint`
+- "Listen with Talkient" button on PDF tabs (opens the PDF viewer)
+
+## PDF Viewer
+
+- Extension page (`pdf-viewer/pdf-viewer.html?file=<url>`) built on pdf.js
+- Opened by the service worker (not web accessible), PDF bytes handed over
+  from the PDF tab through `chrome.storage.local` (5 minutes, deleted on read)
+- Text read in reading order, split into blocks (short first block)
+- Pages rendered near the viewport only; reading blocks never change, so
+  playback and highlights survive scrolling
+- Sentence and word highlight over the page, follows the reading
+- Click a sentence to read from it, Space to play/pause
+- Password protected PDFs
 
 ## Service Worker
 

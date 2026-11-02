@@ -38,6 +38,8 @@ import { createControlPanel } from '../features/control-panel/content/panel-ui';
 import { initPanelHideDuration } from '../features/control-panel/content/panel-visibility';
 import { updatePanelPlayIcon } from '../features/control-panel/content/panel-controller';
 import { isHostnameIgnored } from '../features/settings/storage-schema';
+import { isPdfDocument } from '../features/pdf-viewer/content/pdf-detection';
+import { mountPdfLauncher } from '../features/pdf-viewer/content/pdf-launcher';
 
 import { getSvgIcon, isSvgPlayIcon } from '../features/assets/content/icons';
 import { safeSendMessage } from '../shared/api/messaging';
@@ -385,6 +387,12 @@ void loadButtonPositionFromStorage().then(() => {
           '[Talkient] Domain is ignored. Skipping initial UI injection.',
         );
         removeTalkientUiElements();
+        return;
+      }
+
+      // PDFs are read in the Talkient PDF viewer instead of the page itself
+      if (isPdfDocument()) {
+        mountPdfLauncher();
         return;
       }
 

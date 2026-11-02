@@ -8,6 +8,7 @@ import {
   isSignInMessage,
   isSignOutMessage,
   isGetAuthStateMessage,
+  isOpenPdfViewerMessage,
   type ExtendedServiceWorkerMessage,
 } from '../shared/types/messages';
 import {
@@ -26,6 +27,7 @@ import {
   setupContextMenuClickHandler,
 } from '../features/tts-playback/background/context-menu';
 import { setupTabListeners } from './tab-manager';
+import { handleOpenPdfViewer } from '../features/pdf-viewer/background/open-pdf-viewer';
 
 console.log('Service Worker for Talkient Extension');
 
@@ -59,6 +61,11 @@ chrome.runtime.onMessage.addListener(
     if (isGetAuthStateMessage(request)) {
       console.log('[Talkient.SW] Getting auth state...');
       void handleGetAuthState(sendResponse);
+      return true;
+    }
+
+    if (isOpenPdfViewerMessage(request)) {
+      handleOpenPdfViewer(request, sender, sendResponse);
       return true;
     }
 

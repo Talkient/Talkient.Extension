@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talkient PDF Viewer</title>
+    <link rel="stylesheet" href="pdf-viewer.css" />
+  </head>
+  <body>
+    <div id="talkient-pdf-viewer">
+      <header class="tk-pdf-header">
+        <h1 id="tk-pdf-title" class="tk-pdf-title">Talkient PDF Viewer</h1>
+        <span id="tk-pdf-page-indicator" class="tk-pdf-page-indicator"></span>
+      </header>
+
+      <div id="tk-pdf-status" class="tk-pdf-status" role="status">
+        Loading PDF…
+      </div>
+
+      <main id="tk-pdf-scroll" class="tk-pdf-scroll">
+        <div id="tk-pdf-pages" class="tk-pdf-pages"></div>
+      </main>
+
+      <form id="tk-pdf-password" class="tk-pdf-password" hidden>
+        <label for="tk-pdf-password-input" id="tk-pdf-password-label">
+          This PDF is protected. Enter its password to open it.
+        </label>
+        <div class="tk-pdf-password-row">
+          <input
+            id="tk-pdf-password-input"
+            type="password"
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Open</button>
+        </div>
+      </form>
+
+      <footer class="tk-pdf-player" aria-label="Playback controls">
+        <button
+          id="tk-pdf-previous"
+          class="tk-pdf-button"
+          type="button"
+          title="Previous paragraph"
+          aria-label="Previous paragraph"
+          disabled
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6h2v12H6zM9.5 12l8.5 6V6z" />
+          </svg>
+        </button>
+        <button
+          id="tk-pdf-play"
+          class="tk-pdf-button tk-pdf-play"
+          type="button"
+          title="Play"
+          aria-label="Play"
+          disabled
+        >
+          <svg class="tk-pdf-icon-play" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg
+            class="tk-pdf-icon-pause"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            hidden
+          >
+            <path d="M6 19h4V5H6zm8-14v14h4V5z" />
+          </svg>
+        </button>
+        <button
+          id="tk-pdf-next"
+          class="tk-pdf-button"
+          type="button"
+          title="Next paragraph"
+          aria-label="Next paragraph"
+          disabled
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 18l8.5-6L6 6zM16 6h2v12h-2z" />
+          </svg>
+        </button>
+      </footer>
+    </div>
+    <script type="module" src="pdf-viewer.js"></script>
+  </body>
+</html>
