@@ -1,6 +1,6 @@
 {
   "name": "Talkient.Extension",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "Talkient Extension",
   "main": "index.js",
   "scripts": {
